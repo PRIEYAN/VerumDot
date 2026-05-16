@@ -1,29 +1,96 @@
-/* Rofi launcher theme */
+/**
+ * Glassy Rofi Theme with "Verum" Title
+ */
+
 configuration {
-  show-icons: false;
-  terminal: "kitty";
+    modi:                       "drun";
+    show-icons:                 true;
+    display-drun:               "";
+    drun-display-format:        "{name}";
+    font:                       "JetBrains Mono 11";
+}
+
+* {
+    bg-color:            rgba(10, 12, 18, 0.25);
+    bg-selected:         rgba(255, 255, 255, 0.1);
+    fg-color:            #ffffff;
+    accent-color:        #ff0000; /* Red for Verum */
+    border-color:        rgba(255, 255, 255, 0.2);
 }
 
 window {
-  background: rgba(28, 29, 34, 0.95); /* THEME: background */
-  border: 1px solid rgba(136, 192, 208, 0.25); /* THEME: border */
-  border-radius: 14px;
-  width: 620px;
+    width:               800px;
+    height:              500px;
+    border:              1px;
+    border-color:        @border-color;
+    border-radius:       16px;
+    background-color:    @bg-color;
 }
 
 mainbox {
-  children: [input, message, listview];
+    padding:             20px;
+    background-color:    transparent;
+    children:            [ inputbar, listview ];
 }
 
-textbox {
-  text-color: #eceff4; /* THEME: text */
+inputbar {
+    spacing:             10px;
+    padding:             10px;
+    background-color:    rgba(255, 255, 255, 0.05);
+    border-radius:       12px;
+    children:            [ textbox-verum, entry ];
+}
+
+textbox-verum {
+    expand:              false;
+    str:                 "Verum";
+    font:                "JetBrains Mono ExtraBold 16";
+    vertical-align:      0.5;
+    text-color:          @accent-color;
+    padding:             0 10px;
 }
 
 entry {
-  background: rgba(38, 40, 48, 0.95); /* THEME: entry background */
+    placeholder:         "Search Apps...";
+    placeholder-color:   rgba(255, 255, 255, 0.3);
+    vertical-align:      0.5;
+    text-color:          @fg-color;
+    background-color:    transparent;
 }
 
-entry:selected {
-  background: rgba(136, 192, 208, 0.16); /* THEME: selection background */
-  text-color: #eceff4; /* THEME: selection text */
+listview {
+    columns:             5;
+    lines:               3;
+    spacing:             15px;
+    padding:             20px 0 0 0;
+    cycle:               true;
+    dynamic:             true;
+    layout:              vertical;
+    background-color:    transparent;
+}
+
+element {
+    orientation:         vertical;
+    padding:             15px;
+    border-radius:       12px;
+    background-color:    transparent;
+}
+
+element selected {
+    background-color:    @bg-selected;
+    border:              1px;
+    border-color:        rgba(255, 255, 255, 0.2);
+}
+
+element-icon {
+    size:                64px;
+    horizontal-align:    0.5;
+    background-color:    transparent;
+}
+
+element-text {
+    horizontal-align:    0.5;
+    vertical-align:      0.5;
+    text-color:          inherit;
+    background-color:    transparent;
 }
