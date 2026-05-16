@@ -1,0 +1,23 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "background": "#282a36", /* THEME: bar background */
+  "color": "#eceff4", /* THEME: bar text */
+  "border-color": "#6272a4", /* THEME: bar border */
+  "modules-left": ["workspaces"],
+  "modules-center": ["clock"],
+  "modules-right": ["tray", "battery", "network"],
+  "tray": {
+    "icon-theme": "Papirus"
+  },
+  "clock": {
+    "format": "%a %b %d %H:%M"
+  },
+  "battery": {
+    "format": "{capacity}%"
+  },
+  "network": {
+    "format-online": "{ifname}: {ipaddr}"
+  }
+}

@@ -1,0 +1,29 @@
+/* Rofi launcher theme */
+configuration {
+  show-icons: false;
+  terminal: "kitty";
+}
+
+window {
+  background: rgba(28, 29, 34, 0.95); /* THEME: background */
+  border: 1px solid rgba(136, 192, 208, 0.25); /* THEME: border */
+  border-radius: 14px;
+  width: 620px;
+}
+
+mainbox {
+  children: [input, message, listview];
+}
+
+textbox {
+  text-color: #eceff4; /* THEME: text */
+}
+
+entry {
+  background: rgba(38, 40, 48, 0.95); /* THEME: entry background */
+}
+
+entry:selected {
+  background: rgba(136, 192, 208, 0.16); /* THEME: selection background */
+  text-color: #eceff4; /* THEME: selection text */
+}

@@ -1,0 +1,30 @@
+:root {
+  --bar-bg: rgba(28, 29, 34, 0.90); /* THEME: bar background */
+  --bar-fg: #eceff4; /* THEME: bar text */
+  --bar-border: rgba(255, 255, 255, 0.08); /* THEME: bar border */
+  --bar-accent: #88c0d0; /* THEME: accent */
+}
+
+* {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--bar-fg);
+}
+
+#bar {
+  background: var(--bar-bg);
+  color: var(--bar-fg);
+  border-bottom: 1px solid var(--bar-border);
+}
+
+#workspaces button {
+  border: none;
+  background: transparent;
+}
+
+#clock {
+  padding: 0 12px;
+}
+
+#tray {
+  padding-right: 8px;
+}
