@@ -66,8 +66,10 @@ init() {
     # Ensure hyprpaper is running
     if ! pgrep -x "hyprpaper" > /dev/null; then
         hyprpaper &
-        sleep 0.5
     fi
+    
+    # Give hyprpaper some time to initialize its IPC socket
+    sleep 1
 
     if [[ -f "$CACHE_FILE" ]]; then
         set_wallpaper "$(cat "$CACHE_FILE")"
