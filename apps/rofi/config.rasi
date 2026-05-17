@@ -46,7 +46,7 @@ textbox-verum {
     str:                 "Verum";
     font:                "JetBrains Mono ExtraBold 16";
     vertical-align:      0.5;
-    text-color:          @accent-color;
+    text-color:          #ffffff;
     padding:             0 10px;
 }
 
@@ -74,6 +74,15 @@ element {
     padding:             15px;
     border-radius:       12px;
     background-color:    transparent;
+    text-color:          @fg-color;
+}
+
+element normal.normal {
+    background-color:    transparent;
+}
+
+element alternate.normal {
+    background-color:    transparent;
 }
 
 element selected {
@@ -91,6 +100,6 @@ element-icon {
 element-text {
     horizontal-align:    0.5;
     vertical-align:      0.5;
-    text-color:          inherit;
+    text-color:          #ffffff;
     background-color:    transparent;
 }
