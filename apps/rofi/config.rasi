@@ -1,30 +1,28 @@
-/**
- * Glassy Rofi Theme with "Verum" Title
- */
-
 configuration {
     modi:                       "drun";
     show-icons:                 true;
-    display-drun:               "";
+    display-drun:               "⌖";
     drun-display-format:        "{name}";
-    font:                       "JetBrains Mono 11";
+    font:                       "Iosevka Term 11";
 }
 
 * {
-    bg-color:            rgba(10, 12, 18, 0.25);
-    bg-selected:         rgba(255, 255, 255, 0.1);
-    fg-color:            #ffffff;
-    accent-color:        #ff0000; /* Red for Verum */
-    border-color:        rgba(255, 255, 255, 0.2);
+    bg:                  rgba(14, 13, 12, 0.97);
+    bg-alt:              rgba(26, 25, 23, 0.82);
+    fg:                  #c8c0b0;
+    muted:               #7a7268;
+    accent:              #9a9488;
+    selected:            rgba(180, 168, 140, 0.09);
+    border-col:          rgba(180, 168, 140, 0.24);
 }
 
 window {
     width:               800px;
     height:              500px;
     border:              1px;
-    border-color:        @border-color;
-    border-radius:       16px;
-    background-color:    @bg-color;
+    border-color:        @border-col;
+    border-radius:       10px;
+    background-color:    @bg;
 }
 
 mainbox {
@@ -36,25 +34,27 @@ mainbox {
 inputbar {
     spacing:             10px;
     padding:             10px;
-    background-color:    rgba(255, 255, 255, 0.05);
-    border-radius:       12px;
+    border:              1px;
+    border-color:        @border-col;
+    background-color:    @bg-alt;
+    border-radius:       7px;
     children:            [ textbox-verum, entry ];
 }
 
 textbox-verum {
     expand:              false;
-    str:                 "Verum";
-    font:                "JetBrains Mono ExtraBold 16";
+    str:                 "VERUM";
+    font:                "Iosevka Term 14";
     vertical-align:      0.5;
-    text-color:          #ffffff;
+    text-color:          @accent;
     padding:             0 10px;
 }
 
 entry {
     placeholder:         "Search Apps...";
-    placeholder-color:   rgba(255, 255, 255, 0.3);
+    placeholder-color:   @muted;
     vertical-align:      0.5;
-    text-color:          @fg-color;
+    text-color:          @fg;
     background-color:    transparent;
 }
 
@@ -72,9 +72,9 @@ listview {
 element {
     orientation:         vertical;
     padding:             15px;
-    border-radius:       12px;
+    border-radius:       7px;
     background-color:    transparent;
-    text-color:          @fg-color;
+    text-color:          @fg;
 }
 
 element normal.normal {
@@ -86,9 +86,9 @@ element alternate.normal {
 }
 
 element selected {
-    background-color:    @bg-selected;
+    background-color:    @selected;
     border:              1px;
-    border-color:        rgba(255, 255, 255, 0.2);
+    border-color:        @border-col;
 }
 
 element-icon {
@@ -100,6 +100,6 @@ element-icon {
 element-text {
     horizontal-align:    0.5;
     vertical-align:      0.5;
-    text-color:          #ffffff;
+    text-color:          @fg;
     background-color:    transparent;
 }

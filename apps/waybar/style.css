@@ -1,30 +1,118 @@
-:root {
-  --bar-bg: rgba(28, 29, 34, 0.90); /* THEME: bar background */
-  --bar-fg: #eceff4; /* THEME: bar text */
-  --bar-border: rgba(255, 255, 255, 0.08); /* THEME: bar border */
-  --bar-accent: #88c0d0; /* THEME: accent */
-}
-
 * {
-  font-family: "JetBrains Mono", monospace;
-  color: var(--bar-fg);
-}
-
-#bar {
-  background: var(--bar-bg);
-  color: var(--bar-fg);
-  border-bottom: 1px solid var(--bar-border);
-}
-
-#workspaces button {
   border: none;
-  background: transparent;
+  border-radius: 0;
+  font-family: "Iosevka Term", "Symbols Nerd Font", "BlexMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 13px;
+  min-height: 0;
+  color: #c8c0b0;
+}
+
+window#waybar {
+  background: rgba(14, 13, 12, 0.9);
+}
+
+tooltip {
+  background: rgba(14, 13, 12, 0.97);
+  border: 1px solid rgba(180, 168, 140, 0.24);
+  border-radius: 6px;
+}
+
+tooltip label {
+  color: #c8c0b0;
+  padding: 6px;
+}
+
+#clock,
+#custom-app_launcher,
+#custom-app_info,
+#custom-screenshot,
+#custom-performance,
+#custom-mic,
+#custom-volume,
+#custom-brightness,
+#custom-bluetooth,
+#custom-wifi,
+#custom-battery,
+#custom-power {
+  margin: 0 5px;
+  padding: 0 5px;
 }
 
 #clock {
-  padding: 0 12px;
+  color: #9a9488;
+  margin-left: 8px;
 }
 
-#tray {
-  padding-right: 8px;
+#custom-app_launcher {
+  color: #9a9488;
+}
+
+#custom-app_info {
+  color: #c8c0b0;
+  min-width: 190px;
+}
+
+#custom-ws1,
+#custom-ws2,
+#custom-ws3,
+#custom-ws4,
+#custom-ws5,
+#custom-ws6,
+#custom-ws7,
+#custom-ws8,
+#custom-ws9 {
+  color: #8c8a92;
+  margin: 0 4px;
+  min-width: 28px;
+  padding: 0 4px;
+}
+
+#custom-ws1.active,
+#custom-ws2.active,
+#custom-ws3.active,
+#custom-ws4.active,
+#custom-ws5.active,
+#custom-ws6.active,
+#custom-ws7.active,
+#custom-ws8.active,
+#custom-ws9.active {
+  color: #89b4fa;
+  border-bottom: 2px solid #9a9488;
+}
+
+#custom-screenshot {
+  color: #b4befe;
+}
+
+#custom-performance {
+  color: #f9e2af;
+}
+
+#custom-mic {
+  color: #f38ba8;
+}
+
+#custom-volume {
+  color: #9a9488;
+}
+
+#custom-brightness {
+  color: #fab387;
+}
+
+#custom-bluetooth {
+  color: #9a9488;
+}
+
+#custom-wifi {
+  color: #9a9488;
+}
+
+#custom-battery {
+  color: #cba6f7;
+}
+
+#custom-power {
+  color: #9a9488;
+  margin-right: 8px;
 }

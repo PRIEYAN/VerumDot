@@ -1,23 +1,133 @@
 {
   "layer": "top",
   "position": "top",
-  "height": 30,
-  "background": "#282a36", /* THEME: bar background */
-  "color": "#eceff4", /* THEME: bar text */
-  "border-color": "#6272a4", /* THEME: bar border */
-  "modules-left": ["workspaces"],
-  "modules-center": ["clock"],
-  "modules-right": ["tray", "battery", "network"],
-  "tray": {
-    "icon-theme": "Papirus"
-  },
+  "margin": "0 0 0 0",
+  "height": 38,
+  "font": "Iosevka Term 10",
+  "modules-left": ["clock", "custom/app_launcher", "custom/app_info"],
+  "modules-center": ["custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5", "custom/ws6", "custom/ws7", "custom/ws8", "custom/ws9"],
+  "modules-right": ["custom/screenshot", "custom/performance", "custom/mic", "custom/volume", "custom/brightness", "custom/bluetooth", "custom/wifi", "custom/battery", "custom/power"],
+
   "clock": {
-    "format": "%a %b %d %H:%M"
+    "format": "{:%a %d %b  %H:%M}",
+    "tooltip-format": "{:%A, %d %B %Y  %H:%M:%S}",
+    "on-click": "/home/prieyan/.config/hypr/scripts/calendar-popup.sh"
   },
-  "battery": {
-    "format": "{capacity}%"
+
+  "custom/app_info": {
+    "exec": "/home/prieyan/.config/waybar/scripts/app-info.py",
+    "interval": 1,
+    "return-type": "json",
+    "on-click": "rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
   },
-  "network": {
-    "format-online": "{ifname}: {ipaddr}"
+
+  "custom/app_launcher": {
+    "exec": "printf '{\"text\":\"⌖\",\"tooltip\":\"App launcher\"}'",
+    "interval": "once",
+    "return-type": "json",
+    "on-click": "rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+  },
+
+  "custom/ws1": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 1",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 1"
+  },
+  "custom/ws2": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 2",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 2"
+  },
+  "custom/ws3": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 3",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 3"
+  },
+  "custom/ws4": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 4",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 4"
+  },
+  "custom/ws5": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 5",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 5"
+  },
+  "custom/ws6": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 6",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 6"
+  },
+  "custom/ws7": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 7",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 7"
+  },
+  "custom/ws8": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 8",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 8"
+  },
+  "custom/ws9": {
+    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 9",
+    "return-type": "json",
+    "on-click": "hyprctl dispatch workspace 9"
+  },
+
+  "custom/power": {
+    "exec": "/home/prieyan/.config/hypr/scripts/waybar-power.sh",
+    "interval": 5,
+    "return-type": "json",
+    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-power.sh menu"
+  },
+  "custom/battery": {
+    "exec": "/home/prieyan/.config/waybar/scripts/battery-status.py",
+    "interval": 30,
+    "return-type": "json"
+  },
+  "custom/wifi": {
+    "exec": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh",
+    "interval": 30,
+    "return-type": "json",
+    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh menu"
+  },
+  "custom/bluetooth": {
+    "exec": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh",
+    "interval": 30,
+    "return-type": "json",
+    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh menu"
+  },
+  "custom/volume": {
+    "exec": "/home/prieyan/.config/hypr/scripts/waybar-volume.sh",
+    "interval": 1,
+    "return-type": "json",
+    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-volume.sh menu",
+    "on-scroll-up": "pamixer -i 5",
+    "on-scroll-down": "pamixer -d 5"
+  },
+  "custom/brightness": {
+    "exec": "/home/prieyan/.config/waybar/scripts/brightness-status.sh",
+    "interval": 10,
+    "return-type": "json",
+    "on-scroll-up": "/home/prieyan/.config/waybar/scripts/brightness-adjust.sh up",
+    "on-scroll-down": "/home/prieyan/.config/waybar/scripts/brightness-adjust.sh down"
+  },
+  "custom/mic": {
+    "exec": "/home/prieyan/.config/waybar/scripts/mic-status.sh",
+    "interval": 2,
+    "return-type": "json",
+    "on-click": "/home/prieyan/.config/waybar/scripts/mic-toggle.sh"
+  },
+  "custom/performance": {
+    "exec": "/home/prieyan/.config/waybar/scripts/performance-mode.sh",
+    "interval": 10,
+    "return-type": "json",
+    "on-click": "/home/prieyan/.config/waybar/scripts/performance-mode.sh toggle"
+  },
+  "custom/screenshot": {
+    "exec": "/home/prieyan/.config/waybar/scripts/screenshot.sh",
+    "interval": 60,
+    "return-type": "json",
+    "on-click": "/home/prieyan/.config/waybar/scripts/screenshot.sh take"
   }
 }

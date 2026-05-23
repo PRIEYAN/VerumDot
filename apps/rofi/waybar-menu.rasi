@@ -1,0 +1,67 @@
+configuration {
+  show-icons: false;
+}
+
+* {
+  bg: rgba(14, 13, 12, 0.97);
+  bg-alt: rgba(26, 25, 23, 0.82);
+  fg: #c8c0b0;
+  muted: #7a7268;
+  accent: #9a9488;
+  selected: rgba(180, 168, 140, 0.09);
+  border: rgba(180, 168, 140, 0.24);
+}
+
+window {
+  width: 380px;
+  border: 1px;
+  border-color: @border;
+  border-radius: 10px;
+  background-color: @bg;
+}
+
+mainbox {
+  padding: 12px;
+  background-color: transparent;
+  children: [ inputbar, listview ];
+}
+
+inputbar {
+  padding: 8px 10px;
+  margin: 0 0 8px 0;
+  border: 1px;
+  border-color: @border;
+  border-radius: 7px;
+  background-color: @bg-alt;
+  children: [ prompt ];
+}
+
+prompt {
+  font: "Iosevka Term 12";
+  text-color: @accent;
+  background-color: transparent;
+}
+
+listview {
+  lines: 8;
+  spacing: 4px;
+  background-color: transparent;
+}
+
+element {
+  padding: 8px 11px;
+  border-radius: 6px;
+  background-color: transparent;
+  text-color: @fg;
+}
+
+element selected {
+  background-color: @selected;
+  text-color: @accent;
+}
+
+element-text {
+  font: "Iosevka Term 12";
+  text-color: inherit;
+  background-color: transparent;
+}

@@ -1,0 +1,258 @@
+/*
+ * Rofi Theme — Coldgrave
+ * Vintage · Dark · Ashen · Serif
+ *
+ * Palette: deep charcoal base, warm-cold ash ink, rust accent
+ * Font: Iosevka Term (swap to any serif mono you have)
+ */
+
+configuration {
+    show-icons:              true;
+    icon-theme:              "Papirus-Dark";
+    display-drun:            "⊞  Apps";
+    display-run:             "   Run";
+    display-window:          "⊟  Window";
+    display-ssh:             "⌨  SSH";
+    display-filebrowser:     "⊙  Files";
+    drun-display-format:     "{name}";
+    window-format:           "{w} · {c} · {t}";
+    sidebar-mode:            true;
+    hover-select:            true;
+    me-select-entry:         "";
+    me-accept-entry:         "MousePrimary";
+    sorting-method:          "fzf";
+    matching:                "fuzzy";
+}
+
+* {
+    /* ── Coldgrave palette ─────────────────────────── */
+    void:         #050403;
+    cinder:       #0a0908;
+    ashpit:       #0e0d0c;
+    coal:         #131210;
+    soot:         #1a1917;
+    char:         #222018;
+    ember:        #2e2b24;
+
+    bone:         #c8c0b0;
+    parchment:    #a89f90;
+    fog:          #7a7268;
+    shadow:       #4a4640;
+    ghost:        #302e2a;
+
+    rust:         #8c7358;
+    tarnish:      #6e5c48;
+    pewter:       #9a9488;
+    slate:        #5a6272;
+    mold:         #5a6060;
+
+    /* ── Semantic tokens ───────────────────────────── */
+    bg:           rgba( 14, 13, 12, 0.97);
+    bg-alt:       rgba( 26, 25, 23, 0.82);
+    bg-deep:      rgba( 10,  9,  8, 0.92);
+    fg:           @bone;
+    fg-muted:     @fog;
+    fg-ghost:     @shadow;
+
+    border-col:   rgba(180, 168, 140, 0.18);
+    border-sel:   rgba(180, 168, 140, 0.42);
+    selected:     rgba(180, 168, 140, 0.09);
+
+    urgent:       #7a5040;
+    active:       @slate;
+    accent:       @pewter;
+
+    background-color: transparent;
+    text-color:       @fg;
+    font:             "Iosevka Term 12";
+}
+
+/* ── Window ────────────────────────────────────────── */
+window {
+    transparency:       "real";
+    location:           center;
+    anchor:             center;
+    width:              700px;
+    border:             1px solid;
+    border-radius:      10px;
+    border-color:       @border-col;
+    background-color:   @bg;
+    cursor:             "default";
+}
+
+mainbox {
+    padding:            14px;
+    spacing:            0px;
+    background-color:   transparent;
+    children:           [ "inputbar", "message", "listview", "mode-switcher" ];
+}
+
+/* ── Input bar ─────────────────────────────────────── */
+inputbar {
+    spacing:            10px;
+    margin:             0 0 10px 0;
+    padding:            9px 13px;
+    border:             1px solid;
+    border-radius:      7px;
+    border-color:       @border-col;
+    background-color:   @bg-alt;
+    children:           [ "textbox-prompt-colon", "entry",
+                          "num-filtered-rows", "textbox-num-sep",
+                          "num-rows", "case-indicator" ];
+}
+
+textbox-prompt-colon {
+    expand:             false;
+    str:                "⌖";
+    padding:            0 8px 0 0;
+    text-color:         @accent;
+    font:               "Iosevka Term 14";
+}
+
+entry {
+    placeholder:        "Search…";
+    placeholder-color:  @fg-ghost;
+    cursor:             text;
+    text-color:         @bone;
+    font:               "Iosevka Term 12";
+}
+
+num-filtered-rows {
+    text-color: @rust;
+    font:       "Iosevka Term 11";
+}
+textbox-num-sep {
+    expand:     false;
+    str:        "/";
+    text-color: @fg-ghost;
+    font:       "Iosevka Term 11";
+}
+num-rows {
+    text-color: @fg-ghost;
+    font:       "Iosevka Term 11";
+}
+case-indicator {
+    text-color: @pewter;
+    font:       "Iosevka Term 11";
+}
+
+/* ── Message bar ───────────────────────────────────── */
+message {
+    margin:             0 0 10px 0;
+    padding:            7px 12px;
+    border:             1px solid;
+    border-radius:      6px;
+    border-color:       @border-col;
+    background-color:   @bg-alt;
+}
+
+textbox {
+    text-color:         @fg-muted;
+    vertical-align:     0.5;
+    font:               "Iosevka Term Italic 11";
+    markup:             true;
+}
+
+error-message {
+    padding:            12px;
+    border-radius:      7px;
+    background-color:   @urgent;
+    text-color:         @bone;
+}
+
+/* ── List ──────────────────────────────────────────── */
+listview {
+    columns:            1;
+    lines:              9;
+    cycle:              true;
+    dynamic:            true;
+    scrollbar:          true;
+    fixed-height:       true;
+    spacing:            3px;
+    padding:            3px 2px;
+    background-color:   transparent;
+}
+
+scrollbar {
+    handle-width:       3px;
+    handle-color:       @pewter;
+    border-radius:      8px;
+    background-color:   @bg-alt;
+}
+
+element {
+    spacing:            10px;
+    padding:            7px 12px;
+    border-radius:      6px;
+    border:             0px;
+    cursor:             pointer;
+    background-color:   transparent;
+}
+
+/* normal rows */
+element normal.normal  { text-color: @fg-muted; }
+element normal.urgent  { text-color: @urgent;   }
+element normal.active  { text-color: @active;   }
+
+/* alternating rows (same as normal — no zebra stripes) */
+element alternate.normal  { text-color: @fg-muted; background-color: transparent; }
+element alternate.urgent  { text-color: @urgent; }
+element alternate.active  { text-color: @active; }
+
+/* selected row */
+element selected.normal {
+    background-color:   @selected;
+    text-color:         @accent;
+    border:             0 0 0 2px solid;
+    border-color:       @border-sel;
+}
+element selected.urgent {
+    background-color:   rgba(122, 80, 64, 0.22);
+    text-color:         @bone;
+    border:             0 0 0 2px solid;
+    border-color:       @urgent;
+}
+element selected.active {
+    background-color:   rgba(90, 98, 114, 0.22);
+    text-color:         @bone;
+    border:             0 0 0 2px solid;
+    border-color:       @slate;
+}
+
+element-icon {
+    size:               20px;
+    cursor:             inherit;
+    text-color:         inherit;
+}
+
+element-text {
+    cursor:             inherit;
+    text-color:         inherit;
+    vertical-align:     0.5;
+    font:               "Iosevka Term 12";
+}
+
+/* ── Mode switcher ─────────────────────────────────── */
+mode-switcher {
+    spacing:            5px;
+    margin:             10px 0 0 0;
+    background-color:   transparent;
+}
+
+button {
+    padding:            5px 9px;
+    border:             1px solid;
+    border-radius:      5px;
+    border-color:       @border-col;
+    background-color:   @bg-alt;
+    text-color:         @fg-ghost;
+    cursor:             pointer;
+    font:               "Iosevka Term 11";
+    letter-spacing:     1;
+}
+
+button selected {
+    background-color:   @selected;
+    border-color:       @border-sel;
+    text-color:         @accent;
+}
