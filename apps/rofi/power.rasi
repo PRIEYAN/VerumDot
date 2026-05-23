@@ -50,7 +50,7 @@ element selected {
 }
 
 element-text {
-    font:                "JetBrainsMono Nerd Font 48";
+    font:                "BlexMono Nerd Font 34";
     horizontal-align:    0.5;
     vertical-align:      0.5;
     text-color:          inherit;
