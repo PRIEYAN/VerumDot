@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-/home/prieyan/.config/hypr/scripts/calendar-center.py
+setsid -f /home/prieyan/.config/hypr/scripts/calendar-center.py >/tmp/calendar-center.log 2>&1

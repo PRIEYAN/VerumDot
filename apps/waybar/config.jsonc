@@ -18,14 +18,14 @@
     "exec": "/home/prieyan/.config/waybar/scripts/app-info.py",
     "interval": 1,
     "return-type": "json",
-    "on-click": "rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+    "on-click": "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
   },
 
   "custom/app_launcher": {
     "exec": "printf '{\"text\":\"⌖\",\"tooltip\":\"App launcher\"}'",
     "interval": "once",
     "return-type": "json",
-    "on-click": "rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+    "on-click": "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
   },
 
   "custom/ws1": {
@@ -88,12 +88,14 @@
   "custom/wifi": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh",
     "interval": 30,
+    "signal": 8,
     "return-type": "json",
     "on-click": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh menu"
   },
   "custom/bluetooth": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh",
     "interval": 30,
+    "signal": 9,
     "return-type": "json",
     "on-click": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh menu"
   },

@@ -65,6 +65,9 @@ tooltip label {
   margin: 0 4px;
   min-width: 28px;
   padding: 0 4px;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: none;
 }
 
 #custom-ws1.active,
@@ -76,8 +79,36 @@ tooltip label {
 #custom-ws7.active,
 #custom-ws8.active,
 #custom-ws9.active {
-  color: #89b4fa;
+  color: #e6d7bc;
   border-bottom: 2px solid #9a9488;
+}
+
+#custom-ws1:hover,
+#custom-ws2:hover,
+#custom-ws3:hover,
+#custom-ws4:hover,
+#custom-ws5:hover,
+#custom-ws6:hover,
+#custom-ws7:hover,
+#custom-ws8:hover,
+#custom-ws9:hover {
+  color: #8c8a92;
+  background: transparent;
+  box-shadow: none;
+}
+
+#custom-ws1.active:hover,
+#custom-ws2.active:hover,
+#custom-ws3.active:hover,
+#custom-ws4.active:hover,
+#custom-ws5.active:hover,
+#custom-ws6.active:hover,
+#custom-ws7.active:hover,
+#custom-ws8.active:hover,
+#custom-ws9.active:hover {
+  color: #e6d7bc;
+  background: transparent;
+  box-shadow: none;
 }
 
 #custom-screenshot {

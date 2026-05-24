@@ -188,6 +188,11 @@ def out(args):
     return cmd(args).stdout.strip()
 
 
+def refresh_waybar(page):
+    signal = "8" if page == "wifi" else "9"
+    subprocess.run(["pkill", f"-RTMIN+{signal}", "waybar"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 class NetworkCenter(Gtk.Application):
     def __init__(self, initial_page):
         super().__init__(application_id="local.hypr.NetworkCenter")
@@ -335,6 +340,7 @@ class NetworkCenter(Gtk.Application):
                     self.set_toast(label)
                     if after:
                         after()
+                    refresh_waybar(self.page)
                 else:
                     self.set_toast(result.stderr.strip() or f"{label} failed")
                 return False
@@ -424,6 +430,7 @@ class NetworkCenter(Gtk.Application):
         if cmd(["nmcli", "device", "wifi", "connect", ssid]).returncode == 0:
             self.set_toast(f"Connected to {ssid}")
             self.render_wifi()
+            refresh_waybar("wifi")
             return
         self.ask_password(f"Password for {ssid}", lambda pw: self.run_async(
             f"Connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid, "password", pw], self.render_wifi
