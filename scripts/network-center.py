@@ -47,7 +47,7 @@ button:hover {
 }
 
 .root {
-  background: rgba(8, 8, 7, 0.98);
+  background: rgba(8, 8, 7, 0.72);
   border: 1px solid rgba(222, 207, 178, 0.22);
   border-radius: 22px;
   color: #f8f4ec;

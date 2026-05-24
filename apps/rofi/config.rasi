@@ -1,105 +1,108 @@
 configuration {
     modi:                       "drun";
     show-icons:                 true;
-    display-drun:               "⌖";
+    display-drun:               "Apps";
     drun-display-format:        "{name}";
     font:                       "Iosevka Term 11";
+    matching:                   "fuzzy";
+    sorting-method:             "fzf";
 }
 
 * {
-    bg:                  rgba(14, 13, 12, 0.97);
-    bg-alt:              rgba(26, 25, 23, 0.82);
-    fg:                  #c8c0b0;
-    muted:               #7a7268;
-    accent:              #9a9488;
-    selected:            rgba(180, 168, 140, 0.09);
-    border-col:          rgba(180, 168, 140, 0.24);
+    black:              #080807;
+    white:              #fbf7ef;
+    tan:                #e6d7bc;
+    tan-muted:          #c8baa4;
+
+    bg:                 rgba(8, 8, 7, 0.72);
+    glass:              rgba(251, 247, 239, 0.075);
+    glass-hover:        rgba(230, 215, 188, 0.14);
+    border-col:         rgba(230, 215, 188, 0.22);
+    selected:           rgba(230, 215, 188, 0.18);
+
+    background-color:   transparent;
+    text-color:         @white;
 }
 
 window {
-    width:               800px;
-    height:              500px;
-    border:              1px;
-    border-color:        @border-col;
-    border-radius:       10px;
-    background-color:    @bg;
+    transparency:       "real";
+    location:           center;
+    anchor:             center;
+    width:              820px;
+    height:             540px;
+    border:             1px;
+    border-color:       @border-col;
+    border-radius:      24px;
+    background-color:   @bg;
 }
 
 mainbox {
-    padding:             20px;
-    background-color:    transparent;
-    children:            [ inputbar, listview ];
+    padding:            22px;
+    spacing:            16px;
+    background-color:   transparent;
+    children:           [ inputbar, listview ];
 }
 
 inputbar {
-    spacing:             10px;
-    padding:             10px;
-    border:              1px;
-    border-color:        @border-col;
-    background-color:    @bg-alt;
-    border-radius:       7px;
-    children:            [ textbox-verum, entry ];
+    spacing:            12px;
+    padding:            13px 16px;
+    border:             1px;
+    border-color:       @border-col;
+    background-color:   @glass;
+    border-radius:      18px;
+    children:           [ prompt, entry ];
 }
 
-textbox-verum {
-    expand:              false;
-    str:                 "VERUM";
-    font:                "Iosevka Term 14";
-    vertical-align:      0.5;
-    text-color:          @accent;
-    padding:             0 10px;
+prompt {
+    str:                "⌕";
+    font:               "Iosevka Term 16";
+    text-color:         @tan;
+    padding:            0 6px 0 0;
 }
 
 entry {
-    placeholder:         "Search Apps...";
-    placeholder-color:   @muted;
-    vertical-align:      0.5;
-    text-color:          @fg;
-    background-color:    transparent;
+    placeholder:        "Search apps";
+    placeholder-color:  @tan-muted;
+    text-color:         @white;
+    background-color:   transparent;
 }
 
 listview {
-    columns:             5;
-    lines:               3;
-    spacing:             15px;
-    padding:             20px 0 0 0;
-    cycle:               true;
-    dynamic:             true;
-    layout:              vertical;
-    background-color:    transparent;
+    columns:            5;
+    lines:              3;
+    spacing:            14px;
+    padding:            0;
+    cycle:              true;
+    dynamic:            true;
+    layout:             vertical;
+    background-color:   transparent;
 }
 
 element {
-    orientation:         vertical;
-    padding:             15px;
-    border-radius:       7px;
-    background-color:    transparent;
-    text-color:          @fg;
-}
-
-element normal.normal {
-    background-color:    transparent;
-}
-
-element alternate.normal {
-    background-color:    transparent;
+    orientation:        vertical;
+    padding:            14px;
+    border-radius:      18px;
+    border:             1px;
+    border-color:       transparent;
+    background-color:   @glass;
+    text-color:         @white;
 }
 
 element selected {
-    background-color:    @selected;
-    border:              1px;
-    border-color:        @border-col;
+    background-color:   @selected;
+    border-color:       @border-col;
+    text-color:         @tan;
 }
 
 element-icon {
-    size:                64px;
-    horizontal-align:    0.5;
-    background-color:    transparent;
+    size:               58px;
+    horizontal-align:   0.5;
+    background-color:   transparent;
 }
 
 element-text {
-    horizontal-align:    0.5;
-    vertical-align:      0.5;
-    text-color:          @fg;
-    background-color:    transparent;
+    horizontal-align:   0.5;
+    vertical-align:     0.5;
+    text-color:         inherit;
+    background-color:   transparent;
 }
