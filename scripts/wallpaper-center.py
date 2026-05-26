@@ -18,51 +18,52 @@ EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 CSS = """
 window { background: transparent; }
 .root {
-  background: rgba(8, 8, 7, 0.72);
-  border: 1px solid rgba(230, 215, 188, 0.24);
-  border-radius: 26px;
-  color: #fbf7ef;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 30px;
+  color: #111111;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.15);
 }
-.topbar { padding: 20px 22px 10px; }
-.title { font-size: 24px; font-weight: 900; }
-.subtitle { color: #c8baa4; font-size: 13px; }
+.topbar { padding: 22px 24px 12px; }
+.title { font-size: 24px; font-weight: 900; color: #111111; }
+.subtitle { color: rgba(17, 17, 17, 0.65); font-size: 13px; }
 .close {
   min-width: 38px;
   min-height: 38px;
   border-radius: 999px;
-  background: rgba(251, 247, 239, 0.08);
-  border: 1px solid rgba(230, 215, 188, 0.16);
-  color: #f0d9b2;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #111111;
   font-weight: 900;
 }
-.close:hover { background: rgba(230, 215, 188, 0.16); }
+.close:hover { background: rgba(255, 255, 255, 0.3); }
 .search {
   margin: 0 22px 12px;
   padding: 10px 14px;
   border-radius: 16px;
-  background: rgba(251, 247, 239, 0.08);
-  border: 1px solid rgba(230, 215, 188, 0.16);
-  color: #fbf7ef;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #111111;
 }
 .viewport { padding: 0 18px 18px; }
 .tile {
-  background: rgba(251, 247, 239, 0.055);
-  border: 1px solid rgba(230, 215, 188, 0.12);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 18px;
   padding: 8px;
 }
-.tile:hover { background: rgba(230, 215, 188, 0.13); }
+.tile:hover { background: rgba(255, 255, 255, 0.26); }
 .thumb {
   border-radius: 14px;
 }
 .name {
-  color: #fbf7ef;
+  color: #111111;
   font-size: 12px;
   font-weight: 800;
   margin-top: 7px;
 }
 .empty {
-  color: #c8baa4;
+  color: rgba(17, 17, 17, 0.55);
   padding: 40px;
 }
 """

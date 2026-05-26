@@ -8,7 +8,9 @@
 }
 
 window#waybar {
-  background: rgba(14, 13, 12, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
 }
 
 tooltip {
@@ -36,6 +38,21 @@ tooltip label {
 #custom-power {
   margin: 0 5px;
   padding: 0 5px;
+}
+
+#custom-app_launcher,
+#custom-wifi,
+#custom-bluetooth {
+  padding: 0 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+#custom-app_launcher:hover,
+#custom-wifi:hover,
+#custom-bluetooth:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 #clock {

@@ -17,31 +17,31 @@ window {
 }
 
 dialog {
-  background: rgba(0, 0, 0, 0.6);
-  color: #ffffff;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  color: #111111;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 entry,
 passwordentry {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 12px;
-  color: #ffffff;
+  color: #111111;
   padding: 10px;
 }
 
 button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
   border-radius: 18px;
-  color: #ffffff;
+  color: #111111;
   font-weight: 700;
 }
 
 button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .dialog-action {
@@ -49,44 +49,46 @@ button:hover {
 }
 
 .root {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 24px;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 30px;
+  color: #111111;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.16);
 }
 
 .topbar {
-  padding: 18px 20px 10px;
+  padding: 20px 22px 12px;
 }
 
 .title {
   font-size: 24px;
   font-weight: 800;
+  color: #111111;
 }
 
 .subtitle {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(17, 17, 17, 0.65);
   font-size: 12px;
 }
 
 .tabs {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  padding: 5px;
 }
 
 .tab {
   background: transparent;
   border: 0;
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(17, 17, 17, 0.7);
   font-weight: 700;
   padding: 8px 14px;
 }
 
 .tab.active {
-  background: rgba(255, 255, 255, 0.85);
-  color: #000000;
+  background: rgba(255, 255, 255, 0.9);
+  color: #111111;
 }
 
 .content {
@@ -94,8 +96,8 @@ button:hover {
 }
 
 .hero {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 18px;
   padding: 16px;
 }
@@ -106,50 +108,50 @@ button:hover {
 }
 
 .hero-status {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(17, 17, 17, 0.85);
   font-weight: 700;
 }
 
 .pill-button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.26);
   border-radius: 999px;
-  color: #ffffff;
+  color: #111111;
   font-weight: 700;
   padding: 8px 12px;
 }
 
 .pill-button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .primary {
-  background: rgba(255, 255, 255, 0.85);
-  color: #000000;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111111;
 }
 
 .danger {
-  background: rgba(255, 0, 0, 0.15);
-  color: #ffcccc;
-  border-color: rgba(255, 0, 0, 0.3);
+  background: rgba(255, 118, 117, 0.18);
+  color: #111111;
+  border-color: rgba(255, 118, 117, 0.32);
 }
 
 .section-title {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(17, 17, 17, 0.85);
   font-size: 13px;
   font-weight: 800;
   margin-top: 14px;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 16px;
   padding: 12px 14px;
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.26);
 }
 
 .name {
@@ -158,17 +160,17 @@ button:hover {
 }
 
 .meta {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(17, 17, 17, 0.55);
   font-size: 12px;
 }
 
 .empty {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(17, 17, 17, 0.55);
   padding: 28px;
 }
 
 .toast {
-  color: #ffffff;
+  color: #111111;
   font-size: 12px;
   font-weight: 700;
 }
@@ -177,10 +179,10 @@ button:hover {
   min-width: 34px;
   min-height: 34px;
   padding: 0;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 17px;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.26);
 }
 """
 

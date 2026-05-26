@@ -10,18 +10,18 @@ configuration {
 
 * {
     black:              #080807;
-    white:              #fbf7ef;
-    tan:                #e6d7bc;
-    tan-muted:          #c8baa4;
+    white:              #111111;
+    tan:                #a57f61;
+    tan-muted:          #8f7a65;
 
-    bg:                 rgba(8, 8, 7, 0.72);
-    glass:              rgba(251, 247, 239, 0.075);
-    glass-hover:        rgba(230, 215, 188, 0.14);
-    border-col:         rgba(230, 215, 188, 0.22);
-    selected:           rgba(230, 215, 188, 0.18);
+    bg:                 rgba(255, 255, 255, 0.16);
+    glass:              rgba(255, 255, 255, 0.12);
+    glass-hover:        rgba(255, 255, 255, 0.18);
+    border-col:         rgba(255, 255, 255, 0.24);
+    selected:           rgba(255, 255, 255, 0.28);
 
     background-color:   transparent;
-    text-color:         @white;
+    text-color:         @black;
 }
 
 window {
