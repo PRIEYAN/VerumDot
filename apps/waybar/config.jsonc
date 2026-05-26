@@ -2,11 +2,25 @@
   "layer": "top",
   "position": "top",
   "margin": "0 0 0 0",
-  "height": 38,
+  "height": 34,
+  "spacing": 0,
   "font": "Iosevka Term 10",
   "modules-left": ["clock", "custom/app_launcher", "custom/app_info"],
   "modules-center": ["custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5", "custom/ws6", "custom/ws7", "custom/ws8", "custom/ws9"],
-  "modules-right": ["custom/screenshot", "custom/performance", "custom/mic", "custom/volume", "custom/brightness", "custom/bluetooth", "custom/wifi", "custom/battery", "custom/power"],
+  "modules-right": [
+    "custom/screenshot",
+    "custom/sep1",
+    "custom/performance",
+    "custom/mic",
+    "custom/volume",
+    "custom/brightness",
+    "custom/sep2",
+    "custom/bluetooth",
+    "custom/wifi",
+    "custom/sep3",
+    "custom/battery",
+    "custom/power"
+  ],
 
   "clock": {
     "format": "{:%a %d %b  %H:%M}",
@@ -18,6 +32,7 @@
     "exec": "/home/prieyan/.config/waybar/scripts/app-info.py",
     "interval": 1,
     "return-type": "json",
+    "max-length": 32,
     "on-click": "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
   },
 
@@ -28,51 +43,19 @@
     "on-click": "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
   },
 
-  "custom/ws1": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 1",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 1"
-  },
-  "custom/ws2": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 2",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 2"
-  },
-  "custom/ws3": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 3",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 3"
-  },
-  "custom/ws4": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 4",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 4"
-  },
-  "custom/ws5": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 5",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 5"
-  },
-  "custom/ws6": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 6",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 6"
-  },
-  "custom/ws7": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 7",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 7"
-  },
-  "custom/ws8": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 8",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 8"
-  },
-  "custom/ws9": {
-    "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 9",
-    "return-type": "json",
-    "on-click": "hyprctl dispatch workspace 9"
-  },
+  "custom/ws1": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 1", "return-type": "json", "on-click": "hyprctl dispatch workspace 1" },
+  "custom/ws2": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 2", "return-type": "json", "on-click": "hyprctl dispatch workspace 2" },
+  "custom/ws3": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 3", "return-type": "json", "on-click": "hyprctl dispatch workspace 3" },
+  "custom/ws4": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 4", "return-type": "json", "on-click": "hyprctl dispatch workspace 4" },
+  "custom/ws5": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 5", "return-type": "json", "on-click": "hyprctl dispatch workspace 5" },
+  "custom/ws6": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 6", "return-type": "json", "on-click": "hyprctl dispatch workspace 6" },
+  "custom/ws7": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 7", "return-type": "json", "on-click": "hyprctl dispatch workspace 7" },
+  "custom/ws8": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 8", "return-type": "json", "on-click": "hyprctl dispatch workspace 8" },
+  "custom/ws9": { "exec": "/home/prieyan/.config/waybar/scripts/hypr-tabs.py 9", "return-type": "json", "on-click": "hyprctl dispatch workspace 9" },
+
+  "custom/sep1": { "exec": "echo '│'", "interval": "once", "tooltip": false },
+  "custom/sep2": { "exec": "echo '│'", "interval": "once", "tooltip": false },
+  "custom/sep3": { "exec": "echo '│'", "interval": "once", "tooltip": false },
 
   "custom/power": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-power.sh",
@@ -83,13 +66,15 @@
   "custom/battery": {
     "exec": "/home/prieyan/.config/waybar/scripts/battery-status.py",
     "interval": 30,
-    "return-type": "json"
+    "return-type": "json",
+    "max-length": 8
   },
   "custom/wifi": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh",
     "interval": 30,
     "signal": 8,
     "return-type": "json",
+    "max-length": 14,
     "on-click": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh menu"
   },
   "custom/bluetooth": {
@@ -97,12 +82,14 @@
     "interval": 30,
     "signal": 9,
     "return-type": "json",
+    "max-length": 14,
     "on-click": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh menu"
   },
   "custom/volume": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-volume.sh",
     "interval": 1,
     "return-type": "json",
+    "max-length": 8,
     "on-click": "/home/prieyan/.config/hypr/scripts/waybar-volume.sh menu",
     "on-scroll-up": "pamixer -i 5",
     "on-scroll-down": "pamixer -d 5"
@@ -111,6 +98,7 @@
     "exec": "/home/prieyan/.config/waybar/scripts/brightness-status.sh",
     "interval": 10,
     "return-type": "json",
+    "max-length": 8,
     "on-scroll-up": "/home/prieyan/.config/waybar/scripts/brightness-adjust.sh up",
     "on-scroll-down": "/home/prieyan/.config/waybar/scripts/brightness-adjust.sh down"
   },
@@ -118,18 +106,21 @@
     "exec": "/home/prieyan/.config/waybar/scripts/mic-status.sh",
     "interval": 2,
     "return-type": "json",
+    "max-length": 4,
     "on-click": "/home/prieyan/.config/waybar/scripts/mic-toggle.sh"
   },
   "custom/performance": {
     "exec": "/home/prieyan/.config/waybar/scripts/performance-mode.sh",
     "interval": 10,
     "return-type": "json",
+    "max-length": 10,
     "on-click": "/home/prieyan/.config/waybar/scripts/performance-mode.sh toggle"
   },
   "custom/screenshot": {
     "exec": "/home/prieyan/.config/waybar/scripts/screenshot.sh",
     "interval": 60,
     "return-type": "json",
+    "max-length": 4,
     "on-click": "/home/prieyan/.config/waybar/scripts/screenshot.sh take"
   }
 }
