@@ -14,15 +14,15 @@ from gi.repository import Gdk, Gtk
 CSS = """
 window { background: transparent; }
 .root {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(18, 22, 32, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 28px;
-  color: #111111;
-  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.16);
+  color: #f4f7ff;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
 }
 .topbar { padding: 22px 24px 12px; }
-.title { font-size: 24px; font-weight: 900; color: #111111; }
-.subtitle { color: rgba(17, 17, 17, 0.65); font-size: 13px; }
+.title { font-size: 24px; font-weight: 900; color: #f4f7ff; }
+.subtitle { color: rgba(244, 247, 255, 0.72); font-size: 13px; }
 .nav {
   min-width: 38px;
   min-height: 38px;
@@ -35,26 +35,26 @@ window { background: transparent; }
 .nav:hover { background: rgba(255, 255, 255, 0.32); }
 .calendar { padding: 10px 22px 22px; }
 .weekday {
-  color: rgba(17, 17, 17, 0.7);
+  color: rgba(244, 247, 255, 0.72);
   font-size: 12px;
   font-weight: 900;
 }
 .day {
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
-  min-width: 58px;
-  min-height: 54px;
-  color: #111111;
-  font-size: 16px;
+  min-width: 48px;
+  min-height: 48px;
+  color: #f4f7ff;
+  font-size: 14px;
   font-weight: 800;
 }
 .muted {
-  color: rgba(17, 17, 17, 0.35);
+  color: rgba(244, 247, 255, 0.45);
 }
 .today {
-  background: rgba(255, 255, 255, 0.9);
-  color: #111111;
+  background: rgba(255, 255, 255, 0.18);
+  color: #f4f7ff;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 """
@@ -84,7 +84,7 @@ class CalendarCenter(Gtk.Application):
 
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title("Calendar Center")
-        self.window.set_default_size(520, 520)
+        self.window.set_default_size(460, 460)
         self.window.set_resizable(False)
         self.window.set_decorated(False)
 

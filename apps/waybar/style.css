@@ -8,9 +8,8 @@
 }
 
 window#waybar {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(18px);
+  background: rgba(15, 18, 24, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 tooltip {
@@ -45,8 +44,8 @@ tooltip label {
 #custom-bluetooth {
   padding: 0 8px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 #custom-app_launcher:hover,

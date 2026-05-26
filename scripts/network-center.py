@@ -17,10 +17,10 @@ window {
 }
 
 dialog {
-  background: rgba(255, 255, 255, 0.15);
-  color: #111111;
+  background: rgba(18, 24, 36, 0.78);
+  color: #eef2ff;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 entry,
@@ -33,10 +33,10 @@ passwordentry {
 }
 
 button {
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 18px;
-  color: #111111;
+  color: #eef2ff;
   font-weight: 700;
 }
 
@@ -49,11 +49,11 @@ button:hover {
 }
 
 .root {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(18, 24, 36, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 30px;
-  color: #111111;
-  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.16);
+  color: #eef2ff;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
 }
 
 .topbar {
@@ -63,16 +63,16 @@ button:hover {
 .title {
   font-size: 24px;
   font-weight: 800;
-  color: #111111;
+  color: #f4f7ff;
 }
 
 .subtitle {
-  color: rgba(17, 17, 17, 0.65);
+  color: rgba(244, 247, 255, 0.75);
   font-size: 12px;
 }
 
 .tabs {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 5px;
 }
@@ -81,14 +81,14 @@ button:hover {
   background: transparent;
   border: 0;
   border-radius: 12px;
-  color: rgba(17, 17, 17, 0.7);
+  color: rgba(244, 247, 255, 0.8);
   font-weight: 700;
   padding: 8px 14px;
 }
 
 .tab.active {
-  background: rgba(255, 255, 255, 0.9);
-  color: #111111;
+  background: rgba(255, 255, 255, 0.18);
+  color: #f4f7ff;
 }
 
 .content {
@@ -96,8 +96,8 @@ button:hover {
 }
 
 .hero {
-  background: rgba(255, 255, 255, 0.20);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 18px;
   padding: 16px;
 }
@@ -105,16 +105,17 @@ button:hover {
 .hero-title {
   font-size: 16px;
   font-weight: 800;
+  color: #f4f7ff;
 }
 
 .hero-status {
-  color: rgba(17, 17, 17, 0.85);
+  color: rgba(244, 247, 255, 0.82);
   font-weight: 700;
 }
 
 .pill-button {
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   color: #111111;
   font-weight: 700;
@@ -137,7 +138,7 @@ button:hover {
 }
 
 .section-title {
-  color: rgba(17, 17, 17, 0.85);
+  color: rgba(244, 247, 255, 0.8);
   font-size: 13px;
   font-weight: 800;
   margin-top: 14px;
@@ -227,7 +228,7 @@ class NetworkCenter(Gtk.Application):
 
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title("Network Center")
-        self.window.set_default_size(560, 720)
+        self.window.set_default_size(520, 640)
         self.window.set_resizable(False)
         self.window.set_decorated(False)
 

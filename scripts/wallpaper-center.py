@@ -18,15 +18,15 @@ EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 CSS = """
 window { background: transparent; }
 .root {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(12, 16, 24, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 30px;
-  color: #111111;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.15);
+  color: #f4f7ff;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
 }
 .topbar { padding: 22px 24px 12px; }
-.title { font-size: 24px; font-weight: 900; color: #111111; }
-.subtitle { color: rgba(17, 17, 17, 0.65); font-size: 13px; }
+.title { font-size: 24px; font-weight: 900; color: #f4f7ff; }
+.subtitle { color: rgba(244, 247, 255, 0.75); font-size: 13px; }
 .close {
   min-width: 38px;
   min-height: 38px;
@@ -36,14 +36,14 @@ window { background: transparent; }
   color: #111111;
   font-weight: 900;
 }
-.close:hover { background: rgba(255, 255, 255, 0.3); }
+.close:hover { background: rgba(255, 255, 255, 0.34); }
 .search {
   margin: 0 22px 12px;
   padding: 10px 14px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #111111;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f4f7ff;
 }
 .viewport { padding: 0 18px 18px; }
 .tile {
@@ -57,13 +57,13 @@ window { background: transparent; }
   border-radius: 14px;
 }
 .name {
-  color: #111111;
+  color: #f4f7ff;
   font-size: 12px;
   font-weight: 800;
   margin-top: 7px;
 }
 .empty {
-  color: rgba(17, 17, 17, 0.55);
+  color: rgba(244, 247, 255, 0.75);
   padding: 40px;
 }
 """
@@ -90,7 +90,7 @@ class WallpaperCenter(Gtk.Application):
 
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title("Wallpaper Center")
-        self.window.set_default_size(760, 620)
+        self.window.set_default_size(680, 540)
         self.window.set_resizable(False)
         self.window.set_decorated(False)
 
@@ -129,8 +129,8 @@ class WallpaperCenter(Gtk.Application):
         self.flow = Gtk.FlowBox()
         self.flow.set_max_children_per_line(3)
         self.flow.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.flow.set_row_spacing(12)
-        self.flow.set_column_spacing(12)
+        self.flow.set_row_spacing(10)
+        self.flow.set_column_spacing(10)
         scroll.set_child(self.flow)
         root.append(scroll)
 
@@ -184,7 +184,7 @@ class WallpaperCenter(Gtk.Application):
         picture = Gtk.Picture.new_for_filename(str(path))
         picture.add_css_class("thumb")
         picture.set_content_fit(Gtk.ContentFit.COVER)
-        picture.set_size_request(210, 118)
+        picture.set_size_request(180, 100)
         label = Gtk.Label(label=path.stem, xalign=0)
         label.add_css_class("name")
         label.set_ellipsize(Pango.EllipsizeMode.END)

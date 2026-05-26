@@ -9,27 +9,27 @@ configuration {
 }
 
 * {
-    black:              #080807;
-    white:              #111111;
-    tan:                #a57f61;
-    tan-muted:          #8f7a65;
+    black:              #fbfbff;
+    white:              #fbfbff;
+    tan:                #bfa27e;
+    tan-muted:          #a38d74;
 
-    bg:                 rgba(255, 255, 255, 0.16);
-    glass:              rgba(255, 255, 255, 0.12);
-    glass-hover:        rgba(255, 255, 255, 0.18);
-    border-col:         rgba(255, 255, 255, 0.24);
-    selected:           rgba(255, 255, 255, 0.28);
+    bg:                 rgba(16, 20, 28, 0.78);
+    glass:              rgba(255, 255, 255, 0.08);
+    glass-hover:        rgba(255, 255, 255, 0.14);
+    border-col:         rgba(255, 255, 255, 0.16);
+    selected:           rgba(255, 255, 255, 0.18);
 
     background-color:   transparent;
-    text-color:         @black;
+    text-color:         @white;
 }
 
 window {
     transparency:       "real";
     location:           center;
     anchor:             center;
-    width:              820px;
-    height:             540px;
+    width:              700px;
+    height:             480px;
     border:             1px;
     border-color:       @border-col;
     border-radius:      24px;
@@ -44,18 +44,18 @@ mainbox {
 }
 
 inputbar {
-    spacing:            12px;
-    padding:            13px 16px;
+    spacing:            10px;
+    padding:            12px 14px;
     border:             1px;
     border-color:       @border-col;
     background-color:   @glass;
-    border-radius:      18px;
+    border-radius:      16px;
     children:           [ prompt, entry ];
 }
 
 prompt {
     str:                "⌕";
-    font:               "Iosevka Term 16";
+    font:               "Iosevka Term 14";
     text-color:         @tan;
     padding:            0 6px 0 0;
 }
@@ -68,9 +68,9 @@ entry {
 }
 
 listview {
-    columns:            5;
-    lines:              3;
-    spacing:            14px;
+    columns:            4;
+    lines:              4;
+    spacing:            12px;
     padding:            0;
     cycle:              true;
     dynamic:            true;
@@ -80,11 +80,11 @@ listview {
 
 element {
     orientation:        vertical;
-    padding:            14px;
-    border-radius:      18px;
+    padding:            10px;
+    border-radius:      16px;
     border:             1px;
-    border-color:       transparent;
-    background-color:   @glass;
+    border-color:       rgba(255, 255, 255, 0.12);
+    background-color:   transparent;
     text-color:         @white;
 }
 
@@ -95,7 +95,7 @@ element selected {
 }
 
 element-icon {
-    size:               58px;
+    size:               44px;
     horizontal-align:   0.5;
     background-color:   transparent;
 }
