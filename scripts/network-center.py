@@ -17,29 +17,31 @@ window {
 }
 
 dialog {
-  background: #080807;
-  color: #f8f4ec;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 entry,
 passwordentry {
-  background: rgba(248, 244, 236, 0.08);
-  border: 1px solid rgba(222, 207, 178, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  color: #f8f4ec;
+  color: #ffffff;
   padding: 10px;
 }
 
 button {
-  background: rgba(248, 244, 236, 0.08);
-  border: 1px solid rgba(222, 207, 178, 0.16);
-  border-radius: 999px;
-  color: #f8f4ec;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  color: #ffffff;
   font-weight: 700;
 }
 
 button:hover {
-  background: rgba(222, 207, 178, 0.15);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .dialog-action {
@@ -47,10 +49,10 @@ button:hover {
 }
 
 .root {
-  background: rgba(8, 8, 7, 0.72);
-  border: 1px solid rgba(222, 207, 178, 0.22);
-  border-radius: 22px;
-  color: #f8f4ec;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  color: #ffffff;
 }
 
 .topbar {
@@ -63,12 +65,12 @@ button:hover {
 }
 
 .subtitle {
-  color: #a79c8c;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
 }
 
 .tabs {
-  background: rgba(222, 207, 178, 0.10);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 4px;
 }
@@ -76,15 +78,15 @@ button:hover {
 .tab {
   background: transparent;
   border: 0;
-  border-radius: 13px;
-  color: #c4b7a3;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 700;
   padding: 8px 14px;
 }
 
 .tab.active {
-  background: #e4d1ad;
-  color: #0b0a08;
+  background: rgba(255, 255, 255, 0.85);
+  color: #000000;
 }
 
 .content {
@@ -92,9 +94,9 @@ button:hover {
 }
 
 .hero {
-  background: rgba(222, 207, 178, 0.09);
-  border: 1px solid rgba(222, 207, 178, 0.18);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
   padding: 16px;
 }
 
@@ -104,49 +106,50 @@ button:hover {
 }
 
 .hero-status {
-  color: #e4d1ad;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 700;
 }
 
 .pill-button {
-  background: rgba(248, 244, 236, 0.08);
-  border: 1px solid rgba(222, 207, 178, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  color: #f8f4ec;
+  color: #ffffff;
   font-weight: 700;
   padding: 8px 12px;
 }
 
 .pill-button:hover {
-  background: rgba(222, 207, 178, 0.15);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .primary {
-  background: #e4d1ad;
-  color: #0b0a08;
+  background: rgba(255, 255, 255, 0.85);
+  color: #000000;
 }
 
 .danger {
-  background: rgba(248, 244, 236, 0.06);
-  color: #f1dfc1;
+  background: rgba(255, 0, 0, 0.15);
+  color: #ffcccc;
+  border-color: rgba(255, 0, 0, 0.3);
 }
 
 .section-title {
-  color: #f1dfc1;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
   font-weight: 800;
   margin-top: 14px;
 }
 
 .card {
-  background: rgba(248, 244, 236, 0.055);
-  border: 1px solid rgba(222, 207, 178, 0.12);
-  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
   padding: 12px 14px;
 }
 
 .card:hover {
-  background: rgba(222, 207, 178, 0.11);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .name {
@@ -155,17 +158,17 @@ button:hover {
 }
 
 .meta {
-  color: #a79c8c;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
 }
 
 .empty {
-  color: #a79c8c;
+  color: rgba(255, 255, 255, 0.6);
   padding: 28px;
 }
 
 .toast {
-  color: #e4d1ad;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 700;
 }
@@ -174,8 +177,10 @@ button:hover {
   min-width: 34px;
   min-height: 34px;
   padding: 0;
-  background: rgba(248, 244, 236, 0.06);
-  color: #e4d1ad;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 17px;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 """
 
@@ -420,21 +425,19 @@ class NetworkCenter(Gtk.Application):
         text.append(meta)
         card.append(text)
         label = "Connected" if row["active"] else "Connect"
-        card.append(self.button(label, lambda _, ssid=row["ssid"]: self.connect_wifi(ssid), primary=not row["active"]))
+        card.append(self.button(label, lambda _, r=row: self.connect_wifi(r["ssid"], r["security"]), primary=not row["active"]))
         return card
 
-    def connect_wifi(self, ssid):
+    def connect_wifi(self, ssid, security):
         if cmd(["nmcli", "connection", "show", ssid]).returncode == 0:
             self.run_async(f"Connected to {ssid}", ["nmcli", "connection", "up", ssid], self.render_wifi)
             return
-        if cmd(["nmcli", "device", "wifi", "connect", ssid]).returncode == 0:
-            self.set_toast(f"Connected to {ssid}")
-            self.render_wifi()
-            refresh_waybar("wifi")
-            return
-        self.ask_password(f"Password for {ssid}", lambda pw: self.run_async(
-            f"Connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid, "password", pw], self.render_wifi
-        ))
+        if security == "Secured":
+            self.ask_password(f"Password for {ssid}", lambda pw: self.run_async(
+                f"Connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid, "password", pw], self.render_wifi
+            ))
+        else:
+            self.run_async(f"Connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid], self.render_wifi)
 
     def disconnect_wifi(self):
         device = ""

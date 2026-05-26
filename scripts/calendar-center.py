@@ -14,46 +14,46 @@ from gi.repository import Gdk, Gtk
 CSS = """
 window { background: transparent; }
 .root {
-  background: rgba(8, 8, 7, 0.72);
-  border: 1px solid rgba(230, 215, 188, 0.24);
-  border-radius: 26px;
-  color: #fbf7ef;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  color: #ffffff;
 }
 .topbar { padding: 20px 22px 8px; }
 .title { font-size: 24px; font-weight: 900; }
-.subtitle { color: #c8baa4; font-size: 13px; }
+.subtitle { color: rgba(255, 255, 255, 0.7); font-size: 13px; }
 .nav {
   min-width: 38px;
   min-height: 38px;
-  border-radius: 999px;
-  background: rgba(251, 247, 239, 0.08);
-  border: 1px solid rgba(230, 215, 188, 0.16);
-  color: #f0d9b2;
+  border-radius: 19px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   font-weight: 900;
 }
-.nav:hover { background: rgba(230, 215, 188, 0.16); }
+.nav:hover { background: rgba(255, 255, 255, 0.2); }
 .calendar { padding: 10px 22px 22px; }
 .weekday {
-  color: #c8baa4;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   font-weight: 900;
 }
 .day {
-  background: rgba(251, 247, 239, 0.055);
-  border: 1px solid rgba(230, 215, 188, 0.10);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   min-width: 58px;
   min-height: 54px;
-  color: #fbf7ef;
+  color: #ffffff;
   font-size: 16px;
   font-weight: 800;
 }
 .muted {
-  color: rgba(200, 186, 164, 0.38);
+  color: rgba(255, 255, 255, 0.3);
 }
 .today {
-  background: #e6d7bc;
-  color: #080807;
+  background: rgba(255, 255, 255, 0.85);
+  color: #000000;
 }
 """
 
