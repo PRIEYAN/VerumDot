@@ -13,49 +13,82 @@ from gi.repository import Gdk, Gtk
 
 CSS = """
 window { background: transparent; }
+
 .root {
-  background: rgba(18, 22, 32, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 28px;
-  color: #f4f7ff;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: "Iosevka Term", monospace;
 }
-.topbar { padding: 22px 24px 12px; }
-.title { font-size: 24px; font-weight: 900; color: #f4f7ff; }
-.subtitle { color: rgba(244, 247, 255, 0.72); font-size: 13px; }
-.nav {
-  min-width: 38px;
-  min-height: 38px;
-  border-radius: 19px;
-  background: rgba(255, 255, 255, 0.24);
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  color: #111111;
-  font-weight: 900;
+
+.topbar {
+  padding: 14px 16px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.nav:hover { background: rgba(255, 255, 255, 0.32); }
-.calendar { padding: 10px 22px 22px; }
-.weekday {
-  color: rgba(244, 247, 255, 0.72);
-  font-size: 12px;
-  font-weight: 900;
-}
-.day {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  min-width: 48px;
-  min-height: 48px;
-  color: #f4f7ff;
+
+.month {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
 }
+
+.date {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  letter-spacing: 0.3px;
+}
+
+.nav {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.nav:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.calendar {
+  padding: 10px 16px 16px;
+}
+
+.weekday {
+  color: rgba(255, 255, 255, 0.30);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+}
+
+.day {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  min-width: 36px;
+  min-height: 32px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-weight: 500;
+}
+
 .muted {
-  color: rgba(244, 247, 255, 0.45);
+  color: rgba(255, 255, 255, 0.18);
 }
+
 .today {
-  background: rgba(255, 255, 255, 0.18);
-  color: #f4f7ff;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  background: #ffffff;
+  color: #000000;
+  font-weight: 700;
 }
 """
 
@@ -84,7 +117,7 @@ class CalendarCenter(Gtk.Application):
 
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title("Calendar Center")
-        self.window.set_default_size(460, 460)
+        self.window.set_default_size(380, 400)
         self.window.set_resizable(False)
         self.window.set_decorated(False)
 
@@ -92,28 +125,29 @@ class CalendarCenter(Gtk.Application):
         root.add_css_class("root")
         self.window.set_child(root)
 
-        topbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        topbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         topbar.add_css_class("topbar")
         root.append(topbar)
 
-        heading = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        heading = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
         heading.set_hexpand(True)
         self.title = Gtk.Label(xalign=0)
-        self.title.add_css_class("title")
+        self.title.add_css_class("month")
         self.subtitle = Gtk.Label(xalign=0)
-        self.subtitle.add_css_class("subtitle")
+        self.subtitle.add_css_class("date")
         heading.append(self.title)
         heading.append(self.subtitle)
         topbar.append(heading)
 
-        for label, callback in (("‹", self.prev_month), ("Today", self.go_today), ("›", self.next_month), ("x", self.close)):
+        for label, callback in (("<", self.prev_month), ("o", self.go_today), (">", self.next_month), ("x", self.close)):
             button = Gtk.Button(label=label)
             button.add_css_class("nav")
             button.connect("clicked", callback)
             topbar.append(button)
 
-        self.grid = Gtk.Grid(column_spacing=8, row_spacing=8)
+        self.grid = Gtk.Grid(column_spacing=2, row_spacing=2)
         self.grid.add_css_class("calendar")
+        self.grid.set_column_homogeneous(True)
         root.append(self.grid)
 
         key = Gtk.EventControllerKey()
@@ -139,10 +173,10 @@ class CalendarCenter(Gtk.Application):
     def render(self):
         self.clear_grid()
         current = dt.date(self.year, self.month, 1)
-        self.title.set_text(current.strftime("%B %Y"))
-        self.subtitle.set_text(self.today.strftime("%A, %d %B %Y"))
+        self.title.set_text(current.strftime("%B %Y").upper())
+        self.subtitle.set_text(self.today.strftime("%a %d %b %Y").lower())
 
-        for col, name in enumerate(("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")):
+        for col, name in enumerate(("M", "T", "W", "T", "F", "S", "S")):
             label = Gtk.Label(label=name)
             label.add_css_class("weekday")
             self.grid.attach(label, col, 0, 1, 1)

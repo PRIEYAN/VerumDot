@@ -12,178 +12,227 @@ from gi.repository import Gdk, GLib, Gtk
 
 
 CSS = """
-window {
-  background: transparent;
-}
+window { background: transparent; }
 
 dialog {
-  background: rgba(18, 24, 36, 0.78);
-  color: #eef2ff;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.92);
+  color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 entry,
 passwordentry {
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 12px;
-  color: #111111;
-  padding: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 8px;
+  caret-color: #ffffff;
+}
+
+entry:focus,
+passwordentry:focus {
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 button {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 18px;
-  color: #eef2ff;
-  font-weight: 700;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  color: #ffffff;
+  font-weight: 500;
+  box-shadow: none;
 }
 
 button:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.30);
 }
 
 .dialog-action {
-  padding: 8px 14px;
+  padding: 6px 12px;
 }
 
 .root {
-  background: rgba(18, 24, 36, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 30px;
-  color: #eef2ff;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: "Iosevka Term", monospace;
 }
 
 .topbar {
-  padding: 20px 22px 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #f4f7ff;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
 }
 
 .subtitle {
-  color: rgba(244, 247, 255, 0.75);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 10px;
 }
 
 .tabs {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 5px;
+  background: transparent;
+  padding: 8px 16px 0;
+  border: none;
 }
 
 .tab {
   background: transparent;
-  border: 0;
-  border-radius: 12px;
-  color: rgba(244, 247, 255, 0.8);
-  font-weight: 700;
-  padding: 8px 14px;
+  border: none;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  color: rgba(255, 255, 255, 0.40);
+  font-weight: 600;
+  padding: 6px 10px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  box-shadow: none;
+}
+
+.tab:hover {
+  color: rgba(255, 255, 255, 0.75);
+  background: transparent;
 }
 
 .tab.active {
-  background: rgba(255, 255, 255, 0.18);
-  color: #f4f7ff;
+  color: #ffffff;
+  border-bottom: 1px solid #ffffff;
 }
 
 .content {
-  padding: 0 20px 20px;
+  padding: 10px 16px 14px;
 }
 
 .hero {
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 18px;
-  padding: 16px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 12px;
 }
 
 .hero-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: #f4f7ff;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
 }
 
 .hero-status {
-  color: rgba(244, 247, 255, 0.82);
-  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  font-size: 10px;
 }
 
 .pill-button {
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  color: #111111;
-  font-weight: 700;
-  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  padding: 4px 8px;
+  font-size: 10px;
+  box-shadow: none;
 }
 
 .pill-button:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.30);
+  color: #ffffff;
 }
 
 .primary {
-  background: rgba(255, 255, 255, 0.92);
-  color: #111111;
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.primary:hover {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000000;
 }
 
 .danger {
-  background: rgba(255, 118, 117, 0.18);
-  color: #111111;
-  border-color: rgba(255, 118, 117, 0.32);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+.danger:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
 }
 
 .section-title {
-  color: rgba(244, 247, 255, 0.8);
-  font-size: 13px;
-  font-weight: 800;
-  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 10px;
+  margin-bottom: 2px;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 16px;
-  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0;
+  padding: 10px 4px;
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .name {
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
 }
 
 .meta {
-  color: rgba(17, 17, 17, 0.55);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 9px;
+  letter-spacing: 0.3px;
 }
 
 .empty {
-  color: rgba(17, 17, 17, 0.55);
-  padding: 28px;
+  color: rgba(255, 255, 255, 0.40);
+  padding: 24px;
+  font-size: 11px;
 }
 
 .toast {
-  color: #111111;
-  font-size: 12px;
-  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 0 0;
 }
 
 .close-button {
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 17px;
-  color: #111111;
-  border: 1px solid rgba(255, 255, 255, 0.26);
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  background: transparent;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.55);
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
 }
 """
 
@@ -228,7 +277,7 @@ class NetworkCenter(Gtk.Application):
 
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title("Network Center")
-        self.window.set_default_size(520, 640)
+        self.window.set_default_size(420, 560)
         self.window.set_resizable(False)
         self.window.set_decorated(False)
 
@@ -236,42 +285,42 @@ class NetworkCenter(Gtk.Application):
         root.add_css_class("root")
         self.window.set_child(root)
 
-        topbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        topbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         topbar.add_css_class("topbar")
         root.append(topbar)
 
-        heading = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        heading = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
         heading.set_hexpand(True)
-        title = Gtk.Label(label="Network Center", xalign=0)
+        title = Gtk.Label(label="NETWORK", xalign=0)
         title.add_css_class("title")
-        subtitle = Gtk.Label(label="Fast connections, no maze.", xalign=0)
+        subtitle = Gtk.Label(label="connections", xalign=0)
         subtitle.add_css_class("subtitle")
         heading.append(title)
         heading.append(subtitle)
         topbar.append(heading)
-
-        tabs = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
-        tabs.add_css_class("tabs")
-        self.wifi_tab = self.tab_button("Wi-Fi", "wifi")
-        self.bt_tab = self.tab_button("Bluetooth", "bluetooth")
-        tabs.append(self.wifi_tab)
-        tabs.append(self.bt_tab)
-        topbar.append(tabs)
 
         close = Gtk.Button(label="x")
         close.add_css_class("close-button")
         close.connect("clicked", lambda *_: self.window.close())
         topbar.append(close)
 
-        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        tabs = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        tabs.add_css_class("tabs")
+        self.wifi_tab = self.tab_button("WI-FI", "wifi")
+        self.bt_tab = self.tab_button("BLUETOOTH", "bluetooth")
+        tabs.append(self.wifi_tab)
+        tabs.append(self.bt_tab)
+        root.append(tabs)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         content.add_css_class("content")
         root.append(content)
 
-        hero = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        hero = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         hero.add_css_class("hero")
         content.append(hero)
 
-        hero_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        hero_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         hero.append(hero_row)
         self.hero_title = Gtk.Label(xalign=0)
         self.hero_title.add_css_class("hero-title")
@@ -281,18 +330,19 @@ class NetworkCenter(Gtk.Application):
         hero_row.append(self.hero_title)
         hero_row.append(self.hero_status)
 
-        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         hero.append(actions)
         self.action_box = actions
 
-        section = Gtk.Label(label="Available", xalign=0)
+        section = Gtk.Label(label="AVAILABLE", xalign=0)
         section.add_css_class("section-title")
         content.append(section)
 
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll.set_min_content_height(430)
-        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scroll.set_min_content_height(340)
+        scroll.set_vexpand(True)
+        self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         scroll.set_child(self.list_box)
         content.append(scroll)
 
@@ -370,23 +420,23 @@ class NetworkCenter(Gtk.Application):
         self.clear(self.list_box)
         current = self.current_ssid()
         enabled = out(["nmcli", "radio", "wifi"]) or "unknown"
-        self.hero_title.set_text(current if current else "Wi-Fi")
-        self.hero_status.set_text("Connected" if current else enabled.title())
+        self.hero_title.set_text(current if current else "wi-fi")
+        self.hero_status.set_text("connected" if current else enabled.lower())
 
-        self.action_box.append(self.button("Refresh", lambda *_: self.render_wifi()))
-        self.action_box.append(self.button("Disconnect", lambda *_: self.disconnect_wifi(), danger=True))
-        self.action_box.append(self.button("Power", lambda *_: self.toggle_wifi()))
-        self.action_box.append(self.button("Hidden", lambda *_: self.hidden_wifi()))
-        self.action_box.append(self.button("Hotspot", lambda *_: self.hotspot_wifi(), primary=True))
+        self.action_box.append(self.button("refresh", lambda *_: self.render_wifi()))
+        self.action_box.append(self.button("disconnect", lambda *_: self.disconnect_wifi(), danger=True))
+        self.action_box.append(self.button("power", lambda *_: self.toggle_wifi()))
+        self.action_box.append(self.button("hidden", lambda *_: self.hidden_wifi()))
+        self.action_box.append(self.button("hotspot", lambda *_: self.hotspot_wifi(), primary=True))
 
-        self.list_box.append(self.empty("Scanning networks..."))
-        self.run_async("Networks refreshed", ["nmcli", "device", "wifi", "rescan"], self.populate_wifi)
+        self.list_box.append(self.empty("scanning..."))
+        self.run_async("networks refreshed", ["nmcli", "device", "wifi", "rescan"], self.populate_wifi)
 
     def populate_wifi(self):
         self.clear(self.list_box)
         rows = self.wifi_rows()
         if not rows:
-            self.list_box.append(self.empty("No Wi-Fi networks found."))
+            self.list_box.append(self.empty("no networks found"))
             return
         for row in rows:
             self.list_box.append(self.wifi_card(row))
@@ -411,36 +461,36 @@ class NetworkCenter(Gtk.Application):
                 "active": parts[0] == "*",
                 "ssid": parts[1],
                 "signal": parts[2],
-                "security": "Open" if parts[3] in ("", "--") else "Secured",
+                "security": "open" if parts[3] in ("", "--") else "secured",
             })
         return rows
 
     def wifi_card(self, row):
-        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         card.add_css_class("card")
-        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         text.set_hexpand(True)
         name = Gtk.Label(label=row["ssid"], xalign=0)
         name.add_css_class("name")
-        meta = Gtk.Label(label=f'{row["signal"]}% signal · {row["security"]}', xalign=0)
+        meta = Gtk.Label(label=f'{row["signal"]}% / {row["security"]}', xalign=0)
         meta.add_css_class("meta")
         text.append(name)
         text.append(meta)
         card.append(text)
-        label = "Connected" if row["active"] else "Connect"
+        label = "connected" if row["active"] else "connect"
         card.append(self.button(label, lambda _, r=row: self.connect_wifi(r["ssid"], r["security"]), primary=not row["active"]))
         return card
 
     def connect_wifi(self, ssid, security):
         if cmd(["nmcli", "connection", "show", ssid]).returncode == 0:
-            self.run_async(f"Connected to {ssid}", ["nmcli", "connection", "up", ssid], self.render_wifi)
+            self.run_async(f"connected to {ssid}", ["nmcli", "connection", "up", ssid], self.render_wifi)
             return
-        if security == "Secured":
-            self.ask_password(f"Password for {ssid}", lambda pw: self.run_async(
-                f"Connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid, "password", pw], self.render_wifi
+        if security == "secured":
+            self.ask_password(f"password for {ssid}", lambda pw: self.run_async(
+                f"connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid, "password", pw], self.render_wifi
             ))
         else:
-            self.run_async(f"Connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid], self.render_wifi)
+            self.run_async(f"connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid], self.render_wifi)
 
     def disconnect_wifi(self):
         device = ""
@@ -450,23 +500,23 @@ class NetworkCenter(Gtk.Application):
                 device = parts[0]
                 break
         if device:
-            self.run_async("Wi-Fi disconnected", ["nmcli", "device", "disconnect", device], self.render_wifi)
+            self.run_async("wi-fi disconnected", ["nmcli", "device", "disconnect", device], self.render_wifi)
 
     def toggle_wifi(self):
         state = out(["nmcli", "radio", "wifi"])
-        self.run_async("Wi-Fi power changed", ["nmcli", "radio", "wifi", "off" if state == "enabled" else "on"], self.render_wifi)
+        self.run_async("wi-fi power changed", ["nmcli", "radio", "wifi", "off" if state == "enabled" else "on"], self.render_wifi)
 
     def hidden_wifi(self):
-        self.ask_text("Hidden network name", lambda ssid: self.ask_password(
-            f"Password for {ssid}", lambda pw: self.run_async(
-                f"Connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid, "password", pw, "hidden", "yes"], self.render_wifi
+        self.ask_text("hidden network name", lambda ssid: self.ask_password(
+            f"password for {ssid}", lambda pw: self.run_async(
+                f"connected to {ssid}", ["nmcli", "device", "wifi", "connect", ssid, "password", pw, "hidden", "yes"], self.render_wifi
             )
         ))
 
     def hotspot_wifi(self):
-        self.ask_text("Hotspot name", lambda ssid: self.ask_password(
-            "Hotspot password", lambda pw: self.run_async(
-                "Hotspot started", ["nmcli", "device", "wifi", "hotspot", "ssid", ssid, "password", pw], self.render_wifi
+        self.ask_text("hotspot name", lambda ssid: self.ask_password(
+            "hotspot password", lambda pw: self.run_async(
+                "hotspot started", ["nmcli", "device", "wifi", "hotspot", "ssid", ssid, "password", pw], self.render_wifi
             )
         ), default="Hotspot")
 
@@ -475,16 +525,16 @@ class NetworkCenter(Gtk.Application):
         self.clear(self.list_box)
         connected = out(["bluetoothctl", "devices", "Connected"]).replace("Device ", "")
         powered = self.bluetooth_powered()
-        self.hero_title.set_text(connected.split(" ", 1)[1] if " " in connected else "Bluetooth")
-        self.hero_status.set_text("Connected" if connected else ("On" if powered == "yes" else "Off"))
+        self.hero_title.set_text(connected.split(" ", 1)[1] if " " in connected else "bluetooth")
+        self.hero_status.set_text("connected" if connected else ("on" if powered == "yes" else "off"))
 
-        self.action_box.append(self.button("Refresh", lambda *_: self.render_bluetooth()))
-        self.action_box.append(self.button("Disconnect", lambda *_: self.disconnect_bluetooth(), danger=True))
-        self.action_box.append(self.button("Power", lambda *_: self.toggle_bluetooth()))
-        self.action_box.append(self.button("Pair by MAC", lambda *_: self.pair_by_mac(), primary=True))
+        self.action_box.append(self.button("refresh", lambda *_: self.render_bluetooth()))
+        self.action_box.append(self.button("disconnect", lambda *_: self.disconnect_bluetooth(), danger=True))
+        self.action_box.append(self.button("power", lambda *_: self.toggle_bluetooth()))
+        self.action_box.append(self.button("pair", lambda *_: self.pair_by_mac(), primary=True))
 
-        self.list_box.append(self.empty("Scanning devices..."))
-        self.run_async("Devices refreshed", ["bluetoothctl", "power", "on"], self.scan_bluetooth)
+        self.list_box.append(self.empty("scanning..."))
+        self.run_async("devices refreshed", ["bluetoothctl", "power", "on"], self.scan_bluetooth)
 
     def scan_bluetooth(self):
         def worker():
@@ -507,7 +557,7 @@ class NetworkCenter(Gtk.Application):
         self.clear(self.list_box)
         rows = self.bluetooth_rows()
         if not rows:
-            self.list_box.append(self.empty("No Bluetooth devices found."))
+            self.list_box.append(self.empty("no devices found"))
             return
         for row in rows:
             self.list_box.append(self.bluetooth_card(row))
@@ -529,58 +579,58 @@ class NetworkCenter(Gtk.Application):
         paired = "Paired: yes" in info
         trusted = "Trusted: yes" in info
         if connected:
-            return "Connected"
+            return "connected"
         if paired and trusted:
-            return "Paired · Trusted"
+            return "paired / trusted"
         if paired:
-            return "Paired"
-        return "New"
+            return "paired"
+        return "new"
 
     def bluetooth_card(self, row):
-        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         card.add_css_class("card")
-        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         text.set_hexpand(True)
         name = Gtk.Label(label=row["name"], xalign=0)
         name.add_css_class("name")
-        meta = Gtk.Label(label=f'{row["state"]} · {row["mac"]}', xalign=0)
+        meta = Gtk.Label(label=f'{row["state"]} / {row["mac"]}', xalign=0)
         meta.add_css_class("meta")
         text.append(name)
         text.append(meta)
         card.append(text)
-        if row["state"] == "Connected":
-            card.append(self.button("Disconnect", lambda _, mac=row["mac"]: self.bt_disconnect(mac), danger=True))
+        if row["state"] == "connected":
+            card.append(self.button("disconnect", lambda _, mac=row["mac"]: self.bt_disconnect(mac), danger=True))
         else:
-            card.append(self.button("Connect", lambda _, mac=row["mac"]: self.bt_connect(mac), primary=True))
-        card.append(self.button("Forget", lambda _, mac=row["mac"]: self.bt_forget(mac), danger=True))
+            card.append(self.button("connect", lambda _, mac=row["mac"]: self.bt_connect(mac), primary=True))
+        card.append(self.button("forget", lambda _, mac=row["mac"]: self.bt_forget(mac), danger=True))
         return card
 
     def bt_connect(self, mac):
-        self.run_async("Device connected", ["bluetoothctl", "connect", mac], self.render_bluetooth)
+        self.run_async("device connected", ["bluetoothctl", "connect", mac], self.render_bluetooth)
 
     def bt_disconnect(self, mac):
-        self.run_async("Device disconnected", ["bluetoothctl", "disconnect", mac], self.render_bluetooth)
+        self.run_async("device disconnected", ["bluetoothctl", "disconnect", mac], self.render_bluetooth)
 
     def bt_forget(self, mac):
-        self.run_async("Device forgotten", ["bluetoothctl", "remove", mac], self.render_bluetooth)
+        self.run_async("device forgotten", ["bluetoothctl", "remove", mac], self.render_bluetooth)
 
     def disconnect_bluetooth(self):
         rows = self.bluetooth_rows()
         for row in rows:
-            if row["state"] == "Connected":
+            if row["state"] == "connected":
                 self.bt_disconnect(row["mac"])
                 return
-        self.set_toast("No connected Bluetooth device")
+        self.set_toast("no connected device")
 
     def toggle_bluetooth(self):
         action = "off" if self.bluetooth_powered() == "yes" else "on"
-        self.run_async("Bluetooth power changed", ["bluetoothctl", "power", action], self.render_bluetooth)
+        self.run_async("bluetooth power changed", ["bluetoothctl", "power", action], self.render_bluetooth)
 
     def pair_by_mac(self):
-        self.ask_text("Device MAC address", lambda mac: self.run_async(
-            "Device paired", ["bluetoothctl", "pair", mac], lambda: self.run_async(
-                "Device trusted", ["bluetoothctl", "trust", mac], lambda: self.run_async(
-                    "Device connected", ["bluetoothctl", "connect", mac], self.render_bluetooth
+        self.ask_text("device mac address", lambda mac: self.run_async(
+            "device paired", ["bluetoothctl", "pair", mac], lambda: self.run_async(
+                "device trusted", ["bluetoothctl", "trust", mac], lambda: self.run_async(
+                    "device connected", ["bluetoothctl", "connect", mac], self.render_bluetooth
                 )
             )
         ))
@@ -592,17 +642,17 @@ class NetworkCenter(Gtk.Application):
 
     def ask_text(self, title, callback, default=""):
         dialog = Gtk.Dialog(title=title, transient_for=self.window, modal=True)
-        cancel = dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
-        done = dialog.add_button("Done", Gtk.ResponseType.OK)
+        cancel = dialog.add_button("cancel", Gtk.ResponseType.CANCEL)
+        done = dialog.add_button("done", Gtk.ResponseType.OK)
         cancel.add_css_class("dialog-action")
         done.add_css_class("dialog-action")
         done.add_css_class("primary")
         entry = Gtk.Entry(text=default)
         entry.set_activates_default(True)
-        entry.set_margin_top(16)
-        entry.set_margin_bottom(16)
-        entry.set_margin_start(16)
-        entry.set_margin_end(16)
+        entry.set_margin_top(14)
+        entry.set_margin_bottom(14)
+        entry.set_margin_start(14)
+        entry.set_margin_end(14)
         dialog.get_content_area().append(entry)
         dialog.set_default_response(Gtk.ResponseType.OK)
         dialog.connect("response", lambda d, r: self.handle_entry_response(d, r, entry, callback))
@@ -610,17 +660,17 @@ class NetworkCenter(Gtk.Application):
 
     def ask_password(self, title, callback):
         dialog = Gtk.Dialog(title=title, transient_for=self.window, modal=True)
-        cancel = dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
-        connect = dialog.add_button("Connect", Gtk.ResponseType.OK)
+        cancel = dialog.add_button("cancel", Gtk.ResponseType.CANCEL)
+        connect = dialog.add_button("connect", Gtk.ResponseType.OK)
         cancel.add_css_class("dialog-action")
         connect.add_css_class("dialog-action")
         connect.add_css_class("primary")
         entry = Gtk.PasswordEntry()
         entry.set_activates_default(True)
-        entry.set_margin_top(16)
-        entry.set_margin_bottom(16)
-        entry.set_margin_start(16)
-        entry.set_margin_end(16)
+        entry.set_margin_top(14)
+        entry.set_margin_bottom(14)
+        entry.set_margin_start(14)
+        entry.set_margin_end(14)
         dialog.get_content_area().append(entry)
         dialog.set_default_response(Gtk.ResponseType.OK)
         dialog.connect("response", lambda d, r: self.handle_entry_response(d, r, entry, callback))

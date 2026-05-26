@@ -1,103 +1,111 @@
 configuration {
     modi:                       "drun";
     show-icons:                 true;
-    display-drun:               "Apps";
+    display-drun:               "";
     drun-display-format:        "{name}";
-    font:                       "Iosevka Term 11";
+    font:                       "Iosevka Term 10";
     matching:                   "fuzzy";
     sorting-method:             "fzf";
 }
 
 * {
-    black:              #fbfbff;
-    white:              #fbfbff;
-    tan:                #bfa27e;
-    tan-muted:          #a38d74;
-
-    bg:                 rgba(16, 20, 28, 0.78);
-    glass:              rgba(255, 255, 255, 0.08);
-    glass-hover:        rgba(255, 255, 255, 0.14);
-    border-col:         rgba(255, 255, 255, 0.16);
-    selected:           rgba(255, 255, 255, 0.18);
+    bg:                 rgba(0, 0, 0, 0.78);
+    fg:                 #ffffff;
+    fg-muted:           rgba(255, 255, 255, 0.55);
+    line:               rgba(255, 255, 255, 0.12);
+    line-strong:        rgba(255, 255, 255, 0.22);
+    hover:              rgba(255, 255, 255, 0.06);
 
     background-color:   transparent;
-    text-color:         @white;
+    text-color:         @fg;
 }
 
 window {
     transparency:       "real";
     location:           center;
     anchor:             center;
-    width:              700px;
-    height:             480px;
-    border:             1px;
-    border-color:       @border-col;
-    border-radius:      24px;
+    width:              520px;
+    height:             360px;
+    border:             0px;
+    border-radius:      14px;
     background-color:   @bg;
 }
 
 mainbox {
-    padding:            22px;
-    spacing:            16px;
+    padding:            14px;
+    spacing:            10px;
     background-color:   transparent;
     children:           [ inputbar, listview ];
 }
 
 inputbar {
-    spacing:            10px;
-    padding:            12px 14px;
-    border:             1px;
-    border-color:       @border-col;
-    background-color:   @glass;
-    border-radius:      16px;
+    spacing:            8px;
+    padding:            8px 10px;
+    border:             0px 0px 1px 0px;
+    border-color:       @line;
+    background-color:   transparent;
     children:           [ prompt, entry ];
 }
 
 prompt {
-    str:                "⌕";
-    font:               "Iosevka Term 14";
-    text-color:         @tan;
+    str:                "/";
+    font:               "Iosevka Term 11";
+    text-color:         @fg-muted;
     padding:            0 6px 0 0;
 }
 
 entry {
-    placeholder:        "Search apps";
-    placeholder-color:  @tan-muted;
-    text-color:         @white;
+    placeholder:        "search";
+    placeholder-color:  @fg-muted;
+    text-color:         @fg;
     background-color:   transparent;
 }
 
 listview {
-    columns:            4;
-    lines:              4;
-    spacing:            12px;
-    padding:            0;
+    columns:            5;
+    lines:              3;
+    spacing:            4px;
+    padding:            4px 0 0 0;
     cycle:              true;
     dynamic:            true;
     layout:             vertical;
     background-color:   transparent;
+    fixed-height:       true;
+    scrollbar:          false;
 }
 
 element {
     orientation:        vertical;
-    padding:            10px;
-    border-radius:      16px;
-    border:             1px;
-    border-color:       rgba(255, 255, 255, 0.12);
+    padding:            10px 6px;
+    border:             0px;
+    border-radius:      8px;
     background-color:   transparent;
-    text-color:         @white;
+    text-color:         @fg;
+    spacing:            6px;
 }
 
-element selected {
-    background-color:   @selected;
-    border-color:       @border-col;
-    text-color:         @tan;
+element normal.normal,
+element alternate.normal {
+    background-color:   transparent;
+    text-color:         @fg;
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color:   @hover;
+    text-color:         @fg;
+    border:             0px;
 }
 
 element-icon {
-    size:               44px;
+    size:               40px;
     horizontal-align:   0.5;
     background-color:   transparent;
+    border:             0px;
+    border-radius:      0px;
+    padding:            0px;
+    margin:             0px;
 }
 
 element-text {
@@ -105,4 +113,5 @@ element-text {
     vertical-align:     0.5;
     text-color:         inherit;
     background-color:   transparent;
+    font:               "Iosevka Term 9";
 }

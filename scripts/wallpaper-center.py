@@ -17,54 +17,99 @@ EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
 CSS = """
 window { background: transparent; }
+
 .root {
-  background: rgba(12, 16, 24, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 30px;
-  color: #f4f7ff;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: "Iosevka Term", monospace;
 }
-.topbar { padding: 22px 24px 12px; }
-.title { font-size: 24px; font-weight: 900; color: #f4f7ff; }
-.subtitle { color: rgba(244, 247, 255, 0.75); font-size: 13px; }
+
+.topbar {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 10px;
+}
+
 .close {
-  min-width: 38px;
-  min-height: 38px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #111111;
-  font-weight: 900;
-}
-.close:hover { background: rgba(255, 255, 255, 0.34); }
-.search {
-  margin: 0 22px 12px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #f4f7ff;
-}
-.viewport { padding: 0 18px 18px; }
-.tile {
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 18px;
-  padding: 8px;
-}
-.tile:hover { background: rgba(255, 255, 255, 0.26); }
-.thumb {
-  border-radius: 14px;
-}
-.name {
-  color: #f4f7ff;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
   font-size: 12px;
-  font-weight: 800;
-  margin-top: 7px;
+  box-shadow: none;
 }
+
+.close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.search {
+  margin: 10px 16px 0;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #ffffff;
+  font-size: 11px;
+  box-shadow: none;
+  caret-color: #ffffff;
+}
+
+.search:focus {
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+.viewport {
+  padding: 10px 12px 12px;
+}
+
+.tile {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0;
+  box-shadow: none;
+}
+
+.tile:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: transparent;
+}
+
+.thumb {
+  border-radius: 0;
+}
+
+.name {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 4px 6px;
+  letter-spacing: 0.3px;
+}
+
 .empty {
-  color: rgba(244, 247, 255, 0.75);
-  padding: 40px;
+  color: rgba(255, 255, 255, 0.40);
+  padding: 30px;
+  font-size: 11px;
 }
 """
 
@@ -90,7 +135,7 @@ class WallpaperCenter(Gtk.Application):
 
         self.window = Gtk.ApplicationWindow(application=self)
         self.window.set_title("Wallpaper Center")
-        self.window.set_default_size(680, 540)
+        self.window.set_default_size(560, 480)
         self.window.set_resizable(False)
         self.window.set_decorated(False)
 
@@ -98,13 +143,13 @@ class WallpaperCenter(Gtk.Application):
         root.add_css_class("root")
         self.window.set_child(root)
 
-        topbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        topbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         topbar.add_css_class("topbar")
         root.append(topbar)
 
-        heading = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        heading = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
         heading.set_hexpand(True)
-        title = Gtk.Label(label="Wallpapers", xalign=0)
+        title = Gtk.Label(label="WALLPAPERS", xalign=0)
         title.add_css_class("title")
         self.subtitle = Gtk.Label(xalign=0)
         self.subtitle.add_css_class("subtitle")
@@ -119,18 +164,21 @@ class WallpaperCenter(Gtk.Application):
 
         self.search = Gtk.SearchEntry()
         self.search.add_css_class("search")
-        self.search.set_placeholder_text("Search wallpapers")
+        self.search.set_placeholder_text("filter")
         self.search.connect("search-changed", lambda *_: self.render())
         root.append(self.search)
 
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.add_css_class("viewport")
+        scroll.set_vexpand(True)
         self.flow = Gtk.FlowBox()
         self.flow.set_max_children_per_line(3)
+        self.flow.set_min_children_per_line(3)
         self.flow.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.flow.set_row_spacing(10)
-        self.flow.set_column_spacing(10)
+        self.flow.set_row_spacing(8)
+        self.flow.set_column_spacing(8)
+        self.flow.set_homogeneous(True)
         scroll.set_child(self.flow)
         root.append(scroll)
 
@@ -165,9 +213,9 @@ class WallpaperCenter(Gtk.Application):
 
         query = self.search.get_text().lower() if self.search else ""
         files = [path for path in self.files if query in path.name.lower()]
-        self.subtitle.set_text(f"{len(files)} images in {WALLPAPER_DIR}")
+        self.subtitle.set_text(f"{len(files)} files")
         if not files:
-            empty = Gtk.Label(label="No wallpapers found.")
+            empty = Gtk.Label(label="no wallpapers found")
             empty.add_css_class("empty")
             self.flow.append(empty)
             return
@@ -184,8 +232,8 @@ class WallpaperCenter(Gtk.Application):
         picture = Gtk.Picture.new_for_filename(str(path))
         picture.add_css_class("thumb")
         picture.set_content_fit(Gtk.ContentFit.COVER)
-        picture.set_size_request(180, 100)
-        label = Gtk.Label(label=path.stem, xalign=0)
+        picture.set_size_request(160, 90)
+        label = Gtk.Label(label=path.stem.lower(), xalign=0)
         label.add_css_class("name")
         label.set_ellipsize(Pango.EllipsizeMode.END)
         box.append(picture)
