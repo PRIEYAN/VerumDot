@@ -4,24 +4,28 @@
   font-family: "Iosevka Term", "Symbols Nerd Font", "BlexMono Nerd Font", "JetBrains Mono", monospace;
   font-size: 13px;
   min-height: 0;
-  color: #c8c0b0;
+  color: #ffffff;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
 }
 
 window#waybar {
-  background: rgba(15, 18, 24, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(0, 0, 0, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 tooltip {
-  background: rgba(14, 13, 12, 0.97);
-  border: 1px solid rgba(180, 168, 140, 0.24);
+  background: rgba(0, 0, 0, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
 }
 
 tooltip label {
-  color: #c8c0b0;
-  padding: 6px;
+  color: #ffffff;
+  padding: 6px 8px;
+  font-size: 11px;
 }
+
+/* ───────────────── Left & shared modules ───────────────── */
 
 #clock,
 #custom-app_launcher,
@@ -35,38 +39,51 @@ tooltip label {
 #custom-wifi,
 #custom-battery,
 #custom-power {
-  margin: 0 5px;
-  padding: 0 5px;
-}
-
-#custom-app_launcher,
-#custom-wifi,
-#custom-bluetooth {
+  margin: 0 2px;
   padding: 0 8px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  background: transparent;
+  border-radius: 6px;
 }
 
+#clock:hover,
 #custom-app_launcher:hover,
+#custom-app_info:hover,
+#custom-screenshot:hover,
+#custom-performance:hover,
+#custom-mic:hover,
+#custom-volume:hover,
+#custom-brightness:hover,
+#custom-bluetooth:hover,
 #custom-wifi:hover,
-#custom-bluetooth:hover {
-  background: rgba(255, 255, 255, 0.14);
+#custom-battery:hover,
+#custom-power:hover {
+  color: rgba(255, 255, 255, 0.60);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 #clock {
-  color: #9a9488;
-  margin-left: 8px;
+  margin-left: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 #custom-app_launcher {
-  color: #9a9488;
+  font-size: 14px;
+  padding: 0 10px;
 }
 
 #custom-app_info {
-  color: #c8c0b0;
   min-width: 190px;
+  color: rgba(255, 255, 255, 0.75);
 }
+
+#custom-app_info:hover {
+  color: #ffffff;
+  background: transparent;
+}
+
+/* ───────────────── Workspaces ───────────────── */
 
 #custom-ws1,
 #custom-ws2,
@@ -77,26 +94,12 @@ tooltip label {
 #custom-ws7,
 #custom-ws8,
 #custom-ws9 {
-  color: #8c8a92;
+  color: rgba(255, 255, 255, 0.35);
   margin: 0 4px;
-  min-width: 28px;
-  padding: 0 4px;
+  min-width: 24px;
+  padding: 0 6px;
   background: transparent;
-  box-shadow: none;
-  text-shadow: none;
-}
-
-#custom-ws1.active,
-#custom-ws2.active,
-#custom-ws3.active,
-#custom-ws4.active,
-#custom-ws5.active,
-#custom-ws6.active,
-#custom-ws7.active,
-#custom-ws8.active,
-#custom-ws9.active {
-  color: #e6d7bc;
-  border-bottom: 2px solid #9a9488;
+  border-bottom: 1px solid transparent;
 }
 
 #custom-ws1:hover,
@@ -108,9 +111,21 @@ tooltip label {
 #custom-ws7:hover,
 #custom-ws8:hover,
 #custom-ws9:hover {
-  color: #8c8a92;
+  color: rgba(255, 255, 255, 0.85);
   background: transparent;
-  box-shadow: none;
+}
+
+#custom-ws1.active,
+#custom-ws2.active,
+#custom-ws3.active,
+#custom-ws4.active,
+#custom-ws5.active,
+#custom-ws6.active,
+#custom-ws7.active,
+#custom-ws8.active,
+#custom-ws9.active {
+  color: #ffffff;
+  border-bottom: 1px solid #ffffff;
 }
 
 #custom-ws1.active:hover,
@@ -122,44 +137,28 @@ tooltip label {
 #custom-ws7.active:hover,
 #custom-ws8.active:hover,
 #custom-ws9.active:hover {
-  color: #e6d7bc;
+  color: #ffffff;
   background: transparent;
-  box-shadow: none;
 }
 
-#custom-screenshot {
-  color: #b4befe;
-}
+/* ───────────────── Right side — uniform white icons ───────────────── */
 
-#custom-performance {
-  color: #f9e2af;
-}
-
-#custom-mic {
-  color: #f38ba8;
-}
-
-#custom-volume {
-  color: #9a9488;
-}
-
-#custom-brightness {
-  color: #fab387;
-}
-
-#custom-bluetooth {
-  color: #9a9488;
-}
-
-#custom-wifi {
-  color: #9a9488;
-}
-
-#custom-battery {
-  color: #cba6f7;
+#custom-screenshot,
+#custom-performance,
+#custom-mic,
+#custom-volume,
+#custom-brightness,
+#custom-bluetooth,
+#custom-wifi,
+#custom-battery,
+#custom-power {
+  color: #ffffff;
+  font-size: 13px;
+  min-width: 24px;
+  padding: 0 7px;
+  margin: 0 1px;
 }
 
 #custom-power {
-  color: #9a9488;
-  margin-right: 8px;
+  margin-right: 10px;
 }
