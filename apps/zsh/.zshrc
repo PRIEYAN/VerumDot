@@ -64,10 +64,41 @@ export PS1="%F{red}%1~ >%f "
 export RPROMPT=%B%(?."%F{green}%?%f :)"."%F{red}%?%f :(")%b
 # prompt_context() {}
 
-# source /home/ekoehler/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# ─── Autocorrection ────────────────────────────────────
+setopt CORRECT          # correct mistyped commands
+setopt CORRECT_ALL      # also correct arguments / filenames
+SPROMPT="correct '%R' to '%r'? [Yes/No/Abort/Edit] "
+
+# ─── History (powers autosuggestions) ─────────────────
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt SHARE_HISTORY
+setopt INC_APPEND_HISTORY
+
+# ─── Plugins (install via pacman, see below) ──────────
+# pacman -S zsh-autosuggestions zsh-syntax-highlighting zsh-completions
+[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && \
+    source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && \
+    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fpath=(/usr/share/zsh/site-functions $fpath)
+
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6272a4"
+
+# tab-completion menu
+autoload -Uz compinit && compinit
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'l:|=* r:|=*'
 
 alias ls="ls --color=auto"
 alias l="ls -la --color=auto"
+
+# thefuck (corrects the previous command) – optional
+command -v thefuck >/dev/null && eval "$(thefuck --alias fk)"
 
 # Run fastfetch on startup
 # fastfetch
