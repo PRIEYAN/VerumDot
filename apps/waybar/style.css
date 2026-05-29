@@ -45,6 +45,7 @@ tooltip label {
 #custom-wifi,
 #custom-battery,
 #custom-power,
+#idle_inhibitor,
 #custom-sep1,
 #custom-sep2,
 #custom-sep3 {
@@ -56,21 +57,30 @@ tooltip label {
   margin: 0;
 }
 
+/* Left side keeps the subtle dim-on-hover */
 #clock:hover,
-#custom-app_launcher:hover,
-#custom-app_info:hover,
-#custom-screenshot:hover,
-#custom-performance:hover,
-#custom-mic:hover,
-#custom-volume:hover,
-#custom-brightness:hover,
-#custom-bluetooth:hover,
-#custom-wifi:hover,
-#custom-battery:hover,
-#custom-power:hover {
+#custom-app_launcher:hover {
   color: rgba(255, 255, 255, 0.55);
   background: transparent;
 }
+
+/* ──────────────────────────────────────────────────────────
+   Right side: white by default, each icon lights its own
+   accent colour on hover. Tweak the hex values to taste.
+   ────────────────────────────────────────────────────────── */
+#custom-screenshot:hover   { color: #7aa2f7; }  /* blue   */
+#custom-performance:hover  { color: #e0af68; }  /* amber  */
+#idle_inhibitor:hover      { color: #e0af68; }  /* amber  */
+#custom-mic:hover          { color: #f7768e; }  /* red    */
+#custom-volume:hover       { color: #7dcfff; }  /* cyan   */
+#custom-brightness:hover   { color: #f9e2af; }  /* yellow */
+#custom-bluetooth:hover    { color: #2ac3de; }  /* teal   */
+#custom-wifi:hover         { color: #bb9af7; }  /* purple */
+#custom-battery:hover      { color: #9ece6a; }  /* green  */
+
+/* Stay-awake toggle: amber while keeping the system awake */
+#idle_inhibitor.activated   { color: #e0af68; }
+#idle_inhibitor.deactivated { color: #ffffff; }
 
 /* ──────────────────────────────────────────────────────────
    Left
@@ -161,6 +171,7 @@ tooltip label {
 
 #custom-screenshot,
 #custom-performance,
+#idle_inhibitor,
 #custom-mic,
 #custom-volume,
 #custom-brightness,
