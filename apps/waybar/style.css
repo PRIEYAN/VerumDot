@@ -183,15 +183,8 @@ tooltip label {
   min-width: 16px;
 }
 
-#custom-wifi {
-  /* keep SSID label compact */
-  max-width: 110px;
-}
-
-#custom-app_info {
-  /* truncate path display */
-  max-width: 220px;
-}
+/* NOTE: GTK CSS has no `max-width`. Module width is capped via
+   `max-length` (character count) in config.jsonc instead. */
 
 #custom-sep1,
 #custom-sep2,
