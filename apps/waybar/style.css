@@ -36,6 +36,7 @@ tooltip label {
 #clock,
 #custom-app_launcher,
 #custom-app_info,
+#custom-spotify,
 #custom-screenshot,
 #custom-performance,
 #custom-mic,
@@ -104,6 +105,21 @@ tooltip label {
 
 #custom-app_info:hover {
   color: #ffffff;
+}
+
+/* Spotify now-playing — green icon, dims label */
+#custom-spotify {
+  color: rgba(255, 255, 255, 0.70);
+  padding-left: 10px;
+  letter-spacing: 0.2px;
+}
+
+#custom-spotify.playing {
+  color: #1db954;
+}
+
+#custom-spotify:hover {
+  color: #1db954;
 }
 
 /* ──────────────────────────────────────────────────────────

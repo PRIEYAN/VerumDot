@@ -5,7 +5,7 @@
   "height": 34,
   "spacing": 0,
   "font": "Iosevka Term 10",
-  "modules-left": ["clock", "custom/app_launcher", "custom/app_info"],
+  "modules-left": ["clock", "custom/app_launcher", "custom/app_info", "custom/spotify"],
   "modules-center": ["custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5", "custom/ws6", "custom/ws7", "custom/ws8", "custom/ws9"],
   "modules-right": [
     "custom/screenshot",
@@ -35,6 +35,17 @@
     "return-type": "json",
     "max-length": 32,
     "on-click": "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+  },
+
+  "custom/spotify": {
+    "exec": "/home/prieyan/.config/hypr/scripts/waybar-spotify.sh",
+    "interval": 2,
+    "return-type": "json",
+    "max-length": 40,
+    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-spotify.sh menu",
+    "on-click-middle": "/home/prieyan/.config/hypr/scripts/waybar-spotify.sh toggle",
+    "on-scroll-up": "playerctl -p spotify next",
+    "on-scroll-down": "playerctl -p spotify previous"
   },
 
   "custom/app_launcher": {
