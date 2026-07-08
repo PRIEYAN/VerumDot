@@ -36,6 +36,7 @@ tooltip label {
 #clock,
 #custom-app_launcher,
 #custom-app_info,
+#custom-spotify,
 #custom-screenshot,
 #custom-performance,
 #custom-mic,
@@ -104,6 +105,21 @@ tooltip label {
 
 #custom-app_info:hover {
   color: #ffffff;
+}
+
+/* Spotify now-playing — green icon, dims label */
+#custom-spotify {
+  color: rgba(255, 255, 255, 0.70);
+  padding-left: 10px;
+  letter-spacing: 0.2px;
+}
+
+#custom-spotify.playing {
+  color: #1db954;
+}
+
+#custom-spotify:hover {
+  color: #1db954;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -183,15 +199,8 @@ tooltip label {
   min-width: 16px;
 }
 
-#custom-wifi {
-  /* keep SSID label compact */
-  max-width: 110px;
-}
-
-#custom-app_info {
-  /* truncate path display */
-  max-width: 220px;
-}
+/* NOTE: GTK CSS has no `max-width`. Module width is capped via
+   `max-length` (character count) in config.jsonc instead. */
 
 #custom-sep1,
 #custom-sep2,
