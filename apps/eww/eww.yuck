@@ -98,7 +98,7 @@
        :tooltip spotify_tooltip
        :onclick "eww open --toggle spotify-center"
        :onmiddleclick "/home/prieyan/.config/hypr/scripts/status-spotify.sh toggle"
-       :onscroll "if [ '${SCROLL}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
+       :onscroll "if [ '{}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
        spotify_text))
 
 (defwidget workspace-button [num]
@@ -137,13 +137,13 @@
   (box :class "module volume ${volume_class}"
        :tooltip volume_tooltip
        :onclick "/home/prieyan/.config/hypr/scripts/status-volume.sh menu"
-       :onscroll "if [ '${SCROLL}' = 'up' ]; then pamixer -i 5; else pamixer -d 5; fi"
+       :onscroll "if [ '{}' = 'up' ]; then pamixer -i 5; else pamixer -d 5; fi"
        volume_text))
 
 (defwidget brightness []
   (box :class "module brightness"
        :tooltip brightness_tooltip
-       :onscroll "if [ '${SCROLL}' = 'up' ]; then /home/prieyan/.config/waybar/scripts/brightness-adjust.sh up; else /home/prieyan/.config/waybar/scripts/brightness-adjust.sh down; fi"
+       :onscroll "if [ '{}' = 'up' ]; then /home/prieyan/.config/waybar/scripts/brightness-adjust.sh up; else /home/prieyan/.config/waybar/scripts/brightness-adjust.sh down; fi"
        brightness_text))
 
 (defwidget bluetooth []
@@ -200,8 +200,8 @@
   (box :class "center-root" :orientation "v" :space-evenly false
        (box :class "center-topbar" :orientation "h" :space-evenly false
             (box :orientation "v" :space-evenly false :hexpand true
-                 (label :class "center-title" :halign "start" :text cal_data.title)
-                 (label :class "center-subtitle" :halign "start" :text cal_data.subtitle))
+                 (label :class "center-title" :halign "start" :text {cal_data.title})
+                 (label :class "center-subtitle" :halign "start" :text {cal_data.subtitle}))
             (button :class "center-nav" :onclick "/home/prieyan/.config/hypr/scripts/calendar-nav.sh prev" "<")
             (button :class "center-nav" :onclick "/home/prieyan/.config/hypr/scripts/calendar-nav.sh today" "o")
             (button :class "center-nav" :onclick "/home/prieyan/.config/hypr/scripts/calendar-nav.sh next" ">")
@@ -212,7 +212,7 @@
                  (label :class "cal-weekday" :text "W") (label :class "cal-weekday" :text "T")
                  (label :class "cal-weekday" :text "F") (label :class "cal-weekday" :text "S")
                  (label :class "cal-weekday" :text "S"))
-            (for week in cal_data.weeks
+            (for week in {cal_data.weeks}
               (box :orientation "h" :space-evenly true
                    (for d in week
                      (label :class "cal-day ${d.muted ? "muted" : ""} ${d.today ? "today" : ""}"
@@ -238,7 +238,7 @@
               :placeholder "filter")
        (scroll :class "wallpaper-scroll" :vscroll true :hscroll false
                (box :class "wallpaper-grid" :orientation "v" :space-evenly false
-                    (for row in wallpaper_data.rows
+                    (for row in {wallpaper_data.rows}
                       (box :orientation "h" :space-evenly true
                            (for item in row
                              (wallpaper-tile :item item))))))))
@@ -248,7 +248,7 @@
           :onclick "/home/prieyan/.config/hypr/scripts/wallpaper.sh set '${item.path}'; eww close wallpaper-center"
           (box :orientation "v" :space-evenly false
                (box :class "wallpaper-thumb" :style "background-image: url('${item.path}');")
-               (label :class "wallpaper-name" :text item.name))))
+               (label :class "wallpaper-name" :text {item.name}))))
 
 (deflisten wallpaper_data :initial "{\"count\":0,\"rows\":[]}"
   `/home/prieyan/.config/hypr/scripts/wallpaper-watch.sh`)
@@ -324,7 +324,7 @@
             (scroll :class "net-scroll" :vscroll true :hscroll false
                     (box :class "net-list" :orientation "v" :space-evenly false
                          (for row in {network_data.rows ?: []}
-                           (net-row-item :page network_data.page :row row)))))))
+                           (net-row-item :page {network_data.page} :row row)))))))
 
 (defwidget net-wifi-only-actions []
   (box :orientation "h" :space-evenly false :visible {network_data.page == "wifi"}

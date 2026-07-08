@@ -14,9 +14,6 @@
 .module {
   padding: 0 8px;
   min-height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .separator {
@@ -34,11 +31,6 @@
 
 // Custom module styles
 .spotify {
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
   &.playing {
     color: #1DB954;
   }
@@ -132,7 +124,6 @@
 
 .workspace-button {
   padding: 0 6px;
-  cursor: pointer;
   border-radius: 4px;
   transition: all 200ms ease;
 
@@ -147,11 +138,10 @@
 }
 
 .app-launcher {
-  cursor: pointer;
   font-size: 14pt;
 
   &:hover {
-    transform: scale(1.1);
+    background-color: rgba(255, 255, 255, 0.1);
   }
 }
 
