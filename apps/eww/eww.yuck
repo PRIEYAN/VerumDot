@@ -51,16 +51,17 @@
   (box :class "bar"
        :orientation "h"
        :space-evenly false
-       (box :class "left-modules" :space-evenly false :halign "start"
+       :valign "center"
+       (box :class "left-modules" :space-evenly false :halign "start" :spacing 6
             (clock)
             (app-launcher)
             (app-info)
             (spotify-widget))
-       (box :class "center-modules" :space-evenly false :hexpand true :halign "center"
+       (box :class "center-modules" :space-evenly false :hexpand true :halign "center" :spacing 4
             (workspace-button :num 1) (workspace-button :num 2) (workspace-button :num 3)
             (workspace-button :num 4) (workspace-button :num 5) (workspace-button :num 6)
             (workspace-button :num 7) (workspace-button :num 8) (workspace-button :num 9))
-       (box :class "right-modules" :space-evenly false :halign "end"
+       (box :class "right-modules" :space-evenly false :halign "end" :spacing 6
             (screenshot)
             (idle-inhibitor)
             (separator)
