@@ -7,13 +7,13 @@
 .bar {
   background-color: rgba(0, 0, 0, 0.8);
   color: #ffffff;
-  padding: 2px 8px;
+  padding: 0 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .module {
-  padding: 0 8px;
-  min-height: 34px;
+  padding: 0 6px;
+  min-height: 0;
 }
 
 .separator {
@@ -118,12 +118,11 @@
 
 .clock {
   font-weight: bold;
-  min-width: 200px;
-  text-align: center;
 }
 
 .workspace-button {
   padding: 0 6px;
+  min-width: 20px;
   border-radius: 4px;
   transition: all 200ms ease;
 
