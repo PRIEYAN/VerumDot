@@ -15,35 +15,35 @@
   :monitor 0
   :geometry (geometry :x "-10px" :y "48px" :width "380px" :height "280px" :anchor "top right")
   :stacking "overlay"
-  :windowtype "popup"
+  :windowtype "normal"
   (power-center-window))
 
 (defwindow calendar-center
   :monitor 0
   :geometry (geometry :x "10px" :y "48px" :width "380px" :height "400px" :anchor "top left")
   :stacking "overlay"
-  :windowtype "popup"
+  :windowtype "normal"
   (calendar-center-window))
 
 (defwindow wallpaper-center
   :monitor 0
   :geometry (geometry :x "-10px" :y "48px" :width "560px" :height "480px" :anchor "top right")
   :stacking "overlay"
-  :windowtype "popup"
+  :windowtype "normal"
   (wallpaper-center-window))
 
 (defwindow spotify-center
   :monitor 0
   :geometry (geometry :x "10px" :y "48px" :width "340px" :height "470px" :anchor "top left")
   :stacking "overlay"
-  :windowtype "popup"
+  :windowtype "normal"
   (spotify-center-window))
 
 (defwindow network-center
   :monitor 0
   :geometry (geometry :x "-10px" :y "48px" :width "420px" :height "560px" :anchor "top right")
   :stacking "overlay"
-  :windowtype "popup"
+  :windowtype "normal"
   (network-center-window))
 
 ;; ===================== Layout =====================
@@ -58,9 +58,8 @@
             (app-info)
             (spotify-widget))
        (box :class "center-modules" :space-evenly false :hexpand true :halign "center" :spacing 4
-            (workspace-button :num 1) (workspace-button :num 2) (workspace-button :num 3)
-            (workspace-button :num 4) (workspace-button :num 5) (workspace-button :num 6)
-            (workspace-button :num 7) (workspace-button :num 8) (workspace-button :num 9))
+            (for ws in workspaces
+              (workspace-button :ws ws)))
        (box :class "right-modules" :space-evenly false :halign "end" :spacing 6
             (screenshot)
             (idle-inhibitor)
@@ -102,10 +101,11 @@
        :onscroll "if [ '{}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
        spotify_text))
 
-(defwidget workspace-button [num]
-  (box :class "workspace-button ${hypr_active_ws == num ? "active" : ""}"
-       :onclick "hyprctl dispatch workspace ${num}"
-       "${num}"))
+(defwidget workspace-button [ws]
+  (button :class "workspace-button ${ws.active ? "active" : ""} ${ws.occupied ? "occupied" : "empty"}"
+          :onclick "hyprctl dispatch workspace ${ws.id}"
+          :tooltip "workspace ${ws.id}"
+          (label :class "ws-icon" :text {ws.icon})))
 
 (defwidget screenshot []
   (box :class "module"
@@ -417,8 +417,8 @@
 (defpoll spotify_class :interval "2s" :initial ""
   `/home/prieyan/.config/hypr/scripts/status-spotify.sh | jq -r '.class // ""'`)
 
-(defpoll hypr_active_ws :interval "200ms" :initial 1
-  `hyprctl activeworkspace -j | jq -r '.id'`)
+(deflisten workspaces :initial "[]"
+  `/home/prieyan/.config/hypr/scripts/workspaces-watch.sh`)
 
 (defpoll idle_icon :interval "2s" :initial "󰒲"
   `/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.icon // "󰒲"'`)
