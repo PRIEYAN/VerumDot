@@ -8,11 +8,6 @@ current_ssid() {
   nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}'
 }
 
-if [ "$1" = "menu" ]; then
-  setsid -f /home/prieyan/.config/hypr/scripts/network-center.py wifi >/tmp/network-center.log 2>&1
-  exit 0
-fi
-
 active=$(current_ssid)
 [ -z "$active" ] && active="None"
 active_json=$(json_escape "$active")

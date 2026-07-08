@@ -12,11 +12,6 @@ connected_devices() {
   bluetoothctl devices Connected 2>/dev/null | sed 's/^Device [^ ]* //'
 }
 
-if [ "$1" = "menu" ]; then
-  setsid -f /home/prieyan/.config/hypr/scripts/network-center.py bluetooth >/tmp/network-center.log 2>&1
-  exit 0
-fi
-
 if command -v bluetoothctl >/dev/null 2>&1; then
   status=$(bluetooth_powered)
   [ -z "$status" ] && status="unknown"
