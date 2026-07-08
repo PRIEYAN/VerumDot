@@ -149,11 +149,16 @@
   background-color: transparent;
   // reserve the underline height so glyphs don't shift vertically on focus
   border-bottom: 1px solid transparent;
-  transition: all 150ms ease;
+  // transition only the props that actually change — never "all", which makes
+  // GTK watch layout props too and adds jank. ease-out feels snappy: quick to
+  // start, gentle to settle.
+  transition: background-color 120ms ease-out,
+              border-bottom-color 120ms ease-out;
 
   .ws-icon {
     color: #ffffff;
     font-size: 12pt;
+    transition: color 120ms ease-out, font-size 120ms ease-out;
   }
 
   // inactive + empty: dim number
@@ -204,8 +209,8 @@
 /* ===================== Shared "center" popup chrome ===================== */
 
 .center-root {
-  // macOS Control Center: rounded, mostly-opaque, soft light hairline.
-  background-color: rgba(28, 28, 30, 0.94);
+  // solid black popup, no transparency
+  background-color: #000000;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   color: #ffffff;

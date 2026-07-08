@@ -137,25 +137,25 @@
 
 (defwidget volume []
   (eventbox :onclick "/home/prieyan/.config/hypr/scripts/status-volume.sh menu"
-            :onscroll "if [ '{}' = 'up' ]; then pamixer -i 5; else pamixer -d 5; fi"
+            :onscroll "/home/prieyan/.config/hypr/scripts/volume-adjust.sh {}"
     (box :class "module volume ${volume_class}"
          :tooltip volume_tooltip
          volume_text)))
 
 (defwidget brightness []
-  (eventbox :onscroll "if [ '{}' = 'up' ]; then /home/prieyan/.config/hypr/scripts/brightness-adjust.sh up; else /home/prieyan/.config/hypr/scripts/brightness-adjust.sh down; fi"
+  (eventbox :onscroll "/home/prieyan/.config/hypr/scripts/brightness-adjust.sh {}"
     (box :class "module brightness"
          :tooltip brightness_tooltip
          brightness_text)))
 
 (defwidget bluetooth []
-  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh bluetooth; eww open --toggle network-center"
+  (eventbox :onclick "eww open --toggle network-center; /home/prieyan/.config/hypr/scripts/network-page.sh bluetooth"
     (box :class "module bluetooth ${bt_class}"
          :tooltip bt_tooltip
          bt_text)))
 
 (defwidget wifi []
-  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh wifi; eww open --toggle network-center"
+  (eventbox :onclick "eww open --toggle network-center; /home/prieyan/.config/hypr/scripts/network-page.sh wifi"
     (box :class "module wifi ${wifi_class}"
          :tooltip wifi_tooltip
          wifi_text)))

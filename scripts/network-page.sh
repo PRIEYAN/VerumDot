@@ -1,10 +1,28 @@
 #!/usr/bin/env bash
 # Switches network-watch.sh's active page (wifi|bluetooth) and requests a
-# rescan, so opening a tab always shows fresh data.
+# rescan. Writes the page to the state file directly (so it applies even if
+# the watcher hasn't started yet) and only pokes the FIFO if a reader exists,
+# so this NEVER blocks — the caller's `; eww open network-center` always runs.
 
-fifo="/tmp/eww-network-center/cmd.fifo"
+state_dir="/tmp/eww-network-center"
+fifo="$state_dir/cmd.fifo"
+page_file="$state_dir/page"
 page="$1"
-mkdir -p /tmp/eww-network-center
+
+mkdir -p "$state_dir"
 [ -p "$fifo" ] || mkfifo "$fifo"
-printf 'page:%s\n' "$page" > "$fifo"
-/home/prieyan/.config/hypr/scripts/network-action.sh "$page" rescan &
+
+# Authoritative page state — network-watch.sh reads this on startup and after
+# each FIFO command.
+printf '%s\n' "$page" > "$page_file"
+
+# Non-blocking nudge: only write to the FIFO if something is reading it, and
+# cap it with a timeout so a stale/reader-less FIFO can never hang the click.
+if timeout 0.3 bash -c ': <>"'"$fifo"'"' 2>/dev/null; then
+  timeout 0.3 bash -c 'printf "page:%s\n" "$1" > "$2"' _ "$page" "$fifo" 2>/dev/null &
+fi
+
+# Kick a rescan in the background so the list is fresh.
+/home/prieyan/.config/hypr/scripts/network-action.sh "$page" rescan >/dev/null 2>&1 &
+
+exit 0

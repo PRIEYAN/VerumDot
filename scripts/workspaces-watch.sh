@@ -6,87 +6,114 @@
 #
 # icon: the workspace number for an empty workspace, else a monochrome Nerd
 # Font glyph for the focused (or first) window's app in that workspace.
+#
+# LATENCY: the whole 9-slot array is built in ONE jq pass (below). Earlier
+# versions forked ~20 processes per event (a jq + subshell per slot); that
+# per-event cost is what made switching feel laggy. We now spawn only
+# hyprctl activeworkspace + hyprctl clients + a single jq — and coalesce
+# bursts of events with a tiny debounce so a swipe emits once, not N times.
 
 SLOTS=9
 
-# --- app class -> Nerd Font glyph -----------------------------------------
-# Keyed by a lowercased substring of the window's class. First match wins.
-# Fallback glyph is a generic window for unknown apps.
+# Nerd Font glyph table as a jq object literal. Keys are lowercase substrings
+# matched against the window class; first match wins (checked in listed order).
+# Glyphs are \u escapes (jq decodes them) so no editor can strip the private-
+# use codepoints — literal glyphs had previously been blanked on save.
 #
-# Glyphs are stored as \x UTF-8 byte escapes (printf %b), NOT as literal
-# characters. Some editors silently strip Nerd Font private-use codepoints on
-# save — which had blanked every icon here. Escapes are plain ASCII and survive
-# any editor. Comment shows the Nerd Font codepoint for each.
-icon_for() {
-  case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
-    *firefox*|*librewolf*|*floorp*)       printf '%b' '\xef\x89\xa9' ;; # U+F269
-    *chromium*|*chrome*|*brave*)          printf '%b' '\xef\x89\xa8' ;; # U+F268
-    *kitty*|*alacritty*|*foot*|*wezterm*|*ghostty*|*term*) printf '%b' '\xee\x9e\x95' ;; # U+E795
-    *code*|*vscodium*)                    printf '%b' '\xee\x9c\x8c' ;; # U+E70C
-    *nvim*|*vim*)                         printf '%b' '\xee\x9f\x85' ;; # U+E7C5
-    *spotify*)                            printf '%b' '\xef\x86\xbc' ;; # U+F1BC
-    *discord*|*vesktop*|*webcord*)        printf '%b' '\xef\x8e\x92' ;; # U+F392
-    *telegram*)                           printf '%b' '\xef\x8b\x86' ;; # U+F2C6
-    *thunar*|*nautilus*|*nemo*|*dolphin*|*files*) printf '%b' '\xef\x81\xbb' ;; # U+F07B
-    *obsidian*)                           printf '%b' '\xef\x80\x96' ;; # U+F016
-    *gimp*)                               printf '%b' '\xef\x80\xbe' ;; # U+F03E
-    *blender*)                            printf '%b' '\xf3\xb0\x82\xab' ;; # U+F00AB
-    *steam*)                              printf '%b' '\xef\x86\xb6' ;; # U+F1B6
-    *mpv*|*vlc*)                          printf '%b' '\xef\x85\x84' ;; # U+F144
-    *zathura*|*evince*|*pdf*)             printf '%b' '\xef\x87\x81' ;; # U+F1C1
-    *slack*)                              printf '%b' '\xef\x86\x98' ;; # U+F198
-    *obs*)                                printf '%b' '\xf3\xb0\x91\x8b' ;; # U+F044B
-    *libreoffice*)                        printf '%b' '\xef\x87\x82' ;; # U+F1C2
-    *)                                    printf '%b' '\xef\x8b\x90' ;; # U+F2D0 generic window
-  esac
-}
+# Order matters: more specific keys first. jq walks this list per workspace.
+ICON_RULES='[
+  {"m":["firefox","librewolf","floorp"],"g":"\uf269"},
+  {"m":["chromium","chrome","brave"],"g":"\uf268"},
+  {"m":["kitty","alacritty","foot","wezterm","ghostty","term"],"g":"\ue795"},
+  {"m":["code","vscodium"],"g":"\ue70c"},
+  {"m":["nvim","vim"],"g":"\ue7c5"},
+  {"m":["spotify"],"g":"\uf1bc"},
+  {"m":["discord","vesktop","webcord"],"g":"\uf392"},
+  {"m":["telegram"],"g":"\uf2c6"},
+  {"m":["thunar","nautilus","nemo","dolphin","files"],"g":"\uf07b"},
+  {"m":["obsidian"],"g":"\uf016"},
+  {"m":["gimp"],"g":"\uf03e"},
+  {"m":["blender"],"g":"\udb80\udcab"},
+  {"m":["steam"],"g":"\uf1b6"},
+  {"m":["mpv","vlc"],"g":"\uf144"},
+  {"m":["zathura","evince","pdf"],"g":"\uf1c1"},
+  {"m":["slack"],"g":"\uf198"},
+  {"m":["obs"],"g":"\udb81\udc4b"},
+  {"m":["libreoffice"],"g":"\uf1c2"}
+]'
+GENERIC_GLYPH='"\uf2d0"'   # fallback: generic window (JSON string for fromjson)
+
+# One jq program builds all nine slots from a single clients payload:
+#   - group clients by workspace id
+#   - per slot: occupied? focused/first window's class -> glyph via ICON_RULES
+#   - empty slot -> its number as the icon
+JQ_PROG='
+  # class -> glyph: first rule whose any-substring matches the lowercased class.
+  # $rules is bound below; def is top-level so it sees it.
+  def glyph($rules; $generic; $cls):
+    ($cls | ascii_downcase) as $c
+    | ( [ $rules[] | select(any(.m[]; . as $s | $c | contains($s))) ][0].g )
+      // $generic;
+  ($rules | fromjson) as $rules
+  # $generic arrives as a JSON string literal ("\uXXXX") so decode it too
+  | ($generic | fromjson) as $generic
+  | (($active | fromjson).id // 0) as $active
+  | ($clients | fromjson) as $clients
+  | [ range(1; $slots + 1) as $i
+      | [ $clients[] | select(.workspace.id == $i) ] as $ws
+      | ( ($ws | map(select(.focusHistoryID == 0)) + $ws)[0].class // "" ) as $cls
+      | { id: $i,
+          active: ($i == $active),
+          occupied: ($cls != ""),
+          icon: (if $cls == "" then ($i | tostring) else glyph($rules; $generic; $cls) end) }
+    ]
+'
 
 emit() {
-  local active clients i
-  active=$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.id // 0')
-  clients=$(hyprctl clients -j 2>/dev/null)
-  [ -z "$clients" ] && clients="[]"
-
-  # Per slot, resolve the focused/first window class -> glyph in the shell
-  # (the case-map lives here), then let jq assemble the final array so the
-  # JSON is always well-formed.
-  local ids=() actives=() occs=() icons=()
-  for ((i = 1; i <= SLOTS; i++)); do
-    local cls
-    cls=$(printf '%s' "$clients" | jq -r --argjson ws "$i" '
-      [ .[] | select(.workspace.id == $ws) ]
-      | (map(select(.focusHistoryID == 0)) + .)   # prefer focused window
-      | .[0].class // ""
-    ')
-    ids+=("$i")
-    [ "$i" = "$active" ] && actives+=("true") || actives+=("false")
-    if [ -n "$cls" ]; then occs+=("true"); icons+=("$(icon_for "$cls")")
-    else occs+=("false"); icons+=("$i"); fi
-  done
+  local active clients
+  active=$(hyprctl activeworkspace -j 2>/dev/null); [ -z "$active" ] && active='{}'
+  clients=$(hyprctl clients -j 2>/dev/null);        [ -z "$clients" ] && clients='[]'
 
   jq -cn \
-    --argjson ids   "[$(IFS=,; echo "${ids[*]}")]" \
-    --argjson active "[$(IFS=,; echo "${actives[*]}")]" \
-    --argjson occ   "[$(IFS=,; echo "${occs[*]}")]" \
-    --args '$ids | to_entries | map({
-              id: .value,
-              active: ($active[.key]),
-              occupied: ($occ[.key]),
-              icon: ($ARGS.positional[.key])
-            })' "${icons[@]}"
+    --arg slots   "$SLOTS" \
+    --arg active  "$active" \
+    --arg clients "$clients" \
+    --arg rules   "$ICON_RULES" \
+    --arg generic "$GENERIC_GLYPH" \
+    "(\$slots | tonumber) as \$slots | $JQ_PROG"
 }
 
 emit
 
 # Subscribe to Hyprland's event socket and re-emit on any workspace/window
 # change. Falls back to a slow poll if socat or the socket is unavailable.
+#
+# Debounce: a swipe or window shuffle fires several events back-to-back. We
+# mark "dirty" on each and flush after a short quiet window, so we emit once
+# per burst instead of running the whole pipeline per event. ~30ms is below
+# human-perceptible latency yet coalesces near-simultaneous events.
 sig="$XDG_RUNTIME_DIR/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
 if command -v socat >/dev/null 2>&1 && [ -S "$sig" ]; then
-  socat -U - "UNIX-CONNECT:$sig" 2>/dev/null | while read -r line; do
+  # Read events. When idle we BLOCK (no timeout) so the loop sleeps until the
+  # next event — no busy polling. Once an event marks us dirty, we switch to a
+  # 30ms timeout so a burst (swipe = several events) coalesces into ONE emit
+  # when the quiet window elapses. read's exit status tells timeout from EOF:
+  #   >128  -> timed out       (flush the pending burst)
+  #   >0    -> pipe closed/EOF  (Hyprland gone: leave the loop)
+  socat -U - "UNIX-CONNECT:$sig" 2>/dev/null | while :; do
+    if [ -n "$dirty" ]; then read -r -t 0.03 line; rc=$?
+    else                       read -r          line; rc=$?
+    fi
+    if [ "$rc" -gt 128 ]; then           # timeout: quiet window elapsed
+      emit; dirty=
+      continue
+    elif [ "$rc" -ne 0 ]; then           # EOF: socat/Hyprland went away
+      break
+    fi
     case "$line" in
       workspace*|createworkspace*|destroyworkspace*|focusedmon*|\
       openwindow*|closewindow*|movewindow*|activewindow*|urgent*)
-        emit ;;
+        dirty=1 ;;
     esac
   done
 else

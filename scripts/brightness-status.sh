@@ -11,10 +11,11 @@ fi
 
 pct=$(( cur * 100 / max ))
 
-# glyph ramps with level
-if   [ "$pct" -ge 66 ]; then icon=""
-elif [ "$pct" -ge 33 ]; then icon=""
-else                         icon=""
+# glyph ramps with level (UTF-8 byte escapes, PUA-safe)
+#   brightness-7 U+F00E0 (high) / brightness-5 U+F00DE (med) / brightness-4 U+F00DD (low)
+if   [ "$pct" -ge 66 ]; then icon=$(printf '\xf3\xb0\x83\xa0')
+elif [ "$pct" -ge 33 ]; then icon=$(printf '\xf3\xb0\x83\x9e')
+else                         icon=$(printf '\xf3\xb0\x83\x9d')
 fi
 
 printf '{"text":"%s %d%%","tooltip":"Brightness: %d%%  (scroll to adjust)"}\n' "$icon" "$pct" "$pct"
