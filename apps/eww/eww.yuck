@@ -78,28 +78,28 @@
 ;; ===================== Modules =====================
 
 (defwidget clock []
-  (box :class "module clock"
-       :tooltip clock_tooltip
-       :onclick "eww open --toggle calendar-center"
-       clock_display))
+  (eventbox :onclick "eww open --toggle calendar-center"
+    (box :class "module clock"
+         :tooltip clock_tooltip
+         clock_display)))
 
 (defwidget app-launcher []
-  (box :class "module app-launcher"
-       :onclick "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
-       "⌖"))
+  (eventbox :onclick "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+    (box :class "module app-launcher"
+         "⌖")))
 
 (defwidget app-info []
-  (box :class "module app-info"
-       :onclick "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
-       app_info_text))
+  (eventbox :onclick "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+    (box :class "module app-info"
+         app_info_text)))
 
 (defwidget spotify-widget []
-  (box :class "module spotify ${spotify_class}"
-       :tooltip spotify_tooltip
-       :onclick "eww open --toggle spotify-center"
-       :onmiddleclick "/home/prieyan/.config/hypr/scripts/status-spotify.sh toggle"
-       :onscroll "if [ '{}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
-       spotify_text))
+  (eventbox :onclick "eww open --toggle spotify-center"
+            :onmiddleclick "/home/prieyan/.config/hypr/scripts/status-spotify.sh toggle"
+            :onscroll "if [ '{}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
+    (box :class "module spotify ${spotify_class}"
+         :tooltip spotify_tooltip
+         spotify_text)))
 
 (defwidget workspace-button [ws]
   (button :class "workspace-button ${ws.active ? "active" : ""} ${ws.occupied ? "occupied" : "empty"}"
@@ -108,56 +108,56 @@
           (label :class "ws-icon" :text {ws.icon})))
 
 (defwidget screenshot []
-  (box :class "module"
-       :tooltip "Screenshot"
-       :onclick "/home/prieyan/.config/waybar/scripts/screenshot.sh take"
-       "󰄀"))
+  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/screenshot.sh take"
+    (box :class "module"
+         :tooltip "Screenshot"
+         "󰄀")))
 
 (defwidget idle-inhibitor []
-  (box :class "module ${idle_class}"
-       :tooltip idle_tooltip
-       :onclick "/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh toggle"
-       idle_icon))
+  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh toggle"
+    (box :class "module ${idle_class}"
+         :tooltip idle_tooltip
+         idle_icon)))
 
 (defwidget separator []
   (box :class "module separator" "│"))
 
 (defwidget performance []
-  (box :class "module performance ${perf_class}"
-       :tooltip perf_tooltip
-       :onclick "/home/prieyan/.config/waybar/scripts/performance-mode.sh toggle"
-       perf_text))
+  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/performance-mode.sh cycle"
+    (box :class "module performance ${perf_class}"
+         :tooltip perf_tooltip
+         perf_text)))
 
 (defwidget mic []
-  (box :class "module mic ${mic_class}"
-       :tooltip mic_tooltip
-       :onclick "/home/prieyan/.config/waybar/scripts/mic-toggle.sh"
-       mic_text))
+  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/mic-toggle.sh"
+    (box :class "module mic ${mic_class}"
+         :tooltip mic_tooltip
+         mic_text)))
 
 (defwidget volume []
-  (box :class "module volume ${volume_class}"
-       :tooltip volume_tooltip
-       :onclick "/home/prieyan/.config/hypr/scripts/status-volume.sh menu"
-       :onscroll "if [ '{}' = 'up' ]; then pamixer -i 5; else pamixer -d 5; fi"
-       volume_text))
+  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/status-volume.sh menu"
+            :onscroll "if [ '{}' = 'up' ]; then pamixer -i 5; else pamixer -d 5; fi"
+    (box :class "module volume ${volume_class}"
+         :tooltip volume_tooltip
+         volume_text)))
 
 (defwidget brightness []
-  (box :class "module brightness"
-       :tooltip brightness_tooltip
-       :onscroll "if [ '{}' = 'up' ]; then /home/prieyan/.config/waybar/scripts/brightness-adjust.sh up; else /home/prieyan/.config/waybar/scripts/brightness-adjust.sh down; fi"
-       brightness_text))
+  (eventbox :onscroll "if [ '{}' = 'up' ]; then /home/prieyan/.config/hypr/scripts/brightness-adjust.sh up; else /home/prieyan/.config/hypr/scripts/brightness-adjust.sh down; fi"
+    (box :class "module brightness"
+         :tooltip brightness_tooltip
+         brightness_text)))
 
 (defwidget bluetooth []
-  (box :class "module bluetooth ${bt_class}"
-       :tooltip bt_tooltip
-       :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh bluetooth; eww open --toggle network-center"
-       bt_text))
+  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh bluetooth; eww open --toggle network-center"
+    (box :class "module bluetooth ${bt_class}"
+         :tooltip bt_tooltip
+         bt_text)))
 
 (defwidget wifi []
-  (box :class "module wifi ${wifi_class}"
-       :tooltip wifi_tooltip
-       :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh wifi; eww open --toggle network-center"
-       wifi_text))
+  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh wifi; eww open --toggle network-center"
+    (box :class "module wifi ${wifi_class}"
+         :tooltip wifi_tooltip
+         wifi_text)))
 
 (defwidget battery []
   (box :class "module battery ${battery_class}"
@@ -165,10 +165,10 @@
        battery_text))
 
 (defwidget power []
-  (box :class "module power"
-       :tooltip "Power"
-       :onclick "eww open --toggle power-center"
-       power_text))
+  (eventbox :onclick "eww open --toggle power-center"
+    (box :class "module power"
+         :tooltip "Power"
+         power_text)))
 
 ;; ===================== Power Center =====================
 
@@ -182,7 +182,7 @@
        (box :class "center-grid" :orientation "v" :space-evenly true
             (box :orientation "h" :space-evenly true
                  (power-action :glyph "" :label_ "LOCK" :cmd "hyprlock -c /home/prieyan/.config/hypr/apps/hyprlock/hyprlock.conf" :danger false)
-                 (power-action :glyph "⏾" :label_ "SUSPEND" :cmd "systemctl suspend" :danger false)
+                 (power-action :glyph "⏾" :label_ "HIBERNATE" :cmd "systemctl hibernate" :danger false)
                  (power-action :glyph "→" :label_ "LOGOUT" :cmd "hyprctl dispatch exit" :danger false))
             (box :orientation "h" :space-evenly true
                  (power-action :glyph "↻" :label_ "REBOOT" :cmd "systemctl reboot" :danger true)
@@ -428,18 +428,18 @@
   `/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.class // "deactivated"'`)
 
 (defpoll perf_text :interval "10s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/performance-mode.sh | jq -r '.text // ""'`)
+  `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.text // ""'`)
 (defpoll perf_class :interval "10s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/performance-mode.sh | jq -r '.class // ""'`)
+  `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.class // ""'`)
 (defpoll perf_tooltip :interval "10s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/performance-mode.sh | jq -r '.tooltip // ""'`)
+  `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.tooltip // ""'`)
 
 (defpoll mic_text :interval "2s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/mic-status.sh | jq -r '.text // ""'`)
+  `/home/prieyan/.config/hypr/scripts/mic-status.sh | jq -r '.text // ""'`)
 (defpoll mic_class :interval "2s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/mic-status.sh | jq -r '.class // ""'`)
+  `/home/prieyan/.config/hypr/scripts/mic-status.sh | jq -r '.class // ""'`)
 (defpoll mic_tooltip :interval "2s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/mic-status.sh | jq -r '.tooltip // ""'`)
+  `/home/prieyan/.config/hypr/scripts/mic-status.sh | jq -r '.tooltip // ""'`)
 
 (defpoll volume_text :interval "1s" :initial ""
   `/home/prieyan/.config/hypr/scripts/status-volume.sh | jq -r '.text // ""'`)
@@ -449,9 +449,9 @@
   `/home/prieyan/.config/hypr/scripts/status-volume.sh | jq -r '.class // ""'`)
 
 (defpoll brightness_text :interval "10s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/brightness-status.sh | jq -r '.text // ""'`)
+  `/home/prieyan/.config/hypr/scripts/brightness-status.sh | jq -r '.text // ""'`)
 (defpoll brightness_tooltip :interval "10s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/brightness-status.sh | jq -r '.tooltip // ""'`)
+  `/home/prieyan/.config/hypr/scripts/brightness-status.sh | jq -r '.tooltip // ""'`)
 
 (defpoll wifi_text :interval "5s" :initial ""
   `/home/prieyan/.config/hypr/scripts/status-wifi.sh | jq -r '.text // ""'`)
@@ -468,11 +468,11 @@
   `/home/prieyan/.config/hypr/scripts/status-bluetooth.sh | jq -r '.class // ""'`)
 
 (defpoll battery_text :interval "30s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/battery-status.py | jq -r '.text // ""'`)
+  `/home/prieyan/.config/hypr/scripts/battery-status.py | jq -r '.text // ""'`)
 (defpoll battery_tooltip :interval "30s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/battery-status.py | jq -r '.tooltip // ""'`)
+  `/home/prieyan/.config/hypr/scripts/battery-status.py | jq -r '.tooltip // ""'`)
 (defpoll battery_class :interval "30s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/battery-status.py | jq -r '.class // ""'`)
+  `/home/prieyan/.config/hypr/scripts/battery-status.py | jq -r '.class // ""'`)
 
 (defpoll power_text :interval "3600s" :initial "⏻"
   `/home/prieyan/.config/hypr/scripts/status-power.sh | jq -r '.text // "⏻"'`)

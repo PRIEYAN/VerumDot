@@ -21,7 +21,9 @@ if [ "$1" = "toggle" ]; then
 fi
 
 if is_active; then
-  printf '{"icon":"󰅶","tooltip":"Staying awake — click to allow sleep","class":"activated"}\n'
+  # tea/coffee cup = staying awake
+  printf '{"icon":"","tooltip":"Staying awake — click to allow sleep","class":"activated"}\n'
 else
+  # zzz = normal (will sleep when idle)
   printf '{"icon":"󰒲","tooltip":"Normal — click to keep the PC awake","class":"deactivated"}\n'
 fi

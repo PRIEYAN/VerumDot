@@ -11,28 +11,33 @@ SLOTS=9
 
 # --- app class -> Nerd Font glyph -----------------------------------------
 # Keyed by a lowercased substring of the window's class. First match wins.
-# Fallback glyph is a generic window/dot for unknown apps.
+# Fallback glyph is a generic window for unknown apps.
+#
+# Glyphs are stored as \x UTF-8 byte escapes (printf %b), NOT as literal
+# characters. Some editors silently strip Nerd Font private-use codepoints on
+# save — which had blanked every icon here. Escapes are plain ASCII and survive
+# any editor. Comment shows the Nerd Font codepoint for each.
 icon_for() {
   case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
-    *firefox*|*librewolf*|*floorp*)       printf '' ;;
-    *chromium*|*chrome*|*brave*)          printf '' ;;
-    *kitty*|*alacritty*|*foot*|*wezterm*|*ghostty*|*term*) printf '' ;;
-    *code*|*vscodium*)                    printf '' ;;
-    *nvim*|*vim*)                         printf '' ;;
-    *spotify*)                            printf '' ;;
-    *discord*|*vesktop*|*webcord*)        printf '' ;;
-    *telegram*)                           printf '' ;;
-    *thunar*|*nautilus*|*nemo*|*dolphin*|*files*) printf '' ;;
-    *obsidian*)                           printf '' ;;
-    *gimp*)                               printf '' ;;
-    *blender*)                            printf '󰂫' ;;
-    *steam*)                              printf '' ;;
-    *mpv*|*vlc*)                          printf '' ;;
-    *zathura*|*evince*|*pdf*)             printf '' ;;
-    *slack*)                              printf '' ;;
-    *obs*)                                printf '󰑋' ;;
-    *libreoffice*)                        printf '' ;;
-    *)                                    printf '' ;;  # generic app glyph
+    *firefox*|*librewolf*|*floorp*)       printf '%b' '\xef\x89\xa9' ;; # U+F269
+    *chromium*|*chrome*|*brave*)          printf '%b' '\xef\x89\xa8' ;; # U+F268
+    *kitty*|*alacritty*|*foot*|*wezterm*|*ghostty*|*term*) printf '%b' '\xee\x9e\x95' ;; # U+E795
+    *code*|*vscodium*)                    printf '%b' '\xee\x9c\x8c' ;; # U+E70C
+    *nvim*|*vim*)                         printf '%b' '\xee\x9f\x85' ;; # U+E7C5
+    *spotify*)                            printf '%b' '\xef\x86\xbc' ;; # U+F1BC
+    *discord*|*vesktop*|*webcord*)        printf '%b' '\xef\x8e\x92' ;; # U+F392
+    *telegram*)                           printf '%b' '\xef\x8b\x86' ;; # U+F2C6
+    *thunar*|*nautilus*|*nemo*|*dolphin*|*files*) printf '%b' '\xef\x81\xbb' ;; # U+F07B
+    *obsidian*)                           printf '%b' '\xef\x80\x96' ;; # U+F016
+    *gimp*)                               printf '%b' '\xef\x80\xbe' ;; # U+F03E
+    *blender*)                            printf '%b' '\xf3\xb0\x82\xab' ;; # U+F00AB
+    *steam*)                              printf '%b' '\xef\x86\xb6' ;; # U+F1B6
+    *mpv*|*vlc*)                          printf '%b' '\xef\x85\x84' ;; # U+F144
+    *zathura*|*evince*|*pdf*)             printf '%b' '\xef\x87\x81' ;; # U+F1C1
+    *slack*)                              printf '%b' '\xef\x86\x98' ;; # U+F198
+    *obs*)                                printf '%b' '\xf3\xb0\x91\x8b' ;; # U+F044B
+    *libreoffice*)                        printf '%b' '\xef\x87\x82' ;; # U+F1C2
+    *)                                    printf '%b' '\xef\x8b\x90' ;; # U+F2D0 generic window
   esac
 }
 

@@ -140,37 +140,42 @@
   font-weight: bold;
 }
 
+// Every slot is a FIXED 30px box so glyph size / underline changes inside
+// never reflow the row — the workspaces stay in a static position when you
+// switch. Only the .ws-icon font-size and the bottom border change per state.
 .workspace-button {
-  padding: 0 6px;
-  min-width: 24px;
+  min-width: 30px;
+  padding: 0;
   background-color: transparent;
-  // reserve the underline height so glyphs don't shift when focus moves
+  // reserve the underline height so glyphs don't shift vertically on focus
   border-bottom: 1px solid transparent;
-  transition: all 200ms ease;
+  transition: all 150ms ease;
 
   .ws-icon {
     color: #ffffff;
     font-size: 12pt;
   }
 
-  // empty workspace: dim number
+  // inactive + empty: dim number
   &.empty .ws-icon {
-    color: rgba(255, 255, 255, 0.30);
+    color: rgba(255, 255, 255, 0.35);
     font-size: 11pt;
   }
 
-  // occupied but not focused: slightly dimmed white app glyph
+  // inactive + occupied: smaller, slightly dimmed white app logo
   &.occupied .ws-icon {
-    color: rgba(255, 255, 255, 0.70);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 11pt;
   }
 
-  // current workspace: 1px white bottom border, full-white content
-  // (number when empty, app logo when occupied)
+  // focused workspace: 1px white bottom border + full-white content.
+  // occupied -> the app logo becomes bigger; empty -> the number.
   &.active {
     border-bottom: 1px solid #ffffff;
 
     .ws-icon {
       color: #ffffff;
+      font-size: 15pt;
     }
   }
 
@@ -199,9 +204,10 @@
 /* ===================== Shared "center" popup chrome ===================== */
 
 .center-root {
-  background-color: rgba(0, 0, 0, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 10px;
+  // macOS Control Center: rounded, translucent, soft light hairline.
+  background-color: rgba(28, 28, 30, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
   color: #ffffff;
 }
 
@@ -491,10 +497,11 @@
 /* ===================== Network Center ===================== */
 
 .net-hero {
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 6px;
-  padding: 12px;
+  // filled translucent tile, macOS-style
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
 }
 
 .net-hero-title {
@@ -515,31 +522,31 @@
 }
 
 .net-pill {
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;   // fully rounded, macOS pill
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
-  padding: 4px 8px;
+  padding: 5px 12px;
   font-size: 10px;
-  margin-right: 4px;
+  margin-right: 6px;
 }
 
 .net-pill:hover {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.14);
   border-color: rgba(255, 255, 255, 0.30);
   color: #ffffff;
 }
 
 .net-pill.primary {
-  background-color: #ffffff;
-  color: #000000;
-  border-color: #ffffff;
+  background-color: #0a84ff;   // iOS/macOS system blue
+  color: #ffffff;
+  border-color: #0a84ff;
 }
 
 .net-pill.primary:hover {
-  background-color: rgba(255, 255, 255, 0.85);
-  color: #000000;
+  background-color: #3a9bff;
+  color: #ffffff;
 }
 
 .net-pill.danger {
