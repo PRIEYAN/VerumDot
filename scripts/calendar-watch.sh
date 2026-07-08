@@ -8,6 +8,7 @@ fifo="$state_dir/nav.fifo"
 state_file="$state_dir/state"
 mkdir -p "$state_dir"
 [ -p "$fifo" ] || mkfifo "$fifo"
+[ -f "$state_file" ] || printf '%s %s\n' "$(date +%Y)" "$(date +%-m)" > "$state_file"
 
 emit() {
   read -r year month < "$state_file" 2>/dev/null
