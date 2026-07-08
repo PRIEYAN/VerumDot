@@ -116,6 +116,26 @@
   color: #ffffff;
 }
 
+// Force every right-side module (and all its state variants) to white,
+// overriding the state colors above (wifi blue, battery green/orange, etc.).
+.right-modules .module,
+.right-modules .module.connected,
+.right-modules .module.disconnected,
+.right-modules .module.high,
+.right-modules .module.medium,
+.right-modules .module.low,
+.right-modules .module.charging,
+.right-modules .module.muted,
+.right-modules .module.active,
+.right-modules .module.inactive,
+.right-modules .module.balanced,
+.right-modules .module.performance,
+.right-modules .module.activated,
+.right-modules .module.deactivated,
+.right-modules .brightness {
+  color: #ffffff;
+}
+
 .clock {
   font-weight: bold;
 }
@@ -123,9 +143,9 @@
 .workspace-button {
   padding: 0 6px;
   min-width: 24px;
-  border-radius: 4px;
   background-color: transparent;
-  border: none;
+  // reserve the underline height so glyphs don't shift when focus moves
+  border-bottom: 1px solid transparent;
   transition: all 200ms ease;
 
   .ws-icon {
@@ -133,20 +153,21 @@
     font-size: 12pt;
   }
 
-  // empty workspace: dim underscore
+  // empty workspace: dim number
   &.empty .ws-icon {
     color: rgba(255, 255, 255, 0.30);
-    font-size: 10pt;
+    font-size: 11pt;
   }
 
-  // occupied but not focused: slightly dimmed white glyph
+  // occupied but not focused: slightly dimmed white app glyph
   &.occupied .ws-icon {
     color: rgba(255, 255, 255, 0.70);
   }
 
-  // current workspace: full-white glyph on a subtle pill
+  // current workspace: 1px white bottom border, full-white content
+  // (number when empty, app logo when occupied)
   &.active {
-    background-color: rgba(255, 255, 255, 0.18);
+    border-bottom: 1px solid #ffffff;
 
     .ws-icon {
       color: #ffffff;

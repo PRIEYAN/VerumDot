@@ -4,8 +4,8 @@
 # instant Hyprland fires a relevant IPC event (socket2), so 3-finger
 # workspace swipes and window open/close reflect immediately.
 #
-# icon: an underscore for an empty workspace, else a monochrome Nerd Font
-# glyph for the focused (or first) window's app in that workspace.
+# icon: the workspace number for an empty workspace, else a monochrome Nerd
+# Font glyph for the focused (or first) window's app in that workspace.
 
 SLOTS=9
 
@@ -56,7 +56,7 @@ emit() {
     ids+=("$i")
     [ "$i" = "$active" ] && actives+=("true") || actives+=("false")
     if [ -n "$cls" ]; then occs+=("true"); icons+=("$(icon_for "$cls")")
-    else occs+=("false"); icons+=("_"); fi
+    else occs+=("false"); icons+=("$i"); fi
   done
 
   jq -cn \
