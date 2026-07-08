@@ -98,7 +98,7 @@
        :tooltip spotify_tooltip
        :onclick "eww open --toggle spotify-center"
        :onmiddleclick "/home/prieyan/.config/hypr/scripts/status-spotify.sh toggle"
-       :onscroll "if [ '${SCROLL}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
+       :onscroll "if [ '{}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
        spotify_text))
 
 (defwidget workspace-button [num]
@@ -137,13 +137,13 @@
   (box :class "module volume ${volume_class}"
        :tooltip volume_tooltip
        :onclick "/home/prieyan/.config/hypr/scripts/status-volume.sh menu"
-       :onscroll "if [ '${SCROLL}' = 'up' ]; then pamixer -i 5; else pamixer -d 5; fi"
+       :onscroll "if [ '{}' = 'up' ]; then pamixer -i 5; else pamixer -d 5; fi"
        volume_text))
 
 (defwidget brightness []
   (box :class "module brightness"
        :tooltip brightness_tooltip
-       :onscroll "if [ '${SCROLL}' = 'up' ]; then /home/prieyan/.config/waybar/scripts/brightness-adjust.sh up; else /home/prieyan/.config/waybar/scripts/brightness-adjust.sh down; fi"
+       :onscroll "if [ '{}' = 'up' ]; then /home/prieyan/.config/waybar/scripts/brightness-adjust.sh up; else /home/prieyan/.config/waybar/scripts/brightness-adjust.sh down; fi"
        brightness_text))
 
 (defwidget bluetooth []
