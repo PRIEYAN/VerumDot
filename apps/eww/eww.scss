@@ -1,0 +1,574 @@
+* {
+  all: unset;
+  font-size: 10pt;
+  font-family: "Iosevka Term";
+}
+
+.bar {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.module {
+  padding: 0 8px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.separator {
+  color: rgba(255, 255, 255, 0.3);
+  padding: 0 4px;
+}
+
+.icon {
+  margin-right: 4px;
+}
+
+.label {
+  font-weight: 500;
+}
+
+// Custom module styles
+.spotify {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.playing {
+    color: #1DB954;
+  }
+
+  &.paused {
+    color: #888;
+  }
+}
+
+.wifi {
+  &.connected {
+    color: #4a9eff;
+  }
+
+  &.disconnected {
+    color: #888;
+  }
+}
+
+.bluetooth {
+  &.connected {
+    color: #4a9eff;
+  }
+
+  &.disconnected {
+    color: #888;
+  }
+}
+
+.battery {
+  &.high {
+    color: #4caf50;
+  }
+
+  &.medium {
+    color: #ff9800;
+  }
+
+  &.low {
+    color: #f44336;
+  }
+
+  &.charging {
+    color: #4caf50;
+  }
+}
+
+.volume {
+  &.muted {
+    color: #888;
+  }
+}
+
+.mic {
+  &.active {
+    color: #f44336;
+  }
+
+  &.inactive {
+    color: #4caf50;
+  }
+}
+
+.performance {
+  &.balanced {
+    color: #999;
+  }
+
+  &.performance {
+    color: #ff6b6b;
+  }
+}
+
+.brightness {
+  color: #ffd700;
+}
+
+.module.activated {
+  color: #e0af68;
+}
+
+.module.deactivated {
+  color: #ffffff;
+}
+
+.clock {
+  font-weight: bold;
+  min-width: 200px;
+  text-align: center;
+}
+
+.workspace-button {
+  padding: 0 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 200ms ease;
+
+  &.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: bold;
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.app-launcher {
+  cursor: pointer;
+  font-size: 14pt;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.tooltip {
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 9pt;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ===================== Shared "center" popup chrome ===================== */
+
+.center-root {
+  background-color: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  color: #ffffff;
+}
+
+.center-topbar {
+  padding: 14px 16px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.center-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.center-subtitle {
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 10px;
+}
+
+.center-close, .center-nav {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  background-color: transparent;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.center-close:hover, .center-nav:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.center-tabs {
+  padding: 8px 16px 0;
+}
+
+.center-tab {
+  background-color: transparent;
+  border-bottom: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.40);
+  font-weight: 600;
+  padding: 6px 10px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.center-tab:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.center-tab.active {
+  color: #ffffff;
+  border-bottom: 1px solid #ffffff;
+}
+
+.center-content {
+  padding: 10px 16px 14px;
+}
+
+.center-section-title, .net-section-title {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+
+/* ===================== Power Center ===================== */
+
+.center-grid {
+  padding: 14px;
+}
+
+.power-action {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  color: #ffffff;
+  padding: 18px 10px;
+  min-height: 70px;
+  min-width: 110px;
+}
+
+.power-action:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.power-action.danger:hover {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.power-glyph {
+  font-size: 22px;
+}
+
+.power-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* ===================== Calendar Center ===================== */
+
+.center-calendar {
+  padding: 10px 16px 16px;
+}
+
+.cal-weekday {
+  color: rgba(255, 255, 255, 0.30);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+}
+
+.cal-day {
+  min-width: 36px;
+  min-height: 32px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.cal-day.muted {
+  color: rgba(255, 255, 255, 0.18);
+}
+
+.cal-day.today {
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* ===================== Wallpaper Center ===================== */
+
+.center-search {
+  margin: 10px 16px 0;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.center-search:focus {
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+.wallpaper-scroll {
+  padding: 10px 12px 12px;
+}
+
+.wallpaper-tile {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0;
+}
+
+.wallpaper-tile:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.wallpaper-thumb {
+  min-width: 160px;
+  min-height: 90px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0;
+}
+
+.wallpaper-name {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 4px 6px;
+  letter-spacing: 0.3px;
+}
+
+/* ===================== Spotify Center ===================== */
+
+.spotify-content {
+  padding: 16px;
+}
+
+.spotify-art {
+  min-width: 280px;
+  min-height: 280px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spotify-track-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 14px;
+}
+
+.spotify-track-artist {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 2px;
+}
+
+.spotify-track-album {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 1px;
+}
+
+.spotify-scale {
+  margin-top: 14px;
+}
+
+.spotify-scale trough {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  min-height: 4px;
+}
+
+.spotify-scale highlight {
+  background-color: #1db954;
+  border-radius: 3px;
+  min-height: 4px;
+}
+
+.spotify-time {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 9px;
+  letter-spacing: 0.3px;
+}
+
+.spotify-controls {
+  margin-top: 14px;
+}
+
+.spotify-ctl {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 14px;
+  margin: 0 7px;
+}
+
+.spotify-ctl:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+.spotify-ctl.play {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 16px;
+}
+
+.spotify-ctl.play:hover {
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+.spotify-empty {
+  color: rgba(255, 255, 255, 0.40);
+  padding: 40px 16px;
+  font-size: 11px;
+}
+
+/* ===================== Network Center ===================== */
+
+.net-hero {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.net-hero-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+.net-hero-status {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  font-size: 10px;
+}
+
+.net-actions {
+  margin-top: 10px;
+}
+
+.net-pill {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  padding: 4px 8px;
+  font-size: 10px;
+  margin-right: 4px;
+}
+
+.net-pill:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.30);
+  color: #ffffff;
+}
+
+.net-pill.primary {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.net-pill.primary:hover {
+  background-color: rgba(255, 255, 255, 0.85);
+  color: #000000;
+}
+
+.net-pill.danger {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+.net-pill.danger:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.net-scroll {
+  min-height: 280px;
+}
+
+.net-card {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 4px;
+}
+
+.net-card:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.net-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.net-meta {
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 9px;
+  letter-spacing: 0.3px;
+}
+
+.net-form {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.net-form-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 6px;
+}
+
+.net-form-input {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+}
+
+.net-form-input:focus {
+  border-color: rgba(255, 255, 255, 0.45);
+}

@@ -4,11 +4,6 @@ json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
 
-if [ "$1" = "menu" ]; then
-  setsid -f /home/prieyan/.config/hypr/scripts/spotify-center.py >/tmp/spotify-center.log 2>&1
-  exit 0
-fi
-
 if [ "$1" = "toggle" ]; then
   playerctl -p spotify play-pause >/dev/null 2>&1
   exit 0
