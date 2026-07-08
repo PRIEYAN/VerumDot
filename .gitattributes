@@ -1,0 +1,6 @@
+# Shell scripts must use LF so they run on Linux after checkout on Windows.
+*.sh text eol=lf
+*.py text eol=lf
+*.yuck text eol=lf
+*.scss text eol=lf
+*.conf text eol=lf
