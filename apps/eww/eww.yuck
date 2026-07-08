@@ -13,54 +13,55 @@
 
 (defwindow power-center
   :monitor 0
-  :geometry (geometry :x "-10px" :y "48px" :width "380px" :height "280px" :anchor "top right")
+  :geometry (geometry :x "-10px" :y "38px" :width "380px" :height "280px" :anchor "top right")
   :stacking "overlay"
   :windowtype "normal"
   (power-center-window))
 
 (defwindow calendar-center
   :monitor 0
-  :geometry (geometry :x "10px" :y "48px" :width "380px" :height "400px" :anchor "top left")
+  :geometry (geometry :x "10px" :y "38px" :width "380px" :height "400px" :anchor "top left")
   :stacking "overlay"
   :windowtype "normal"
   (calendar-center-window))
 
 (defwindow wallpaper-center
   :monitor 0
-  :geometry (geometry :x "-10px" :y "48px" :width "560px" :height "480px" :anchor "top right")
+  :geometry (geometry :x "-10px" :y "38px" :width "560px" :height "480px" :anchor "top right")
   :stacking "overlay"
   :windowtype "normal"
   (wallpaper-center-window))
 
 (defwindow spotify-center
   :monitor 0
-  :geometry (geometry :x "10px" :y "48px" :width "340px" :height "470px" :anchor "top left")
+  :geometry (geometry :x "10px" :y "38px" :width "340px" :height "470px" :anchor "top left")
   :stacking "overlay"
   :windowtype "normal"
   (spotify-center-window))
 
 (defwindow network-center
   :monitor 0
-  :geometry (geometry :x "-10px" :y "48px" :width "420px" :height "560px" :anchor "top right")
+  :geometry (geometry :x "-10px" :y "38px" :width "420px" :height "560px" :anchor "top right")
   :stacking "overlay"
   :windowtype "normal"
   (network-center-window))
 
 ;; ===================== Layout =====================
 (defwidget topbar []
-  (box :class "bar"
+  ;; centerbox guarantees the middle child sits at the true midpoint of the bar
+  ;; regardless of how wide the left/right sections grow — so the workspaces
+  ;; stay pinned to the center even as the clock/spotify/app-info text changes.
+  (centerbox :class "bar"
        :orientation "h"
-       :space-evenly false
-       :valign "center"
-       (box :class "left-modules" :space-evenly false :halign "start" :spacing 6
+       (box :class "left-modules" :space-evenly false :halign "start" :valign "center" :spacing 6
             (clock)
             (app-launcher)
             (app-info)
             (spotify-widget))
-       (box :class "center-modules" :space-evenly false :hexpand true :halign "center" :spacing 4
+       (box :class "center-modules" :space-evenly false :halign "center" :valign "center" :spacing 4
             (for ws in workspaces
               (workspace-button :ws ws)))
-       (box :class "right-modules" :space-evenly false :halign "end" :spacing 6
+       (box :class "right-modules" :space-evenly false :halign "end" :valign "center" :spacing 6
             (screenshot)
             (idle-inhibitor)
             (separator)

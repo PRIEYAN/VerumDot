@@ -204,8 +204,8 @@
 /* ===================== Shared "center" popup chrome ===================== */
 
 .center-root {
-  // macOS Control Center: rounded, translucent, soft light hairline.
-  background-color: rgba(28, 28, 30, 0.72);
+  // macOS Control Center: rounded, mostly-opaque, soft light hairline.
+  background-color: rgba(28, 28, 30, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   color: #ffffff;
