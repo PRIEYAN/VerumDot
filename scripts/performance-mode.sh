@@ -5,12 +5,12 @@
 #
 # Glyphs are produced from their Nerd Font UTF-8 bytes via printf '\xNN' so
 # the Private-Use-Area characters survive editing/encoding round-trips.
-#   speedometer        U+F04C5 (performance)
-#   speedometer-medium U+F04C4 (balanced)
-#   speedometer-slow   U+F04C3 (power-saver)
-G_PERF=$(printf '\xf3\xb0\x93\x85')
-G_BAL=$(printf '\xf3\xb0\x93\x84')
-G_SAVE=$(printf '\xf3\xb0\x93\x83')
+#   fire    U+F0238 (performance boost)
+#   leaf    U+F0032 (balanced / efficient)
+#   battery U+F0079 (power-saver / battery saver)
+G_PERF=$(printf '\xf3\xb0\x88\xb8')
+G_BAL=$(printf '\xf3\xb0\x80\xb2')
+G_SAVE=$(printf '\xf3\xb0\x81\xb9')
 
 profile() { powerprofilesctl get 2>/dev/null; }
 
