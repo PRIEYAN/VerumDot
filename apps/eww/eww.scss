@@ -147,18 +147,25 @@
   min-width: 30px;
   padding: 0;
   background-color: transparent;
+  border-radius: 6px;
   // reserve the underline height so glyphs don't shift vertically on focus
-  border-bottom: 1px solid transparent;
-  // transition only the props that actually change — never "all", which makes
-  // GTK watch layout props too and adds jank. ease-out feels snappy: quick to
-  // start, gentle to settle.
-  transition: background-color 120ms ease-out,
-              border-bottom-color 120ms ease-out;
+  border-bottom: 2px solid transparent;
+  // Transition ONLY the props that change — never "all" (GTK would watch
+  // layout props too and jank). Now that the data path is instant, these
+  // animations are actually visible. Two curves on purpose:
+  //   - colour / background fade quickly (ease-out) — snappy feedback
+  //   - the underline + glyph-size use a gentle overshoot (ease-out-back) so
+  //     the focused workspace "pops" in with a little spring, then settles.
+  transition:
+    background-color 140ms ease-out,
+    border-bottom-color 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
   .ws-icon {
     color: #ffffff;
     font-size: 12pt;
-    transition: color 120ms ease-out, font-size 120ms ease-out;
+    transition:
+      color 140ms ease-out,
+      font-size 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   // inactive + empty: dim number
@@ -173,10 +180,11 @@
     font-size: 11pt;
   }
 
-  // focused workspace: 1px white bottom border + full-white content.
-  // occupied -> the app logo becomes bigger; empty -> the number.
+  // focused workspace: faint pill + white underline + full-white content.
+  // occupied -> the app logo grows bigger; empty -> the number grows.
   &.active {
-    border-bottom: 1px solid #ffffff;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-bottom: 2px solid #ffffff;
 
     .ws-icon {
       color: #ffffff;

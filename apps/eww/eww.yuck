@@ -428,7 +428,7 @@
 (defpoll idle_class :interval "2s" :initial "deactivated"
   `/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.class // "deactivated"'`)
 
-(defpoll perf_text :interval "10s" :initial ""
+(defpoll perf_text :interval "5s" :initial ""
   `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.text // ""'`)
 (defpoll perf_class :interval "10s" :initial ""
   `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.class // ""'`)
@@ -449,9 +449,9 @@
 (defpoll volume_class :interval "1s" :initial ""
   `/home/prieyan/.config/hypr/scripts/status-volume.sh | jq -r '.class // ""'`)
 
-(defpoll brightness_text :interval "10s" :initial ""
+(defpoll brightness_text :interval "3s" :initial ""
   `/home/prieyan/.config/hypr/scripts/brightness-status.sh | jq -r '.text // ""'`)
-(defpoll brightness_tooltip :interval "10s" :initial ""
+(defpoll brightness_tooltip :interval "3s" :initial ""
   `/home/prieyan/.config/hypr/scripts/brightness-status.sh | jq -r '.tooltip // ""'`)
 
 (defpoll wifi_text :interval "5s" :initial ""

@@ -14,6 +14,17 @@ G_SAVE=$(printf '\xf3\xb0\x93\x83')
 
 profile() { powerprofilesctl get 2>/dev/null; }
 
+status_json() {
+  case "$(profile)" in
+    performance)
+      printf '{"text":"%s","tooltip":"Performance mode","class":"performance"}\n' "$G_PERF" ;;
+    power-saver)
+      printf '{"text":"%s","tooltip":"Power-saver mode","class":"balanced"}\n' "$G_SAVE" ;;
+    balanced|*)
+      printf '{"text":"%s","tooltip":"Balanced mode","class":"balanced"}\n' "$G_BAL" ;;
+  esac
+}
+
 if [ "$1" = "cycle" ]; then
   case "$(profile)" in
     balanced)     next="performance" ;;
@@ -22,14 +33,13 @@ if [ "$1" = "cycle" ]; then
     *)            next="balanced" ;;
   esac
   powerprofilesctl set "$next" 2>/dev/null || powerprofilesctl set balanced 2>/dev/null
+  # push fresh state into eww immediately
+  json=$(status_json)
+  eww update "perf_text=$(printf '%s' "$json" | jq -r '.text // ""')" \
+             "perf_class=$(printf '%s' "$json" | jq -r '.class // ""')" \
+             "perf_tooltip=$(printf '%s' "$json" | jq -r '.tooltip // ""')" \
+    >/dev/null 2>&1
   exit 0
 fi
 
-case "$(profile)" in
-  performance)
-    printf '{"text":"%s","tooltip":"Performance mode","class":"performance"}\n' "$G_PERF" ;;
-  power-saver)
-    printf '{"text":"%s","tooltip":"Power-saver mode","class":"balanced"}\n' "$G_SAVE" ;;
-  balanced|*)
-    printf '{"text":"%s","tooltip":"Balanced mode","class":"balanced"}\n' "$G_BAL" ;;
-esac
+status_json
