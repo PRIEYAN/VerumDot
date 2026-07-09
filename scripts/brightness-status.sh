@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Brightness module for eww. Emits JSON {text, tooltip} with a sun glyph and
-# the current percentage, computed from brightnessctl's raw/max values.
+# Brightness module for eww. Reports the same unified 10..150 level as
+# brightness-adjust.sh: hardware % up to 100, plus the boost shader
+# multiplier (1.0..1.5x -> 100..150) when engaged.
+
+BOOST="/home/prieyan/.config/hypr/scripts/brightness_boost.sh"
 
 cur=$(brightnessctl get 2>/dev/null)
 max=$(brightnessctl max 2>/dev/null)
@@ -9,13 +12,23 @@ if [ -z "$max" ] || [ "$max" -eq 0 ] 2>/dev/null; then
   exit 0
 fi
 
-pct=$(( cur * 100 / max ))
+hw=$(( cur * 100 / max ))
+mult=$(bash "$BOOST" get 2>/dev/null); mult=${mult:-1.0}
+boost_active=$(awk "BEGIN{print ($mult > 1.0) ? 1 : 0}")
+
+if [ "$boost_active" -eq 1 ]; then
+  level=$(awk "BEGIN{printf \"%d\", 100 + ($mult - 1.0) * 100 + 0.5}")
+else
+  level=$hw
+fi
 
 # glyph ramps with level (UTF-8 byte escapes, PUA-safe)
 #   brightness-7 U+F00E0 (high) / brightness-5 U+F00DE (med) / brightness-4 U+F00DD (low)
-if   [ "$pct" -ge 66 ]; then icon=$(printf '\xf3\xb0\x83\xa0')
-elif [ "$pct" -ge 33 ]; then icon=$(printf '\xf3\xb0\x83\x9e')
-else                         icon=$(printf '\xf3\xb0\x83\x9d')
+if   [ "$level" -ge 66 ]; then icon=$(printf '\xf3\xb0\x83\xa0')
+elif [ "$level" -ge 33 ]; then icon=$(printf '\xf3\xb0\x83\x9e')
+else                           icon=$(printf '\xf3\xb0\x83\x9d')
 fi
 
-printf '{"text":"%s %d%%","tooltip":"Brightness: %d%%  (scroll to adjust)"}\n' "$icon" "$pct" "$pct"
+tip="Brightness: ${level}%"
+[ "$level" -gt 100 ] && tip="$tip (boost)"
+printf '{"text":"%s %d%%","tooltip":"%s  (scroll to adjust)"}\n' "$icon" "$level" "$tip"

@@ -140,11 +140,11 @@
   font-weight: bold;
 }
 
-// Every slot is a FIXED 30px box so glyph size / underline changes inside
+// Every slot is a FIXED 22px box so glyph size / underline changes inside
 // never reflow the row — the workspaces stay in a static position when you
 // switch. Only the .ws-icon font-size and the bottom border change per state.
 .workspace-button {
-  min-width: 30px;
+  min-width: 22px;
   padding: 0;
   background-color: transparent;
   border-radius: 6px;
@@ -162,7 +162,7 @@
 
   .ws-icon {
     color: #ffffff;
-    font-size: 12pt;
+    font-size: 10pt;
     transition:
       color 140ms ease-out,
       font-size 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -171,13 +171,13 @@
   // inactive + empty: dim number
   &.empty .ws-icon {
     color: rgba(255, 255, 255, 0.35);
-    font-size: 11pt;
+    font-size: 9pt;
   }
 
   // inactive + occupied: smaller, slightly dimmed white app logo
   &.occupied .ws-icon {
     color: rgba(255, 255, 255, 0.75);
-    font-size: 11pt;
+    font-size: 9pt;
   }
 
   // focused workspace: white underline only (no pill) + full-white content.
@@ -188,7 +188,7 @@
 
     .ws-icon {
       color: #ffffff;
-      font-size: 15pt;
+      font-size: 12pt;
     }
   }
 
