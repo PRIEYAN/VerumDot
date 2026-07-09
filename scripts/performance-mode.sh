@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Power-profile module for eww. Reads/sets the active profile via
 # power-profiles-daemon (powerprofilesctl). `cycle` advances
-# balanced -> performance -> power-saver -> balanced.
+# balanced(efficient) -> power-saver(battery) -> performance -> balanced.
 #
 # Glyphs are produced from their Nerd Font UTF-8 bytes via printf '\xNN' so
 # the Private-Use-Area characters survive editing/encoding round-trips.
@@ -27,12 +27,19 @@ status_json() {
 
 if [ "$1" = "cycle" ]; then
   case "$(profile)" in
-    balanced)     next="performance" ;;
-    performance)  next="power-saver" ;;
-    power-saver)  next="balanced" ;;
+    balanced)     next="power-saver" ;;
+    power-saver)  next="performance" ;;
+    performance)  next="balanced" ;;
     *)            next="balanced" ;;
   esac
-  powerprofilesctl set "$next" 2>/dev/null || powerprofilesctl set balanced 2>/dev/null
+  # If the target profile isn't available on this hardware, skip it so the
+  # cycle doesn't get stuck (e.g. no 'performance' -> jump to balanced).
+  if ! powerprofilesctl set "$next" 2>/dev/null; then
+    case "$next" in
+      performance) powerprofilesctl set balanced 2>/dev/null ;;
+      *)           powerprofilesctl set balanced 2>/dev/null ;;
+    esac
+  fi
   # push fresh state into eww immediately
   json=$(status_json)
   eww update "perf_text=$(printf '%s' "$json" | jq -r '.text // ""')" \

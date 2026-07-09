@@ -147,52 +147,45 @@
   min-width: 22px;
   padding: 0;
   background-color: transparent;
-  border-radius: 6px;
-  // reserve the underline height so glyphs don't shift vertically on focus
+  // straight underline: no border-radius, or the bottom border curves at the
+  // corners. reserve the underline height so glyphs don't shift on focus.
   border-bottom: 2px solid transparent;
   // Transition ONLY the props that change — never "all" (GTK would watch
-  // layout props too and jank). Now that the data path is instant, these
-  // animations are actually visible. Two curves on purpose:
-  //   - colour / background fade quickly (ease-out) — snappy feedback
-  //   - the underline + glyph-size use a gentle overshoot (ease-out-back) so
-  //     the focused workspace "pops" in with a little spring, then settles.
+  // layout props too and jank). colour/background fade quickly; the underline
+  // colour eases in so focus feels responsive without a jump.
   transition:
     background-color 140ms ease-out,
-    border-bottom-color 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-bottom-color 140ms ease-out;
 
   .ws-icon {
     color: #ffffff;
-    font-size: 10pt;
+    // Same size in every state — the focused workspace is marked ONLY by the
+    // white underline, the glyph never grows/shrinks.
+    font-size: 9pt;
     // Give the workspace app icons a distinct icon font from the rest of the
     // bar (which uses IosevkaTerm). Must stay a Nerd Font or the app glyphs
     // won't render — Symbols Nerd Font is the icons-only fallback.
     font-family: "FiraCode Nerd Font", "Symbols Nerd Font", monospace;
-    transition:
-      color 140ms ease-out,
-      font-size 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: color 140ms ease-out;
   }
 
   // inactive + empty: dim number
   &.empty .ws-icon {
     color: rgba(255, 255, 255, 0.35);
-    font-size: 9pt;
   }
 
-  // inactive + occupied: smaller, slightly dimmed white app logo
+  // inactive + occupied: slightly dimmed white app logo
   &.occupied .ws-icon {
     color: rgba(255, 255, 255, 0.75);
-    font-size: 9pt;
   }
 
-  // focused workspace: white underline only (no pill) + full-white content.
-  // occupied -> the app logo grows bigger; empty -> the number grows.
+  // focused workspace: straight white underline only (no pill, no size change).
   &.active {
     background-color: transparent;
     border-bottom: 2px solid #ffffff;
 
     .ws-icon {
       color: #ffffff;
-      font-size: 12pt;
     }
   }
 

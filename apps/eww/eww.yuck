@@ -247,7 +247,7 @@
 
 (defwidget wallpaper-tile [item]
   (button :class "wallpaper-tile"
-          :onclick "/home/prieyan/.config/hypr/scripts/wallpaper.sh set '${item.path}'; eww close wallpaper-center"
+          :onclick "/home/prieyan/.config/hypr/scripts/wallpaper.sh set '${item.full}'; eww close wallpaper-center"
           (box :orientation "v" :space-evenly false
                (box :class "wallpaper-thumb" :style "background-image: url('${item.path}');")
                (label :class "wallpaper-name" :text {item.name}))))
