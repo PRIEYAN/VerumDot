@@ -9,7 +9,7 @@
 #           bt-connect <mac> | bt-disconnect <mac> | bt-forget <mac> |
 #           bt-pair <mac> | rescan
 
-fifo="/tmp/eww-network-center/cmd.fifo"
+fifo="${XDG_RUNTIME_DIR:-/tmp}/eww-network-center/cmd.fifo"
 page="$1"; action="$2"; shift 2
 
 case "$page:$action" in

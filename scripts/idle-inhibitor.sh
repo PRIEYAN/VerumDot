@@ -3,7 +3,7 @@
 # module with no CLI equivalent, so this drives a systemd-inhibit lock
 # instead). State is tracked via a pidfile holding the inhibitor's PID.
 
-pidfile="/tmp/eww-idle-inhibitor.pid"
+pidfile="${XDG_RUNTIME_DIR:-/tmp}/eww-idle-inhibitor.pid"
 
 # Glyphs via UTF-8 byte escapes so the PUA characters survive encoding.
 #   coffee  U+F0176 (staying awake)

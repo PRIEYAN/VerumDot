@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
+# per-user runtime scratch theme (one var keeps write + -theme in sync)
+theme="${XDG_RUNTIME_DIR:-/tmp}/mogger.rasi"
+
 # Create a temporary rofi theme for the splash screen
-cat << 'EOF' > /tmp/mogger.rasi
+cat << 'EOF' > "$theme"
 * {
     background-color: black;
     text-color: red;
@@ -18,7 +21,7 @@ textbox {
 EOF
 
 # Show the splash screen
-rofi -e "MOGGER" -theme /tmp/mogger.rasi &
+rofi -e "MOGGER" -theme "$theme" &
 ROFI_PID=$!
 
 # Wait 1 second

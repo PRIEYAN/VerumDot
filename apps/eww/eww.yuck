@@ -85,18 +85,18 @@
          clock_display)))
 
 (defwidget app-launcher []
-  (eventbox :onclick "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+  (eventbox :onclick "setsid -f rofi -show drun -theme $HOME/.config/hypr/apps/rofi/config.rasi"
     (box :class "module app-launcher"
          "⌖")))
 
 (defwidget app-info []
-  (eventbox :onclick "setsid -f rofi -show drun -theme /home/prieyan/.config/hypr/apps/rofi/config.rasi"
+  (eventbox :onclick "setsid -f rofi -show drun -theme $HOME/.config/hypr/apps/rofi/config.rasi"
     (box :class "module app-info"
          app_info_text)))
 
 (defwidget spotify-widget []
   (eventbox :onclick "eww open --toggle spotify-center"
-            :onmiddleclick "/home/prieyan/.config/hypr/scripts/status-spotify.sh toggle"
+            :onmiddleclick "$HOME/.config/hypr/scripts/status-spotify.sh toggle"
             :onscroll "if [ '{}' = 'up' ]; then playerctl -p spotify next; else playerctl -p spotify previous; fi"
     (box :class "module spotify ${spotify_class}"
          :tooltip spotify_tooltip
@@ -109,13 +109,13 @@
           (label :class "ws-icon" :text {ws.icon})))
 
 (defwidget screenshot []
-  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/screenshot.sh take"
+  (eventbox :onclick "$HOME/.config/hypr/scripts/screenshot.sh take"
     (box :class "module"
          :tooltip "Screenshot"
          "󰄀")))
 
 (defwidget idle-inhibitor []
-  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh toggle"
+  (eventbox :onclick "$HOME/.config/hypr/scripts/idle-inhibitor.sh toggle"
     (box :class "module ${idle_class}"
          :tooltip idle_tooltip
          idle_icon)))
@@ -124,38 +124,38 @@
   (box :class "module separator" "│"))
 
 (defwidget performance []
-  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/performance-mode.sh cycle"
+  (eventbox :onclick "$HOME/.config/hypr/scripts/performance-mode.sh cycle"
     (box :class "module performance ${perf_class}"
          :tooltip perf_tooltip
          perf_text)))
 
 (defwidget mic []
-  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/mic-toggle.sh"
+  (eventbox :onclick "$HOME/.config/hypr/scripts/mic-toggle.sh"
     (box :class "module mic ${mic_class}"
          :tooltip mic_tooltip
          mic_text)))
 
 (defwidget volume []
-  (eventbox :onclick "/home/prieyan/.config/hypr/scripts/status-volume.sh menu"
-            :onscroll "/home/prieyan/.config/hypr/scripts/volume-adjust.sh {}"
+  (eventbox :onclick "$HOME/.config/hypr/scripts/status-volume.sh menu"
+            :onscroll "$HOME/.config/hypr/scripts/volume-adjust.sh {}"
     (box :class "module volume ${volume_class}"
          :tooltip volume_tooltip
          volume_text)))
 
 (defwidget brightness []
-  (eventbox :onscroll "/home/prieyan/.config/hypr/scripts/brightness-adjust.sh {}"
+  (eventbox :onscroll "$HOME/.config/hypr/scripts/brightness-adjust.sh {}"
     (box :class "module brightness"
          :tooltip brightness_tooltip
          brightness_text)))
 
 (defwidget bluetooth []
-  (eventbox :onclick "eww open --toggle network-center; /home/prieyan/.config/hypr/scripts/network-page.sh bluetooth"
+  (eventbox :onclick "eww open --toggle network-center; $HOME/.config/hypr/scripts/network-page.sh bluetooth"
     (box :class "module bluetooth ${bt_class}"
          :tooltip bt_tooltip
          bt_text)))
 
 (defwidget wifi []
-  (eventbox :onclick "eww open --toggle network-center; /home/prieyan/.config/hypr/scripts/network-page.sh wifi"
+  (eventbox :onclick "eww open --toggle network-center; $HOME/.config/hypr/scripts/network-page.sh wifi"
     (box :class "module wifi ${wifi_class}"
          :tooltip wifi_tooltip
          wifi_text)))
@@ -182,12 +182,12 @@
             (button :class "center-close" :onclick "eww close power-center" "x"))
        (box :class "center-grid" :orientation "v" :space-evenly true
             (box :orientation "h" :space-evenly true
-                 (power-action :glyph "" :label_ "LOCK" :cmd "hyprlock -c /home/prieyan/.config/hypr/apps/hyprlock/hyprlock.conf" :danger false)
+                 (power-action :glyph "" :label_ "LOCK" :cmd "hyprlock -c $HOME/.config/hypr/apps/hyprlock/hyprlock.conf" :danger false)
                  (power-action :glyph "⏾" :label_ "HIBERNATE" :cmd "systemctl hibernate" :danger false)
                  (power-action :glyph "→" :label_ "LOGOUT" :cmd "hyprctl dispatch exit" :danger false))
             (box :orientation "h" :space-evenly true
                  (power-action :glyph "↻" :label_ "REBOOT" :cmd "systemctl reboot" :danger true)
-                 (power-action :glyph "⏻" :label_ "SHUTDOWN" :cmd "/home/prieyan/.config/hypr/scripts/mogger_shutdown.sh" :danger true)))))
+                 (power-action :glyph "⏻" :label_ "SHUTDOWN" :cmd "$HOME/.config/hypr/scripts/mogger_shutdown.sh" :danger true)))))
 
 (defwidget power-action [glyph label_ cmd danger]
   (button :class "power-action ${danger ? "danger" : ""}"
@@ -204,9 +204,9 @@
             (box :orientation "v" :space-evenly false :hexpand true
                  (label :class "center-title" :halign "start" :text {cal_data.title})
                  (label :class "center-subtitle" :halign "start" :text {cal_data.subtitle}))
-            (button :class "center-nav" :onclick "/home/prieyan/.config/hypr/scripts/calendar-nav.sh prev" "<")
-            (button :class "center-nav" :onclick "/home/prieyan/.config/hypr/scripts/calendar-nav.sh today" "o")
-            (button :class "center-nav" :onclick "/home/prieyan/.config/hypr/scripts/calendar-nav.sh next" ">")
+            (button :class "center-nav" :onclick "$HOME/.config/hypr/scripts/calendar-nav.sh prev" "<")
+            (button :class "center-nav" :onclick "$HOME/.config/hypr/scripts/calendar-nav.sh today" "o")
+            (button :class "center-nav" :onclick "$HOME/.config/hypr/scripts/calendar-nav.sh next" ">")
             (button :class "center-close" :onclick "eww close calendar-center" "x"))
        (box :class "center-calendar" :orientation "v" :space-evenly false
             (box :orientation "h" :space-evenly true
@@ -221,7 +221,7 @@
                             :text "${d.day}")))))))
 
 (deflisten cal_data :initial "{\"title\":\"\",\"subtitle\":\"\",\"weeks\":[]}"
-  `/home/prieyan/.config/hypr/scripts/calendar-watch.sh`)
+  `$HOME/.config/hypr/scripts/calendar-watch.sh`)
 
 ;; ===================== Wallpaper Center =====================
 
@@ -236,7 +236,7 @@
             (button :class "center-close" :onclick "eww close wallpaper-center" "x"))
        (input :class "center-search"
               :value wallpaper_query
-              :onchange "/home/prieyan/.config/hypr/scripts/wallpaper-search.sh {}; eww update wallpaper_query={}"
+              :onchange "$HOME/.config/hypr/scripts/wallpaper-search.sh {}; eww update wallpaper_query={}"
               :placeholder "filter")
        (scroll :class "wallpaper-scroll" :vscroll true :hscroll false
                (box :class "wallpaper-grid" :orientation "v" :space-evenly false
@@ -247,13 +247,13 @@
 
 (defwidget wallpaper-tile [item]
   (button :class "wallpaper-tile"
-          :onclick "/home/prieyan/.config/hypr/scripts/wallpaper.sh set '${item.full}'; eww close wallpaper-center"
+          :onclick "$HOME/.config/hypr/scripts/wallpaper.sh set '${item.full}'; eww close wallpaper-center"
           (box :orientation "v" :space-evenly false
                (box :class "wallpaper-thumb" :style "background-image: url('${item.path}');")
                (label :class "wallpaper-name" :text {item.name}))))
 
 (deflisten wallpaper_data :initial "{\"count\":0,\"rows\":[]}"
-  `/home/prieyan/.config/hypr/scripts/wallpaper-watch.sh`)
+  `$HOME/.config/hypr/scripts/wallpaper-watch.sh`)
 
 ;; ===================== Spotify Center =====================
 
@@ -286,7 +286,7 @@
               :visible {!(spotify_data.playing ?: false)})))
 
 (deflisten spotify_data :initial "{\"playing\":false}"
-  `/home/prieyan/.config/hypr/scripts/spotify-watch.sh`)
+  `$HOME/.config/hypr/scripts/spotify-watch.sh`)
 
 ;; ===================== Network Center =====================
 
@@ -305,20 +305,20 @@
             (button :class "center-close" :onclick "eww close network-center; eww update net_form=''" "x"))
        (box :class "center-tabs" :orientation "h" :space-evenly false
             (button :class "center-tab ${network_data.page == "wifi" ? "active" : ""}"
-                    :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh wifi" "WI-FI")
+                    :onclick "$HOME/.config/hypr/scripts/network-page.sh wifi" "WI-FI")
             (button :class "center-tab ${network_data.page == "bluetooth" ? "active" : ""}"
-                    :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh bluetooth" "BLUETOOTH"))
+                    :onclick "$HOME/.config/hypr/scripts/network-page.sh bluetooth" "BLUETOOTH"))
        (box :class "center-content" :orientation "v" :space-evenly false
             (box :class "net-hero" :orientation "v" :space-evenly false
                  (box :orientation "h" :space-evenly false
                       (label :class "net-hero-title" :halign "start" :hexpand true :text {network_data.heroTitle ?: ""})
                       (label :class "net-hero-status" :halign "end" :text {network_data.heroStatus ?: ""}))
                  (box :class "net-actions" :orientation "h" :space-evenly false
-                      (button :class "net-pill" :onclick "/home/prieyan/.config/hypr/scripts/network-page.sh ${network_data.page}" "refresh")
+                      (button :class "net-pill" :onclick "$HOME/.config/hypr/scripts/network-page.sh ${network_data.page}" "refresh")
                       (button :class "net-pill danger"
-                              :onclick "/home/prieyan/.config/hypr/scripts/network-action.sh ${network_data.page} disconnect"
+                              :onclick "$HOME/.config/hypr/scripts/network-action.sh ${network_data.page} disconnect"
                               "disconnect")
-                      (button :class "net-pill" :onclick "/home/prieyan/.config/hypr/scripts/network-action.sh ${network_data.page} toggle-power" "power")
+                      (button :class "net-pill" :onclick "$HOME/.config/hypr/scripts/network-action.sh ${network_data.page} toggle-power" "power")
                       (net-wifi-only-actions)
                       (net-bt-only-actions)))
             (label :class "net-section-title" :halign "start" :text "AVAILABLE")
@@ -350,19 +350,19 @@
        (button :class "net-pill ${row.active || row.state == "connected" ? "" : "primary"}"
                :visible {page == "wifi"}
                :onclick {row.active
-                 ? "/home/prieyan/.config/hypr/scripts/network-action.sh wifi disconnect"
+                 ? "$HOME/.config/hypr/scripts/network-action.sh wifi disconnect"
                  : (row.security == "secured"
                      ? "eww update net_form=wifi-password net_form_ssid='${row.ssid}' net_form_password=''"
-                     : "/home/prieyan/.config/hypr/scripts/network-action.sh wifi connect '${row.ssid}'")}
+                     : "$HOME/.config/hypr/scripts/network-action.sh wifi connect '${row.ssid}'")}
                "${row.active ? "connected" : "connect"}")
        (button :class "net-pill ${row.state == "connected" ? "" : "primary"}"
                :visible {page == "bluetooth"}
                :onclick {row.state == "connected"
-                 ? "/home/prieyan/.config/hypr/scripts/network-action.sh bluetooth bt-disconnect '${row.mac}'"
-                 : "/home/prieyan/.config/hypr/scripts/network-action.sh bluetooth bt-connect '${row.mac}'"}
+                 ? "$HOME/.config/hypr/scripts/network-action.sh bluetooth bt-disconnect '${row.mac}'"
+                 : "$HOME/.config/hypr/scripts/network-action.sh bluetooth bt-connect '${row.mac}'"}
                "${row.state == "connected" ? "disconnect" : "connect"}")
        (button :class "net-pill danger" :visible {page == "bluetooth"}
-               :onclick "/home/prieyan/.config/hypr/scripts/network-action.sh bluetooth bt-forget '${row.mac}'"
+               :onclick "$HOME/.config/hypr/scripts/network-action.sh bluetooth bt-forget '${row.mac}'"
                "forget")))
 
 ;; Inline forms replace GTK dialogs: one box, shown/hidden by net_form.
@@ -385,18 +385,18 @@
             (button :class "net-pill" :onclick "eww update net_form=''" "cancel")
             (button :class "net-pill primary"
                     :onclick {net_form == "wifi-password"
-                      ? "/home/prieyan/.config/hypr/scripts/network-action.sh wifi connect '${net_form_ssid}' '${net_form_password}'; eww update net_form=''"
+                      ? "$HOME/.config/hypr/scripts/network-action.sh wifi connect '${net_form_ssid}' '${net_form_password}'; eww update net_form=''"
                       : net_form == "wifi-hidden"
-                      ? "/home/prieyan/.config/hypr/scripts/network-action.sh wifi connect-hidden '${net_form_text}' '${net_form_password}'; eww update net_form=''"
+                      ? "$HOME/.config/hypr/scripts/network-action.sh wifi connect-hidden '${net_form_text}' '${net_form_password}'; eww update net_form=''"
                       : net_form == "wifi-hotspot"
-                      ? "/home/prieyan/.config/hypr/scripts/network-action.sh wifi hotspot '${net_form_text}' '${net_form_password}'; eww update net_form=''"
+                      ? "$HOME/.config/hypr/scripts/network-action.sh wifi hotspot '${net_form_text}' '${net_form_password}'; eww update net_form=''"
                       : net_form == "bt-pair"
-                      ? "/home/prieyan/.config/hypr/scripts/network-action.sh bluetooth bt-pair '${net_form_text}'; eww update net_form=''"
+                      ? "$HOME/.config/hypr/scripts/network-action.sh bluetooth bt-pair '${net_form_text}'; eww update net_form=''"
                       : "eww update net_form=''"}
                     "done"))))
 
 (deflisten network_data :initial "{\"page\":\"wifi\",\"heroTitle\":\"\",\"heroStatus\":\"\",\"poweredOn\":false,\"rows\":[]}"
-  `/home/prieyan/.config/hypr/scripts/network-watch.sh`)
+  `$HOME/.config/hypr/scripts/network-watch.sh`)
 
 ;; ===================== Polling variables =====================
 ;; Each defpoll shells out to a small status script (JSON output) and
@@ -409,71 +409,71 @@
   `date '+%A, %d %B %Y  %H:%M:%S'`)
 
 (defpoll app_info_text :interval "1s" :initial ""
-  `/home/prieyan/.config/waybar/scripts/app-info.py | jq -r '.text // "" | .[0:32]'`)
+  `$HOME/.config/waybar/scripts/app-info.py | jq -r '.text // "" | .[0:32]'`)
 
 (defpoll spotify_text :interval "2s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-spotify.sh | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/status-spotify.sh | jq -r '.text // ""'`)
 (defpoll spotify_tooltip :interval "2s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-spotify.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/status-spotify.sh | jq -r '.tooltip // ""'`)
 (defpoll spotify_class :interval "2s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-spotify.sh | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/status-spotify.sh | jq -r '.class // ""'`)
 
 (deflisten workspaces :initial "[]"
-  `/home/prieyan/.config/hypr/scripts/workspaces-watch.sh`)
+  `$HOME/.config/hypr/scripts/workspaces-watch.sh`)
 
 (defpoll idle_icon :interval "2s" :initial "󰒲"
-  `/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.icon // "󰒲"'`)
+  `$HOME/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.icon // "󰒲"'`)
 (defpoll idle_tooltip :interval "2s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.tooltip // ""'`)
 (defpoll idle_class :interval "2s" :initial "deactivated"
-  `/home/prieyan/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.class // "deactivated"'`)
+  `$HOME/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.class // "deactivated"'`)
 
 (defpoll perf_text :interval "5s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/performance-mode.sh | jq -r '.text // ""'`)
 (defpoll perf_class :interval "10s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/performance-mode.sh | jq -r '.class // ""'`)
 (defpoll perf_tooltip :interval "10s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/performance-mode.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/performance-mode.sh | jq -r '.tooltip // ""'`)
 
 (defpoll mic_text :interval "2s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/mic-status.sh | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/mic-status.sh | jq -r '.text // ""'`)
 (defpoll mic_class :interval "2s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/mic-status.sh | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/mic-status.sh | jq -r '.class // ""'`)
 (defpoll mic_tooltip :interval "2s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/mic-status.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/mic-status.sh | jq -r '.tooltip // ""'`)
 
 (defpoll volume_text :interval "1s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-volume.sh | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/status-volume.sh | jq -r '.text // ""'`)
 (defpoll volume_tooltip :interval "1s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-volume.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/status-volume.sh | jq -r '.tooltip // ""'`)
 (defpoll volume_class :interval "1s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-volume.sh | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/status-volume.sh | jq -r '.class // ""'`)
 
 (defpoll brightness_text :interval "3s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/brightness-status.sh | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/brightness-status.sh | jq -r '.text // ""'`)
 (defpoll brightness_tooltip :interval "3s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/brightness-status.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/brightness-status.sh | jq -r '.tooltip // ""'`)
 
 (defpoll wifi_text :interval "5s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-wifi.sh | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/status-wifi.sh | jq -r '.text // ""'`)
 (defpoll wifi_tooltip :interval "5s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-wifi.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/status-wifi.sh | jq -r '.tooltip // ""'`)
 (defpoll wifi_class :interval "5s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-wifi.sh | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/status-wifi.sh | jq -r '.class // ""'`)
 
 (defpoll bt_text :interval "5s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-bluetooth.sh | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/status-bluetooth.sh | jq -r '.text // ""'`)
 (defpoll bt_tooltip :interval "5s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-bluetooth.sh | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/status-bluetooth.sh | jq -r '.tooltip // ""'`)
 (defpoll bt_class :interval "5s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/status-bluetooth.sh | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/status-bluetooth.sh | jq -r '.class // ""'`)
 
 (defpoll battery_text :interval "30s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/battery-status.py | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/battery-status.py | jq -r '.text // ""'`)
 (defpoll battery_tooltip :interval "30s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/battery-status.py | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/battery-status.py | jq -r '.tooltip // ""'`)
 (defpoll battery_class :interval "30s" :initial ""
-  `/home/prieyan/.config/hypr/scripts/battery-status.py | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/battery-status.py | jq -r '.class // ""'`)
 
 (defpoll power_text :interval "3600s" :initial "⏻"
-  `/home/prieyan/.config/hypr/scripts/status-power.sh | jq -r '.text // "⏻"'`)
+  `$HOME/.config/hypr/scripts/status-power.sh | jq -r '.text // "⏻"'`)

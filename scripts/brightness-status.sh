@@ -3,7 +3,9 @@
 # brightness-adjust.sh: hardware % up to 100, plus the boost shader
 # multiplier (1.0..1.5x -> 100..150) when engaged.
 
-BOOST="/home/prieyan/.config/hypr/scripts/brightness_boost.sh"
+# self-locate so sibling scripts resolve for any user / checkout location
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BOOST="$DIR/brightness_boost.sh"
 
 cur=$(brightnessctl get 2>/dev/null)
 max=$(brightnessctl max 2>/dev/null)

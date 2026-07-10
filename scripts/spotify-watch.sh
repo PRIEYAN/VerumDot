@@ -3,7 +3,7 @@
 # JSON every 500ms while a spotify player is present, mirroring the old
 # GTK Spotify Center's tick loop. Also fetches album art to a local cache.
 
-art_dir="/tmp/spotify-center-art"
+art_dir="${XDG_RUNTIME_DIR:-/tmp}/spotify-center-art"
 mkdir -p "$art_dir"
 
 fetch_art() {

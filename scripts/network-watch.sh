@@ -3,7 +3,7 @@
 # for whichever page (wifi|bluetooth) is currently selected, refreshing on
 # a timer and whenever network-action.sh signals a state change.
 
-state_dir="/tmp/eww-network-center"
+state_dir="${XDG_RUNTIME_DIR:-/tmp}/eww-network-center"
 fifo="$state_dir/cmd.fifo"
 page_file="$state_dir/page"
 mkdir -p "$state_dir"

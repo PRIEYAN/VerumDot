@@ -8,7 +8,9 @@
 MIN=10
 MAX=150
 STEP=5
-BOOST="/home/prieyan/.config/hypr/scripts/brightness_boost.sh"
+# self-locate so sibling scripts resolve for any user / checkout location
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BOOST="$DIR/brightness_boost.sh"
 
 # --- read current unified level -------------------------------------------
 # hardware percent (0..100)

@@ -4,7 +4,9 @@
 # the watcher hasn't started yet) and only pokes the FIFO if a reader exists,
 # so this NEVER blocks — the caller's `; eww open network-center` always runs.
 
-state_dir="/tmp/eww-network-center"
+# self-locate so sibling scripts resolve for any user / checkout location
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+state_dir="${XDG_RUNTIME_DIR:-/tmp}/eww-network-center"
 fifo="$state_dir/cmd.fifo"
 page_file="$state_dir/page"
 page="$1"
@@ -23,6 +25,6 @@ if timeout 0.3 bash -c ': <>"'"$fifo"'"' 2>/dev/null; then
 fi
 
 # Kick a rescan in the background so the list is fresh.
-/home/prieyan/.config/hypr/scripts/network-action.sh "$page" rescan >/dev/null 2>&1 &
+"$DIR/network-action.sh" "$page" rescan >/dev/null 2>&1 &
 
 exit 0

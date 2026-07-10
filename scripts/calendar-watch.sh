@@ -3,7 +3,9 @@
 # line per month whenever calendar-nav.sh signals a change via the FIFO,
 # and once immediately on startup so the calendar has initial data.
 
-state_dir="/tmp/eww-calendar-center"
+# self-locate so sibling scripts resolve for any user / checkout location
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+state_dir="${XDG_RUNTIME_DIR:-/tmp}/eww-calendar-center"
 fifo="$state_dir/nav.fifo"
 state_file="$state_dir/state"
 mkdir -p "$state_dir"
@@ -17,7 +19,7 @@ emit() {
     month=$(date +%-m)
     printf '%s %s\n' "$year" "$month" > "$state_file"
   fi
-  /home/prieyan/.config/hypr/scripts/calendar-data.sh "$year" "$month"
+  "$DIR/calendar-data.sh" "$year" "$month"
 }
 
 emit

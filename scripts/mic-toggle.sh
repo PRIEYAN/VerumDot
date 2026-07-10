@@ -3,7 +3,9 @@
 # fresh state into eww immediately so the icon flips instantly.
 wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
 
-json=$(/home/prieyan/.config/hypr/scripts/mic-status.sh)
+# self-locate so the sibling status script resolves for any user / checkout
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+json=$("$DIR/mic-status.sh")
 text=$(printf '%s' "$json" | jq -r '.text // ""')
 tooltip=$(printf '%s' "$json" | jq -r '.tooltip // ""')
 class=$(printf '%s' "$json" | jq -r '.class // ""')
