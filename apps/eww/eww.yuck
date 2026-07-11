@@ -206,15 +206,16 @@
 
 ;; ===================== GPU Center =====================
 ;; Dropdown from the battery icon. Two mutually-exclusive modes driven by
-;; gpu-mode.sh (supergfxctl). The currently-active mode is highlighted via
-;; gpu_mode; clicking a mode requests the switch and closes the popup.
+;; gpu-mode.sh (OmenCore / omencore-cli). The currently-active mode is
+;; highlighted via gpu_mode; clicking a mode requests the switch (pkexec) and
+;; closes the popup. Switching requires a reboot to take effect.
 
 (defwidget gpu-center-window []
   (box :class "center-root" :orientation "v" :space-evenly false
        (box :class "center-topbar" :orientation "h" :space-evenly false
             (box :orientation "v" :space-evenly false :hexpand true
-                 (label :class "center-title" :halign "start" :text "GPU")
-                 (label :class "center-subtitle" :halign "start" :text {gpu_mode == "na" ? "supergfxctl unavailable" : "current: ${gpu_mode}"}))
+                 (label :class "center-title" :halign "start" :text "GRAPHICS")
+                 (label :class "center-subtitle" :halign "start" :text {gpu_mode == "na" ? "omencore-cli not found" : "current: ${gpu_mode} · reboot to apply"}))
             (button :class "center-close" :onclick "eww close gpu-center" "x"))
        (box :class "gpu-list" :orientation "v" :space-evenly false
             (gpu-option :mode "Integrated"
@@ -234,7 +235,7 @@
                (box :orientation "v" :space-evenly false :hexpand true :halign "start"
                     (label :class "gpu-option-title" :halign "start" :text title)
                     (label :class "gpu-option-desc" :halign "start" :text desc))
-               (label :class "gpu-check" :text {gpu_mode == mode ? "" : ""}))))
+               (label :class "gpu-check" :text {gpu_mode == mode ? "✓" : ""}))))
 
 ;; ===================== Calendar Center =====================
 
@@ -519,11 +520,12 @@
 (defpoll power_text :interval "3600s" :initial "⏻"
   `$HOME/.config/hypr/scripts/status-power.sh | jq -r '.text // "⏻"'`)
 
-;; GPU mode (supergfxctl). Push-driven from gpu-mode.sh (init at startup, and
-;; after each `set`), so gpu_mode drives which option is highlighted with no
-;; poll lag. A slow poll keeps it honest if the mode is changed from elsewhere.
+;; GPU mode (OmenCore). Push-driven from gpu-mode.sh: `init` seeds these at
+;; startup and each `set` runs `eww update`, so gpu_mode drives which option is
+;; highlighted with no poll lag. Because a switch only takes effect after a
+;; reboot — and `init` runs on every login — the widget is re-seeded after any
+;; real change, so no poll is needed (mirrors the performance-mode module).
 (defvar gpu_text "")
 (defvar gpu_class "")
 (defvar gpu_tooltip "")
-(defpoll gpu_mode :interval "30s" :initial ""
-  `$HOME/.config/hypr/scripts/gpu-mode.sh | jq -r '.mode // ""'`)
+(defvar gpu_mode "")
