@@ -1,0 +1,7 @@
+# Python bytecode caches — build artifacts, never commit
+__pycache__/
+*.pyc
+*.pyo
+
+# Thumbnail / state caches these scripts generate at runtime
+# (kept out of the repo; regenerated on the target machine)

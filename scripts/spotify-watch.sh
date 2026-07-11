@@ -3,8 +3,19 @@
 # JSON every 500ms while a spotify player is present, mirroring the old
 # GTK Spotify Center's tick loop. Also fetches album art to a local cache.
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$DIR/json.sh"
+
 art_dir="${XDG_RUNTIME_DIR:-/tmp}/spotify-center-art"
 mkdir -p "$art_dir"
+
+# micros -> "m:ss" (integer math only).
+fmt_time() {
+  local micros=$1
+  [ -n "$micros" ] && [ "$micros" -ge 0 ] 2>/dev/null || micros=0
+  local seconds=$(( micros / 1000000 ))
+  printf '%d:%02d' "$(( seconds / 60 ))" "$(( seconds % 60 ))"
+}
 
 fetch_art() {
   local url="$1"
@@ -33,30 +44,26 @@ while true; do
   IFS=$'\t' read -r title artist album art_url length position <<< "$(playerctl -p spotify metadata --format '{{title}}	{{artist}}	{{album}}	{{mpris:artUrl}}	{{mpris:length}}	{{position}}' 2>/dev/null)"
   art_path=$(fetch_art "$art_url")
 
-  python3 - "$status" "$title" "$artist" "$album" "$art_path" "${length:-0}" "${position:-0}" <<'PY'
-import json
-import sys
+  # Normalise the raw micros to integers (empty/garbage -> 0).
+  length=${length:-0}; position=${position:-0}
+  case $length in ''|*[!0-9]*) length=0 ;; esac
+  case $position in ''|*[!0-9]*) position=0 ;; esac
 
-status, title, artist, album, art_path, length, position = sys.argv[1:8]
-length, position = int(length or 0), int(position or 0)
+  # length_sec must be >= 1 so eww's scale :max is never 0.
+  length_sec=$(( length / 1000000 )); [ "$length_sec" -lt 1 ] && length_sec=1
+  position_sec=$(( position / 1000000 ))
+  # progress as an integer percent (0..100); the widget doesn't read it, but
+  # keep the field for compatibility with the previous JSON shape.
+  if [ "$length" -gt 0 ]; then progress=$(( position * 100 / length )); else progress=0; fi
 
-def fmt(micros):
-    seconds = max(0, micros // 1_000_000)
-    return f"{seconds // 60}:{seconds % 60:02d}"
-
-print(json.dumps({
-    "playing": True,
-    "status": status,
-    "title": title or "Unknown",
-    "artist": artist or "Unknown",
-    "album": album,
-    "art_path": art_path,
-    "length_fmt": fmt(length),
-    "position_fmt": fmt(position),
-    "progress": (position / length) if length > 0 else 0,
-    "length_sec": length / 1_000_000 if length else 1,
-    "position_sec": position / 1_000_000,
-}))
-PY
+  printf '{"playing":true,"status":%s,"title":%s,"artist":%s,"album":%s,"art_path":%s,"length_fmt":%s,"position_fmt":%s,"progress":%d,"length_sec":%d,"position_sec":%d}\n' \
+    "$(json_str "$status")" \
+    "$(json_str "${title:-Unknown}")" \
+    "$(json_str "${artist:-Unknown}")" \
+    "$(json_str "$album")" \
+    "$(json_str "$art_path")" \
+    "$(json_str "$(fmt_time "$length")")" \
+    "$(json_str "$(fmt_time "$position")")" \
+    "$progress" "$length_sec" "$position_sec"
   sleep 0.5
 done

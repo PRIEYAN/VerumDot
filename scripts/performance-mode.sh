@@ -25,6 +25,16 @@ status_json() {
   esac
 }
 
+# Push current profile state into eww's perf_* vars. Called after a cycle and
+# at startup (init) so the widget reflects state without any poll-interval lag.
+push_eww() {
+  json=$(status_json)
+  eww update "perf_text=$(printf '%s' "$json" | jq -r '.text // ""')" \
+             "perf_class=$(printf '%s' "$json" | jq -r '.class // ""')" \
+             "perf_tooltip=$(printf '%s' "$json" | jq -r '.tooltip // ""')" \
+    >/dev/null 2>&1
+}
+
 if [ "$1" = "cycle" ]; then
   case "$(profile)" in
     balanced)     next="power-saver" ;;
@@ -40,12 +50,13 @@ if [ "$1" = "cycle" ]; then
       *)           powerprofilesctl set balanced 2>/dev/null ;;
     esac
   fi
-  # push fresh state into eww immediately
-  json=$(status_json)
-  eww update "perf_text=$(printf '%s' "$json" | jq -r '.text // ""')" \
-             "perf_class=$(printf '%s' "$json" | jq -r '.class // ""')" \
-             "perf_tooltip=$(printf '%s' "$json" | jq -r '.tooltip // ""')" \
-    >/dev/null 2>&1
+  push_eww   # reflect the new profile in the bar immediately
+  exit 0
+fi
+
+# Seed the eww vars from the current profile (run once at startup).
+if [ "$1" = "init" ]; then
+  push_eww
   exit 0
 fi
 

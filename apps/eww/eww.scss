@@ -327,6 +327,54 @@
   letter-spacing: 1px;
 }
 
+/* ===================== GPU Center ===================== */
+
+.gpu-list {
+  padding: 12px 16px 16px;
+}
+
+.gpu-option {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  color: #ffffff;
+  padding: 14px 14px;
+  margin-bottom: 10px;
+}
+
+.gpu-option:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.gpu-option.active {
+  border-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+.gpu-glyph {
+  font-size: 22px;
+  margin-right: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.gpu-option-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.gpu-option-desc {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.gpu-check {
+  font-size: 14px;
+  color: #ffffff;
+  margin-left: 10px;
+}
+
 /* ===================== Calendar Center ===================== */
 
 .center-calendar {

@@ -46,6 +46,13 @@
   :windowtype "normal"
   (network-center-window))
 
+(defwindow gpu-center
+  :monitor 0
+  :geometry (geometry :x "-10px" :y "38px" :width "380px" :height "300px" :anchor "top right")
+  :stacking "overlay"
+  :windowtype "normal"
+  (gpu-center-window))
+
 ;; ===================== Layout =====================
 (defwidget topbar []
   ;; centerbox guarantees the middle child sits at the true midpoint of the bar
@@ -161,9 +168,10 @@
          wifi_text)))
 
 (defwidget battery []
-  (box :class "module battery ${battery_class}"
-       :tooltip battery_tooltip
-       battery_text))
+  (eventbox :onclick "eww open --toggle gpu-center"
+    (box :class "module battery ${battery_class}"
+         :tooltip battery_tooltip
+         battery_text)))
 
 (defwidget power []
   (eventbox :onclick "eww open --toggle power-center"
@@ -195,6 +203,38 @@
           (box :orientation "v" :space-evenly false :halign "center" :valign "center"
                (label :class "power-glyph" :text glyph)
                (label :class "power-label" :text label_))))
+
+;; ===================== GPU Center =====================
+;; Dropdown from the battery icon. Two mutually-exclusive modes driven by
+;; gpu-mode.sh (supergfxctl). The currently-active mode is highlighted via
+;; gpu_mode; clicking a mode requests the switch and closes the popup.
+
+(defwidget gpu-center-window []
+  (box :class "center-root" :orientation "v" :space-evenly false
+       (box :class "center-topbar" :orientation "h" :space-evenly false
+            (box :orientation "v" :space-evenly false :hexpand true
+                 (label :class "center-title" :halign "start" :text "GPU")
+                 (label :class "center-subtitle" :halign "start" :text {gpu_mode == "na" ? "supergfxctl unavailable" : "current: ${gpu_mode}"}))
+            (button :class "center-close" :onclick "eww close gpu-center" "x"))
+       (box :class "gpu-list" :orientation "v" :space-evenly false
+            (gpu-option :mode "Integrated"
+                        :glyph "󰻠"
+                        :title "Integrated only"
+                        :desc "Intel iGPU · NVIDIA powered off")
+            (gpu-option :mode "Hybrid"
+                        :glyph "󰢮"
+                        :title "Dedicated + Integrated"
+                        :desc "Intel UHD + NVIDIA (PRIME offload)"))))
+
+(defwidget gpu-option [mode glyph title desc]
+  (button :class "gpu-option ${gpu_mode == mode ? "active" : ""}"
+          :onclick "eww close gpu-center; $HOME/.config/hypr/scripts/gpu-mode.sh set ${mode}"
+          (box :orientation "h" :space-evenly false :valign "center"
+               (label :class "gpu-glyph" :text glyph)
+               (box :orientation "v" :space-evenly false :hexpand true :halign "start"
+                    (label :class "gpu-option-title" :halign "start" :text title)
+                    (label :class "gpu-option-desc" :halign "start" :text desc))
+               (label :class "gpu-check" :text {gpu_mode == mode ? "" : ""}))))
 
 ;; ===================== Calendar Center =====================
 
@@ -409,7 +449,7 @@
   `date '+%A, %d %B %Y  %H:%M:%S'`)
 
 (defpoll app_info_text :interval "1s" :initial ""
-  `$HOME/.config/waybar/scripts/app-info.py | jq -r '.text // "" | .[0:32]'`)
+  `$HOME/.config/hypr/scripts/app-info.sh | jq -r '.text // "" | .[0:32]'`)
 
 (defpoll spotify_text :interval "2s" :initial ""
   `$HOME/.config/hypr/scripts/status-spotify.sh | jq -r '.text // ""'`)
@@ -428,12 +468,13 @@
 (defpoll idle_class :interval "2s" :initial "deactivated"
   `$HOME/.config/hypr/scripts/idle-inhibitor.sh | jq -r '.class // "deactivated"'`)
 
-(defpoll perf_text :interval "5s" :initial ""
-  `$HOME/.config/hypr/scripts/performance-mode.sh | jq -r '.text // ""'`)
-(defpoll perf_class :interval "10s" :initial ""
-  `$HOME/.config/hypr/scripts/performance-mode.sh | jq -r '.class // ""'`)
-(defpoll perf_tooltip :interval "10s" :initial ""
-  `$HOME/.config/hypr/scripts/performance-mode.sh | jq -r '.tooltip // ""'`)
+;; Push-driven: the click handler in performance-mode.sh runs `eww update`
+;; to refresh these the instant the profile changes, so they're plain
+;; defvars (not defpolls) and update with no poll-interval lag. Initial
+;; state is seeded by `performance-mode.sh init` at startup.
+(defvar perf_text "")
+(defvar perf_class "")
+(defvar perf_tooltip "")
 
 (defpoll mic_text :interval "2s" :initial ""
   `$HOME/.config/hypr/scripts/mic-status.sh | jq -r '.text // ""'`)
@@ -469,11 +510,20 @@
   `$HOME/.config/hypr/scripts/status-bluetooth.sh | jq -r '.class // ""'`)
 
 (defpoll battery_text :interval "30s" :initial ""
-  `$HOME/.config/hypr/scripts/battery-status.py | jq -r '.text // ""'`)
+  `$HOME/.config/hypr/scripts/battery-status.sh | jq -r '.text // ""'`)
 (defpoll battery_tooltip :interval "30s" :initial ""
-  `$HOME/.config/hypr/scripts/battery-status.py | jq -r '.tooltip // ""'`)
+  `$HOME/.config/hypr/scripts/battery-status.sh | jq -r '.tooltip // ""'`)
 (defpoll battery_class :interval "30s" :initial ""
-  `$HOME/.config/hypr/scripts/battery-status.py | jq -r '.class // ""'`)
+  `$HOME/.config/hypr/scripts/battery-status.sh | jq -r '.class // ""'`)
 
 (defpoll power_text :interval "3600s" :initial "⏻"
   `$HOME/.config/hypr/scripts/status-power.sh | jq -r '.text // "⏻"'`)
+
+;; GPU mode (supergfxctl). Push-driven from gpu-mode.sh (init at startup, and
+;; after each `set`), so gpu_mode drives which option is highlighted with no
+;; poll lag. A slow poll keeps it honest if the mode is changed from elsewhere.
+(defvar gpu_text "")
+(defvar gpu_class "")
+(defvar gpu_tooltip "")
+(defpoll gpu_mode :interval "30s" :initial ""
+  `$HOME/.config/hypr/scripts/gpu-mode.sh | jq -r '.mode // ""'`)

@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
+# self-locate so the rofi theme resolves for any user / checkout location
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [ "$1" = "menu" ]; then
-  choice=$(printf '%s\n' "󰝟  Mute / Unmute" "󰖀  10%" "󰕾  25%" "󰕾  50%" "󰕾  75%" "󰕾  100%" | rofi -dmenu -p "Volume" -theme $HOME/.config/hypr/apps/rofi/waybar-menu.rasi)
+  choice=$(printf '%s\n' "󰝟  Mute / Unmute" "󰖀  10%" "󰕾  25%" "󰕾  50%" "󰕾  75%" "󰕾  100%" | rofi -dmenu -p "Volume" -theme "$DIR/../apps/rofi/waybar-menu.rasi")
   case "$choice" in
     *Mute*) pamixer -t ;;
     *10%*) pamixer --set-volume 10 ;;

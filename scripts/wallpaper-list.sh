@@ -4,6 +4,9 @@
 # opens fast even with many large wallpapers.
 # Usage: wallpaper-list.sh [filter-substring]
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$DIR/json.sh"
+
 dir="$HOME/Pictures/Wallpapers"
 cache="$HOME/.cache/eww-wallpaper-thumbs"
 filter="${1:-}"
@@ -39,27 +42,44 @@ shopt -s nullglob nocaseglob
 files=("$dir"/*.jpg "$dir"/*.jpeg "$dir"/*.png "$dir"/*.webp)
 shopt -u nullglob nocaseglob
 
-# Build "name<TAB>thumb<TAB>fullpath" lines, filtered, then hand to python
-# for JSON assembly (python handles quoting/rows).
+# Build "name<TAB>thumb<TAB>fullpath" lines (name lowercased for sort+display),
+# filtered, then assemble JSON in pure shell — rows of 3 items each.
+# NOTE: precompute the lowercased filter into a plain var — a *quoted* empty
+# expansion (*"${filter,,}"*) fails to match everything in bash 5.2, so use
+# the pattern unquoted with the empty string matching all names.
+flt=${filter,,}
 tmp=$(mktemp)
 for f in "${files[@]}"; do
   base=$(basename "$f")
   case "${base,,}" in
-    *"${filter,,}"*) printf '%s\t%s\t%s\n' "${base%.*}" "$(thumb_for "$f")" "$f" >> "$tmp" ;;
+    *$flt*)
+      name=${base%.*}
+      printf '%s\t%s\t%s\n' "${name,,}" "$(thumb_for "$f")" "$f" >> "$tmp"
+      ;;
   esac
 done
 
-python3 - "$tmp" <<'PY'
-import json, sys
-items = []
-with open(sys.argv[1]) as fh:
-    for line in fh:
-        parts = line.rstrip("\n").split("\t")
-        if len(parts) == 3:
-            name, thumb, full = parts
-            items.append({"name": name.lower(), "path": thumb, "full": full})
-items.sort(key=lambda x: x["name"])
-rows = [items[i:i+3] for i in range(0, len(items), 3)]
-print(json.dumps({"count": len(items), "rows": rows}))
-PY
+# Sort by name (first TAB-separated field), then emit {count, rows[[{...}]]}.
+count=0
+rows=""      # comma-joined week/row arrays
+cell_json="" # items accumulated for the current row of 3
+col=0
+while IFS=$'\t' read -r name thumb full; do
+  [ -n "$name$thumb$full" ] || continue
+  count=$(( count + 1 ))
+  item=$(printf '{"name":%s,"path":%s,"full":%s}' \
+    "$(json_str "$name")" "$(json_str "$thumb")" "$(json_str "$full")")
+  if [ -z "$cell_json" ]; then cell_json="$item"; else cell_json="$cell_json,$item"; fi
+  col=$(( col + 1 ))
+  if [ "$col" -eq 3 ]; then
+    if [ -z "$rows" ]; then rows="[$cell_json]"; else rows="$rows,[$cell_json]"; fi
+    cell_json=""; col=0
+  fi
+done < <(LC_ALL=C sort -t $'\t' -k1,1 "$tmp")
+# Flush a partial final row.
+if [ -n "$cell_json" ]; then
+  if [ -z "$rows" ]; then rows="[$cell_json]"; else rows="$rows,[$cell_json]"; fi
+fi
 rm -f "$tmp"
+
+printf '{"count":%d,"rows":[%s]}\n' "$count" "$rows"
