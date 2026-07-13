@@ -19,7 +19,7 @@ status_json() {
     performance)
       printf '{"text":"%s","tooltip":"Performance mode","class":"performance"}\n' "$G_PERF" ;;
     power-saver)
-      printf '{"text":"%s","tooltip":"Power-saver mode","class":"balanced"}\n' "$G_SAVE" ;;
+      printf '{"text":"%s","tooltip":"Power-saver mode","class":"power-saver"}\n' "$G_SAVE" ;;
     balanced|*)
       printf '{"text":"%s","tooltip":"Balanced mode","class":"balanced"}\n' "$G_BAL" ;;
   esac
