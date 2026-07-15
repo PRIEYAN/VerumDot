@@ -1,0 +1,226 @@
+;; ─────────────────────────────────────────────────────────────────────
+;; eww popup panels for the hypr bar: wifi, bluetooth, power, volume,
+;; calendar. macOS Control-Center-ish look. All data comes from pure-sh
+;; backends in ~/.config/hypr/scripts/eww/. This .yuck (widgets) and the
+;; .scss (styling) are the only non-shell pieces, by design.
+;; ─────────────────────────────────────────────────────────────────────
+
+(defvar SD "/home/prieyan/.config/hypr/scripts/eww")
+(defvar CAL "/home/prieyan/.config/hypr/scripts/eww-cal.sh")
+
+;; ─── polled data variables ───────────────────────────────────────────
+(defpoll net_state   :interval "5s" :initial "{\"kind\":\"none\",\"ethernet\":\"\",\"ssid\":\"\",\"wifi_enabled\":false}" `${SD}/net-data.sh state`)
+(defpoll net_known   :interval "8s" :initial "[]" `${SD}/net-data.sh known`)
+(defpoll net_other   :interval "8s" :initial "[]" `${SD}/net-data.sh other`)
+(defpoll bt_state    :interval "5s" :initial "{\"powered\":false,\"connected\":\"\"}" `${SD}/net-data.sh bt-state`)
+(defpoll bt_devices  :interval "8s" :initial "[]" `${SD}/net-data.sh bt-devices`)
+(defpoll vol_state   :interval "1s" :initial "{\"volume\":0,\"muted\":false}" `${SD}/vol-data.sh`)
+
+;; ─── UI-only state ────────────────────────────────────────────────────
+(defvar cal_offset 0)                 ;; month offset for the calendar
+(defvar show_other false)             ;; wifi "Other Networks" expanded?
+(defvar wifi_pw "")                   ;; text typed into the inline pw field
+(defvar wifi_pw_target "")            ;; ssid the pw field is targeting
+;; cal_data is driven only by eww-cal.sh (reset/prev/next), never polled,
+;; so month navigation is not clobbered on an interval.
+(defvar cal_data "{\"label\":\"\",\"weeks\":[]}")
+
+;; ═══════════════════════════════════════════════════════════════════════
+;; WIFI PANEL
+;; ═══════════════════════════════════════════════════════════════════════
+
+(defwidget wifi-row [item locked]
+  (box :class "net-row" :space-evenly false :spacing 8
+    (button :class "net-row-main" :onclick "${SD}/net-action.sh wifi-connect '${item.ssid}' &"
+      (box :space-evenly false :spacing 8
+        (label :class "net-ico ${item.active == true ? "on" : ""}" :text "󰤨")
+        (label :class "net-name" :text {item.ssid})
+        (box :hexpand true)
+        (label :class "net-lock" :visible {item.secured == true} :text "")))))
+
+(defwidget wifi-pw-row []
+  (box :class "pw-row" :orientation "v" :space-evenly false :spacing 6
+    (label :class "pw-label" :xalign 0 :text "Password for ${wifi_pw_target}")
+    (box :space-evenly false :spacing 6
+      (input :class "pw-input" :password true :value wifi_pw
+             :onchange "eww -c /home/prieyan/.config/hypr/apps/eww update wifi_pw='{}'")
+      (button :class "pw-join" :onclick "${SD}/net-action.sh wifi-connect '${wifi_pw_target}' '${wifi_pw}' &" "Join"))))
+
+(defwidget wifi-panel []
+  (box :class "panel" :orientation "v" :space-evenly false :spacing 4
+    (box :class "panel-head" :space-evenly false
+      (label :class "panel-title" :text "Wi-Fi")
+      (box :hexpand true)
+      (button :class "toggle ${net_state.wifi_enabled == true ? "on" : ""}"
+              :onclick "${SD}/net-action.sh wifi-toggle &"
+        (box :class "knob")))
+
+    ;; Ethernet takes priority in the status line.
+    (box :class "conn-status" :visible {net_state.kind == "ethernet"} :space-evenly false :spacing 8
+      (label :class "net-ico on" :text "󰈀")
+      (label :class "net-name" :text "Connected — Ethernet (${net_state.ethernet})"))
+
+    (label :class "section" :xalign 0 :text "Known Network"
+           :visible {net_state.kind != "ethernet"})
+    (box :orientation "v" :space-evenly false :visible {net_state.kind != "ethernet"}
+      (for item in net_known
+        (box :orientation "v" :space-evenly false
+          (wifi-row :item item :locked false)
+          ;; inline password field appears under the row being joined
+          (box :visible {wifi_pw_target == item.ssid}
+            (wifi-pw-row)))))
+
+    ;; "Other Networks ›" expands to the unsaved scan list.
+    (button :class "section-btn" :onclick "eww -c /home/prieyan/.config/hypr/apps/eww update show_other=${!show_other}"
+      (box :space-evenly false
+        (label :xalign 0 :text "Other Networks")
+        (box :hexpand true)
+        (label :class "chev" :text {show_other ? "" : ""})))
+    (box :orientation "v" :space-evenly false :visible show_other
+      (for item in net_other
+        (box :orientation "v" :space-evenly false
+          (button :class "net-row-main"
+                  :onclick "eww -c /home/prieyan/.config/hypr/apps/eww update wifi_pw_target='${item.ssid}' wifi_pw=''"
+            (box :space-evenly false :spacing 8
+              (label :class "net-ico" :text "󰤨")
+              (label :class "net-name" :text {item.ssid})
+              (box :hexpand true)
+              (label :class "net-lock" :visible {item.secured == true} :text "")))
+          (box :visible {wifi_pw_target == item.ssid}
+            (wifi-pw-row)))))
+
+    (button :class "settings-btn" :onclick "nm-connection-editor & eww -c /home/prieyan/.config/hypr/apps/eww close wifi"
+      (box :space-evenly false :spacing 8
+        (label :class "gear" :text "")
+        (label :xalign 0 :text "Wi-Fi Settings…")))))
+
+;; ═══════════════════════════════════════════════════════════════════════
+;; BLUETOOTH PANEL
+;; ═══════════════════════════════════════════════════════════════════════
+
+(defwidget bt-row [item]
+  (button :class "net-row-main"
+          :onclick {item.state == "connected"
+                     ? "${SD}/net-action.sh bt-disconnect '${item.mac}' &"
+                     : "${SD}/net-action.sh bt-connect '${item.mac}' &"}
+    (box :space-evenly false :spacing 8
+      (label :class "net-ico ${item.state == "connected" ? "on" : ""}" :text "")
+      (label :class "net-name" :text {item.name})
+      (box :hexpand true)
+      (label :class "net-meta" :text {item.state}))))
+
+(defwidget bt-panel []
+  (box :class "panel" :orientation "v" :space-evenly false :spacing 4
+    (box :class "panel-head" :space-evenly false
+      (label :class "panel-title" :text "Bluetooth")
+      (box :hexpand true)
+      (button :class "toggle ${bt_state.powered == true ? "on" : ""}"
+              :onclick "${SD}/net-action.sh bt-toggle &"
+        (box :class "knob")))
+    (box :class "conn-status" :visible {bt_state.connected != ""} :space-evenly false :spacing 8
+      (label :class "net-ico on" :text "")
+      (label :class "net-name" :text "Connected — ${bt_state.connected}"))
+    (label :class "section" :xalign 0 :text "Devices" :visible {bt_state.powered == true})
+    (box :orientation "v" :space-evenly false :visible {bt_state.powered == true}
+      (for item in bt_devices
+        (bt-row :item item)))))
+
+;; ═══════════════════════════════════════════════════════════════════════
+;; VOLUME PANEL
+;; ═══════════════════════════════════════════════════════════════════════
+
+(defwidget vol-panel []
+  (box :class "panel" :orientation "v" :space-evenly false :spacing 8
+    (box :class "panel-head" :space-evenly false
+      (label :class "panel-title" :text "Sound")
+      (box :hexpand true)
+      (label :class "vol-pct" :text "${vol_state.volume}%"))
+    (box :space-evenly false :spacing 10
+      (button :class "vol-mute ${vol_state.muted == true ? "on" : ""}"
+              :onclick "${SD}/vol-action.sh mute &"
+        (label :text {vol_state.muted == true ? "󰝟" : "󰕾"}))
+      (scale :class "vol-scale" :hexpand true :min 0 :max 100
+             :value {vol_state.volume}
+             :onchange "${SD}/vol-action.sh set {} &"))))
+
+;; ═══════════════════════════════════════════════════════════════════════
+;; POWER PANEL
+;; ═══════════════════════════════════════════════════════════════════════
+
+(defwidget power-btn [icon name action danger]
+  (button :class "power-cell ${danger ? "danger" : ""}" :onclick "${SD}/power-action.sh ${action} &"
+    (box :orientation "v" :space-evenly false :spacing 4
+      (label :class "power-glyph" :text icon)
+      (label :class "power-label" :text name))))
+
+(defwidget power-panel []
+  (box :class "panel" :orientation "v" :space-evenly false :spacing 8
+    (label :class "panel-title" :xalign 0 :text "Power")
+    (box :space-evenly true :spacing 8
+      (power-btn :icon "" :name "Lock"    :action "lock"    :danger false)
+      (power-btn :icon "󰤄" :name "Suspend" :action "suspend" :danger false)
+      (power-btn :icon "󰗽" :name "Logout"  :action "logout"  :danger false))
+    (box :space-evenly true :spacing 8
+      (power-btn :icon "" :name "Reboot"   :action "reboot"   :danger true)
+      (power-btn :icon "⏻" :name "Shutdown" :action "shutdown" :danger true))))
+
+;; ═══════════════════════════════════════════════════════════════════════
+;; CALENDAR PANEL
+;; ═══════════════════════════════════════════════════════════════════════
+
+(defwidget cal-cell [cell]
+  (label :class "cal-cell ${cell.today == true ? "today" : ""}" :text {cell.d}))
+
+(defwidget cal-panel []
+  (box :class "panel" :orientation "v" :space-evenly false :spacing 6
+    (box :class "cal-head" :space-evenly false
+      (button :class "cal-nav" :onclick "${CAL} prev &" "")
+      (box :hexpand true)
+      (label :class "cal-month" :text {cal_data.label})
+      (box :hexpand true)
+      (button :class "cal-nav" :onclick "${CAL} next &" ""))
+    (box :class "cal-week-head" :space-evenly true
+      (label :class "wd" :text "Su") (label :class "wd" :text "Mo")
+      (label :class "wd" :text "Tu") (label :class "wd" :text "We")
+      (label :class "wd" :text "Th") (label :class "wd" :text "Fr")
+      (label :class "wd" :text "Sa"))
+    (box :orientation "v" :space-evenly false :spacing 2
+      (for week in {cal_data.weeks}
+        (box :space-evenly true
+          (for cell in week
+            (cal-cell :cell cell)))))
+    (label :class "cal-hint" :text "←  prev   ·   next  →")))
+
+;; ═══════════════════════════════════════════════════════════════════════
+;; WINDOWS
+;; ═══════════════════════════════════════════════════════════════════════
+
+(defwindow wifi
+  :monitor 0
+  :geometry (geometry :anchor "top right" :x "8px" :y "40px" :width "300px")
+  :stacking "overlay" :focusable true
+  (wifi-panel))
+
+(defwindow bluetooth
+  :monitor 0
+  :geometry (geometry :anchor "top right" :x "8px" :y "40px" :width "300px")
+  :stacking "overlay" :focusable true
+  (bt-panel))
+
+(defwindow volume
+  :monitor 0
+  :geometry (geometry :anchor "top right" :x "8px" :y "40px" :width "280px")
+  :stacking "overlay" :focusable true
+  (vol-panel))
+
+(defwindow power
+  :monitor 0
+  :geometry (geometry :anchor "top right" :x "8px" :y "40px" :width "300px")
+  :stacking "overlay" :focusable true
+  (power-panel))
+
+(defwindow calendar
+  :monitor 0
+  :geometry (geometry :anchor "top left" :x "8px" :y "40px" :width "260px")
+  :stacking "overlay" :focusable true
+  (cal-panel))

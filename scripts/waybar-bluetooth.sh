@@ -13,8 +13,7 @@ connected_devices() {
 }
 
 if [ "$1" = "menu" ]; then
-  # Run inline (blocking) so rofi attaches to the Wayland session.
-  /home/prieyan/.config/hypr/scripts/network-center.sh bluetooth
+  eww -c /home/prieyan/.config/hypr/apps/eww open --toggle bluetooth
   exit 0
 fi
 

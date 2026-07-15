@@ -1,0 +1,208 @@
+// ─────────────────────────────────────────────────────────────────────
+// macOS Control-Center-ish styling for the eww popup panels.
+// Dark translucent cards, blue accent toggles, rounded pills.
+// ─────────────────────────────────────────────────────────────────────
+
+$bg:        rgba(28, 27, 26, 0.94);
+$card:      rgba(255, 255, 255, 0.05);
+$card-hi:   rgba(255, 255, 255, 0.09);
+$fg:        #e8e3d8;
+$muted:     rgba(232, 227, 216, 0.45);
+$border:    rgba(255, 255, 255, 0.10);
+$accent:    #3b82f6;   // iOS/macOS toggle blue
+$danger:    #ff5f56;
+$font:      "Iosevka Term";
+
+* {
+  all: unset;
+  font-family: $font;
+  font-size: 13px;
+}
+
+.panel {
+  background-color: $bg;
+  border: 1px solid $border;
+  border-radius: 14px;
+  padding: 14px;
+  color: $fg;
+}
+
+// ─── headers / sections ───────────────────────────────────────────────
+.panel-head { margin-bottom: 6px; }
+
+.panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: $fg;
+}
+
+.section {
+  color: $muted;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 8px 2px 2px;
+}
+
+.section-btn {
+  color: $muted;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 2px;
+  border-radius: 6px;
+  &:hover { background-color: $card-hi; color: $fg; }
+  .chev { color: $muted; font-size: 12px; }
+}
+
+// ─── toggle switch (macOS pill) ───────────────────────────────────────
+.toggle {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  min-width: 42px;
+  min-height: 24px;
+  padding: 2px;
+  transition: 180ms;
+  .knob {
+    background-color: #ffffff;
+    border-radius: 999px;
+    min-width: 20px;
+    min-height: 20px;
+  }
+  &.on {
+    background-color: $accent;
+    .knob { margin-left: 18px; }
+  }
+}
+
+// ─── network / bluetooth rows ─────────────────────────────────────────
+.conn-status {
+  background-color: $card;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 4px 0;
+}
+
+.net-row-main {
+  padding: 8px 10px;
+  border-radius: 8px;
+  &:hover { background-color: $card-hi; }
+}
+
+.net-ico {
+  color: $muted;
+  font-size: 15px;
+  &.on { color: $accent; }
+}
+
+.net-name { color: $fg; }
+.net-meta { color: $muted; font-size: 11px; }
+.net-lock { color: $muted; font-size: 12px; }
+
+// ─── inline password field ────────────────────────────────────────────
+.pw-row {
+  background-color: $card;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 2px 0 6px 22px;
+}
+.pw-label { color: $muted; font-size: 11px; }
+.pw-input {
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: $fg;
+  caret-color: $fg;
+}
+.pw-input:focus { border-color: $accent; }
+.pw-join {
+  background-color: $accent;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  &:hover { background-color: lighten($accent, 6%); }
+}
+
+.settings-btn {
+  padding: 8px 4px;
+  margin-top: 6px;
+  border-radius: 8px;
+  color: $fg;
+  .gear { color: $muted; font-size: 14px; }
+  &:hover { background-color: $card-hi; }
+}
+
+// ─── volume ────────────────────────────────────────────────────────────
+.vol-pct { color: $muted; font-size: 12px; }
+.vol-mute {
+  font-size: 16px;
+  color: $fg;
+  padding: 6px 8px;
+  border-radius: 8px;
+  &.on { color: $danger; }
+  &:hover { background-color: $card-hi; }
+}
+.vol-scale {
+  min-height: 22px;
+  trough {
+    background-color: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    min-height: 5px;
+  }
+  highlight {
+    background-color: $accent;
+    border-radius: 999px;
+    min-height: 5px;
+  }
+  slider {
+    background-color: #ffffff;
+    border-radius: 999px;
+    min-width: 14px;
+    min-height: 14px;
+    margin: -5px;
+  }
+}
+
+// ─── power grid ─────────────────────────────────────────────────────────
+.power-cell {
+  background-color: $card;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 14px 8px;
+  min-width: 78px;
+  color: $fg;
+  &:hover { background-color: $card-hi; border-color: rgba(255,255,255,0.30); }
+  &.danger:hover { background-color: $danger; border-color: $danger; color: #ffffff; }
+  .power-glyph { font-size: 20px; }
+  .power-label { font-size: 11px; font-weight: 600; }
+}
+
+// ─── calendar ────────────────────────────────────────────────────────────
+.cal-head { margin-bottom: 2px; }
+.cal-month { font-size: 14px; font-weight: 700; color: $fg; }
+.cal-nav {
+  color: $muted;
+  font-size: 14px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  &:hover { background-color: $card-hi; color: $fg; }
+}
+.cal-week-head { margin-bottom: 2px; }
+.wd { color: $muted; font-size: 11px; font-weight: 700; }
+.cal-cell {
+  color: $fg;
+  font-size: 12px;
+  min-width: 30px;
+  min-height: 28px;
+  border-radius: 999px;
+  &.today {
+    background-color: $accent;
+    color: #ffffff;
+    font-weight: 700;
+  }
+}
+.cal-hint {
+  color: $muted;
+  font-size: 10px;
+  margin-top: 8px;
+}

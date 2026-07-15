@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
 
 if [ "$1" = "menu" ]; then
-  choice=$(printf '%s\n' "󰝟  Mute / Unmute" "󰖀  10%" "󰕾  25%" "󰕾  50%" "󰕾  75%" "󰕾  100%" | rofi -dmenu -p "Volume" -theme /home/prieyan/.config/hypr/apps/rofi/waybar-menu.rasi)
-  case "$choice" in
-    *Mute*) pamixer -t ;;
-    *10%*) pamixer --set-volume 10 ;;
-    *25%*) pamixer --set-volume 25 ;;
-    *50%*) pamixer --set-volume 50 ;;
-    *75%*) pamixer --set-volume 75 ;;
-    *100%*) pamixer --set-volume 100 ;;
-    *) exit 0 ;;
-  esac
+  eww -c /home/prieyan/.config/hypr/apps/eww open --toggle volume
   exit 0
 fi
 
