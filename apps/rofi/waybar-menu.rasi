@@ -33,13 +33,22 @@ inputbar {
   border-color: @border;
   border-radius: 7px;
   background-color: @bg-alt;
-  children: [ prompt ];
+  children: [ prompt, entry ];
 }
 
 prompt {
   font: "Iosevka Term 12";
   text-color: @accent;
   background-color: transparent;
+}
+
+entry {
+  font: "Iosevka Term 12";
+  margin: 0 0 0 8px;
+  text-color: @fg;
+  background-color: transparent;
+  placeholder: "";
+  placeholder-color: @muted;
 }
 
 listview {

@@ -21,7 +21,10 @@ list_entries() {
       done
 }
 
-selection=$(list_entries | rofi -dmenu -i -p "Wallpaper" -show-icons -theme "$THEME")
+# The shared theme sets `show-icons: false`, which would override the
+# -show-icons flag; re-enable icons inline so thumbnails render.
+selection=$(list_entries | rofi -dmenu -i -p "Wallpaper" \
+  -show-icons -theme "$THEME" -theme-str 'configuration { show-icons: true; }')
 [ -z "$selection" ] && exit 0
 
 setsid -f "$SET_WALLPAPER" set "$WALLPAPER_DIR/$selection" >/dev/null 2>&1

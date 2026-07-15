@@ -5,7 +5,8 @@ json_escape() {
 }
 
 if [ "$1" = "menu" ]; then
-  setsid -f /home/prieyan/.config/hypr/scripts/spotify-center.sh >/tmp/spotify-center.log 2>&1
+  # Run inline (blocking) so rofi attaches to the Wayland session.
+  /home/prieyan/.config/hypr/scripts/spotify-center.sh
   exit 0
 fi
 
