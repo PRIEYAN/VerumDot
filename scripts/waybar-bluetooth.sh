@@ -13,7 +13,7 @@ connected_devices() {
 }
 
 if [ "$1" = "menu" ]; then
-  setsid -f /home/prieyan/.config/hypr/scripts/network-center.py bluetooth >/tmp/network-center.log 2>&1
+  setsid -f /home/prieyan/.config/hypr/scripts/network-center.sh bluetooth >/tmp/network-center.log 2>&1
   exit 0
 fi
 

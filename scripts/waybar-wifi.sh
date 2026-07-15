@@ -9,7 +9,7 @@ current_ssid() {
 }
 
 if [ "$1" = "menu" ]; then
-  setsid -f /home/prieyan/.config/hypr/scripts/network-center.py wifi >/tmp/network-center.log 2>&1
+  setsid -f /home/prieyan/.config/hypr/scripts/network-center.sh wifi >/tmp/network-center.log 2>&1
   exit 0
 fi
 
