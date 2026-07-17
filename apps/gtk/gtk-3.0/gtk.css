@@ -1,17 +1,42 @@
-/* Curved window borders for GTK3 apps (nm-connection-editor, blueman-manager),
-   matching the eww/rofi popup radius. */
+/* Black, curved windows for GTK3 apps (nm-connection-editor, blueman-manager),
+   matching the eww/rofi popup look. Colors are forced here rather than
+   relying solely on the theme, since some distros ship GTK apps that
+   ignore gtk-application-prefer-dark-theme for parts of their chrome. */
 
-window.background {
-  border-radius: 14px;
-  background-color: #1c1b1a;
-}
-
+window,
+window.background,
 window.background.csd {
   border-radius: 14px;
+  background-color: #0d0d0d;
+  color: #e8e3d8;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.10);
 }
 
 headerbar {
+  background-color: #141414;
+  color: #e8e3d8;
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
+  box-shadow: none;
+}
+
+headerbar,
+headerbar entry,
+headerbar button {
+  background-image: none;
+}
+
+treeview,
+list,
+list row,
+notebook,
+notebook stack,
+scrolledwindow,
+box {
+  background-color: transparent;
+}
+
+treeview:selected,
+list row:selected {
+  background-color: #2a2a2a;
 }
