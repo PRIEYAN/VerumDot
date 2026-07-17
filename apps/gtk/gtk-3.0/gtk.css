@@ -1,21 +1,23 @@
-/* Black, curved windows for GTK3 apps (nm-connection-editor, blueman-manager),
+/* Glassy, curved windows for GTK3 apps (nm-connection-editor, blueman-manager),
    matching the eww/rofi popup look. Colors are forced here rather than
    relying solely on the theme, since some distros ship GTK apps that
    ignore gtk-application-prefer-dark-theme for parts of their chrome.
-   Corners are clipped via border-radius + overflow (no drawn border). */
+   Corners are clipped via border-radius + overflow (no drawn border).
+   Transparency here pairs with Hyprland's compositor-side blur
+   (decoration.blur in hypr.conf) to give the glass effect. */
 
 window,
 window.background,
 window.background.csd {
   border-radius: 14px;
-  background-color: #0d0d0d;
+  background-color: rgba(13, 13, 13, 0.72);
   background-clip: border-box;
 }
 
 decoration {
   border-radius: 14px;
   box-shadow: none;
-  background-color: #0d0d0d;
+  background-color: rgba(13, 13, 13, 0.72);
 }
 
 * {
@@ -23,7 +25,7 @@ decoration {
 }
 
 headerbar {
-  background-color: #141414;
+  background-color: rgba(20, 20, 20, 0.60);
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
   box-shadow: none;
@@ -53,12 +55,46 @@ notebook header,
 notebook stack,
 scrolledwindow,
 box {
-  background-color: #0d0d0d;
+  background-color: transparent;
   background-image: none;
 }
 
 treeview:selected,
 list row:selected,
 row:selected {
-  background-color: #2a2a2a;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Bottom toolbar (+ / - / gear on blueman, nm-connection-editor) */
+toolbar,
+.toolbar {
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  padding: 4px;
+}
+
+toolbar button,
+.toolbar button,
+toolbutton,
+toolbutton button {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  color: #ffffff;
+}
+
+toolbar button:hover,
+.toolbar button:hover,
+toolbutton button:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+}
+
+toolbar image,
+.toolbar image,
+toolbutton image,
+toolbar button image {
+  color: #ffffff;
+  -gtk-icon-shadow: none;
 }
