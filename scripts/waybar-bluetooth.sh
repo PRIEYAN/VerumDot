@@ -13,7 +13,7 @@ connected_devices() {
 }
 
 if [ "$1" = "menu" ]; then
-  eww -c /home/prieyan/.config/hypr/apps/eww open --toggle bluetooth
+  setsid -f blueman-manager >/dev/null 2>&1
   exit 0
 fi
 

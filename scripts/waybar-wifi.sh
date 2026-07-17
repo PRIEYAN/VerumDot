@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 #
 # Waybar wifi/ethernet module. Shows an ethernet glyph when a wired
-# connection is up, otherwise the connected SSID. Click toggles the
-# eww network panel. Pure shell.
-
-EWW="eww -c /home/prieyan/.config/hypr/apps/eww"
+# connection is up, otherwise the connected SSID. Click opens
+# nm-connection-editor. Pure shell.
 
 json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -20,7 +18,7 @@ current_ssid() {
 }
 
 if [ "$1" = "menu" ]; then
-  $EWW open --toggle wifi
+  setsid -f nm-connection-editor >/dev/null 2>&1
   exit 0
 fi
 

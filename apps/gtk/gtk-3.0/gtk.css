@@ -1,0 +1,17 @@
+/* Curved window borders for GTK3 apps (nm-connection-editor, blueman-manager),
+   matching the eww/rofi popup radius. */
+
+window.background {
+  border-radius: 14px;
+  background-color: #1c1b1a;
+}
+
+window.background.csd {
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+
+headerbar {
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}

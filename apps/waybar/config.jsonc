@@ -87,7 +87,7 @@
     "signal": 8,
     "return-type": "json",
     "max-length": 14,
-    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh menu"
+    "on-click": "nm-connection-editor"
   },
   "custom/bluetooth": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh",
@@ -95,7 +95,7 @@
     "signal": 9,
     "return-type": "json",
     "max-length": 14,
-    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh menu"
+    "on-click": "blueman-manager"
   },
   "custom/volume": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-volume.sh",

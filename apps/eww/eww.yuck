@@ -1,8 +1,9 @@
 ;; ─────────────────────────────────────────────────────────────────────
-;; eww popup panels for the hypr bar: wifi, bluetooth, power, volume,
-;; calendar. macOS Control-Center-ish look. All data comes from pure-sh
+;; eww popup panels for the hypr bar: power, volume, calendar.
+;; macOS Control-Center-ish look. All data comes from pure-sh
 ;; backends in ~/.config/hypr/scripts/eww/. This .yuck (widgets) and the
 ;; .scss (styling) are the only non-shell pieces, by design.
+;; Wifi/Bluetooth use nm-connection-editor / blueman-manager instead.
 ;;
 ;; NOTE on syntax:
 ;;  - defpoll/deflisten commands are run by eww's own shell; eww vars are
@@ -16,121 +17,13 @@
 (defvar CAL "/home/prieyan/.config/hypr/scripts/eww-cal.sh")
 
 ;; ─── polled data variables (literal paths — no ${SD} here) ────────────
-(defpoll net_state   :interval "5s" :initial '{"kind":"none","ethernet":"","ssid":"","wifi_enabled":false}' "/home/prieyan/.config/hypr/scripts/eww/net-data.sh state")
-(defpoll net_known   :interval "8s" :initial "[]" "/home/prieyan/.config/hypr/scripts/eww/net-data.sh known")
-(defpoll net_other   :interval "8s" :initial "[]" "/home/prieyan/.config/hypr/scripts/eww/net-data.sh other")
-(defpoll bt_state    :interval "5s" :initial '{"powered":false,"connected":""}' "/home/prieyan/.config/hypr/scripts/eww/net-data.sh bt-state")
-(defpoll bt_devices  :interval "8s" :initial "[]" "/home/prieyan/.config/hypr/scripts/eww/net-data.sh bt-devices")
 (defpoll vol_state   :interval "1s" :initial '{"volume":0,"muted":false}' "/home/prieyan/.config/hypr/scripts/eww/vol-data.sh")
 
 ;; ─── UI-only state ────────────────────────────────────────────────────
 (defvar cal_offset 0)                 ;; month offset for the calendar
-(defvar show_other false)             ;; wifi "Other Networks" expanded?
-(defvar wifi_pw "")                   ;; text typed into the inline pw field
-(defvar wifi_pw_target "")            ;; ssid the pw field is targeting
 ;; cal_data is driven only by eww-cal.sh (reset/prev/next), never polled,
 ;; so month navigation is not clobbered on an interval.
 (defvar cal_data '{"label":"","weeks":[]}')
-
-;; ═══════════════════════════════════════════════════════════════════════
-;; WIFI PANEL
-;; ═══════════════════════════════════════════════════════════════════════
-
-(defwidget wifi-row [item]
-  (box :class "net-row" :space-evenly false :spacing 8
-    (button :class "net-row-main" :onclick "${SD}/net-action.sh wifi-connect '${item.ssid}' &"
-      (box :space-evenly false :spacing 8
-        (label :class {item.active ? "net-ico on" : "net-ico"} :text "󰤨")
-        (label :class "net-name" :text {item.ssid})
-        (box :hexpand true)
-        (label :class "net-lock" :visible {item.secured} :text "")))))
-
-(defwidget wifi-pw-row []
-  (box :class "pw-row" :orientation "v" :space-evenly false :spacing 6
-    (label :class "pw-label" :xalign 0 :text "Password for ${wifi_pw_target}")
-    (box :space-evenly false :spacing 6
-      (input :class "pw-input" :password true :value wifi_pw
-             :onchange "${SD}/../eww-set.sh wifi_pw '{}'")
-      (button :class "pw-join" :onclick "${SD}/net-action.sh wifi-connect '${wifi_pw_target}' '${wifi_pw}' &" "Join"))))
-
-(defwidget wifi-panel []
-  (box :class "panel" :orientation "v" :space-evenly false :spacing 4
-    (box :class "panel-head" :space-evenly false
-      (label :class "panel-title" :text "Wi-Fi")
-      (box :hexpand true)
-      (button :class {net_state.wifi_enabled ? "toggle on" : "toggle"}
-              :onclick "${SD}/net-action.sh wifi-toggle &"
-        (box :class "knob")))
-
-    ;; Ethernet takes priority in the status line.
-    (box :class "conn-status" :visible {net_state.kind == "ethernet"} :space-evenly false :spacing 8
-      (label :class "net-ico on" :text "󰈀")
-      (label :class "net-name" :text "Connected — Ethernet (${net_state.ethernet})"))
-
-    (label :class "section" :xalign 0 :text "Known Network"
-           :visible {net_state.kind != "ethernet"})
-    (box :orientation "v" :space-evenly false :visible {net_state.kind != "ethernet"}
-      (for item in net_known
-        (box :orientation "v" :space-evenly false
-          (wifi-row :item item)
-          ;; inline password field appears under the row being joined
-          (box :visible {wifi_pw_target == item.ssid}
-            (wifi-pw-row)))))
-
-    ;; "Other Networks" expands to the unsaved scan list.
-    (button :class "section-btn" :onclick "${SD}/../eww-set.sh show_other ${show_other ? "false" : "true"}"
-      (box :space-evenly false
-        (label :xalign 0 :text "Other Networks")
-        (box :hexpand true)
-        (label :class "chev" :text {show_other ? "" : ""})))
-    (box :orientation "v" :space-evenly false :visible show_other
-      (for item in net_other
-        (box :orientation "v" :space-evenly false
-          (button :class "net-row-main"
-                  :onclick "${SD}/../eww-set.sh wifi_pw_target '${item.ssid}'"
-            (box :space-evenly false :spacing 8
-              (label :class "net-ico" :text "󰤨")
-              (label :class "net-name" :text {item.ssid})
-              (box :hexpand true)
-              (label :class "net-lock" :visible {item.secured} :text "")))
-          (box :visible {wifi_pw_target == item.ssid}
-            (wifi-pw-row)))))
-
-    (button :class "settings-btn" :onclick "nm-connection-editor & ${SD}/../eww-close.sh wifi"
-      (box :space-evenly false :spacing 8
-        (label :class "gear" :text "")
-        (label :xalign 0 :text "Wi-Fi Settings…")))))
-
-;; ═══════════════════════════════════════════════════════════════════════
-;; BLUETOOTH PANEL
-;; ═══════════════════════════════════════════════════════════════════════
-
-(defwidget bt-row [item]
-  (button :class "net-row-main"
-          :onclick {item.state == "connected"
-                     ? "${SD}/net-action.sh bt-disconnect '${item.mac}' &"
-                     : "${SD}/net-action.sh bt-connect '${item.mac}' &"}
-    (box :space-evenly false :spacing 8
-      (label :class {item.state == "connected" ? "net-ico on" : "net-ico"} :text "")
-      (label :class "net-name" :text {item.name})
-      (box :hexpand true)
-      (label :class "net-meta" :text {item.state}))))
-
-(defwidget bt-panel []
-  (box :class "panel" :orientation "v" :space-evenly false :spacing 4
-    (box :class "panel-head" :space-evenly false
-      (label :class "panel-title" :text "Bluetooth")
-      (box :hexpand true)
-      (button :class {bt_state.powered ? "toggle on" : "toggle"}
-              :onclick "${SD}/net-action.sh bt-toggle &"
-        (box :class "knob")))
-    (box :class "conn-status" :visible {bt_state.connected != ""} :space-evenly false :spacing 8
-      (label :class "net-ico on" :text "")
-      (label :class "net-name" :text "Connected — ${bt_state.connected}"))
-    (label :class "section" :xalign 0 :text "Devices" :visible {bt_state.powered})
-    (box :orientation "v" :space-evenly false :visible {bt_state.powered}
-      (for item in bt_devices
-        (bt-row :item item)))))
 
 ;; ═══════════════════════════════════════════════════════════════════════
 ;; VOLUME PANEL
@@ -201,18 +94,6 @@
 ;; ═══════════════════════════════════════════════════════════════════════
 ;; WINDOWS
 ;; ═══════════════════════════════════════════════════════════════════════
-
-(defwindow wifi
-  :monitor 0
-  :geometry (geometry :anchor "top right" :x "8px" :y "40px" :width "300px")
-  :stacking "overlay" :focusable true
-  (wifi-panel))
-
-(defwindow bluetooth
-  :monitor 0
-  :geometry (geometry :anchor "top right" :x "8px" :y "40px" :width "300px")
-  :stacking "overlay" :focusable true
-  (bt-panel))
 
 (defwindow volume
   :monitor 0
