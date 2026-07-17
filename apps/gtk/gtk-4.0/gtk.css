@@ -30,11 +30,25 @@ headerbar {
   background-image: none;
 }
 
+toolbar,
+.toolbar,
+menubar,
+.menubar,
+popover,
+popover.background,
+popover contents,
+.titlebar,
+columnview,
+columnview header,
+columnview header button,
 listview,
 list,
 row,
+notebook,
+notebook header,
 scrolledwindow {
-  background-color: transparent;
+  background-color: #0d0d0d;
+  background-image: none;
 }
 
 row:selected {

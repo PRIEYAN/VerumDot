@@ -35,17 +35,30 @@ headerbar button {
   background-image: none;
 }
 
+toolbar,
+.toolbar,
+menubar,
+.menubar,
+popover,
+popover.background,
+popover contents,
+.titlebar,
 treeview,
+treeview header,
+treeview header button,
 list,
 list row,
 notebook,
+notebook header,
 notebook stack,
 scrolledwindow,
 box {
-  background-color: transparent;
+  background-color: #0d0d0d;
+  background-image: none;
 }
 
 treeview:selected,
-list row:selected {
+list row:selected,
+row:selected {
   background-color: #2a2a2a;
 }
