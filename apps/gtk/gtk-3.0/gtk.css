@@ -15,6 +15,7 @@ window.background.csd {
 decoration {
   border-radius: 14px;
   box-shadow: none;
+  background-color: #0d0d0d;
 }
 
 * {
