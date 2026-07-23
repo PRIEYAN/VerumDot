@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=kora-white
+Comment=kora-pgrey with pure white folder icons
+Inherits=kora-pgrey,breeze-dark,Adwaita,hicolor
+Directories=places/scalable
+
+[places/scalable]
+Size=48
+MinSize=8
+MaxSize=512
+Context=Places
+Type=Scalable

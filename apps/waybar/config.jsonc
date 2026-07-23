@@ -77,7 +77,8 @@
   },
   "custom/battery": {
     "exec": "/home/prieyan/.config/waybar/scripts/battery-status.py",
-    "interval": 30,
+    "interval": 5,
+    "signal": 10,
     "return-type": "json",
     "max-length": 8
   },
@@ -87,7 +88,7 @@
     "signal": 8,
     "return-type": "json",
     "max-length": 14,
-    "on-click": "nm-connection-editor"
+    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-wifi.sh menu"
   },
   "custom/bluetooth": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh",
@@ -95,7 +96,7 @@
     "signal": 9,
     "return-type": "json",
     "max-length": 14,
-    "on-click": "blueman-manager"
+    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-bluetooth.sh menu"
   },
   "custom/volume": {
     "exec": "/home/prieyan/.config/hypr/scripts/waybar-volume.sh",

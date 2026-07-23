@@ -1,0 +1,321 @@
+/* Pure-black glass theme for GTK3 apps and the portal file chooser
+   (VS Code "Open Folder", download destination dialogs, etc.).
+
+   Lives in ~/.config/hypr/apps/theme/ and is symlinked to
+   ~/.config/gtk-3.0/gtk.css, since GTK only reads that XDG path.
+
+   Colors are forced here rather than relying on the theme, because the GTK
+   portal's file chooser ignores gtk-application-prefer-dark-theme for parts
+   of its chrome and otherwise renders washed-out/light.
+   Transparency pairs with Hyprland's compositor-side blur
+   (decoration.blur in hypr.conf) for the glass effect. */
+
+@define-color bg        rgba(0, 0, 0, 0.72);
+@define-color fg        #ffffff;
+@define-color sel       rgba(255, 255, 255, 0.16);
+@define-color hover     rgba(255, 255, 255, 0.10);
+@define-color line      rgba(255, 255, 255, 0.12);
+
+window,
+window.background,
+window.background.csd,
+dialog,
+dialog.background {
+  border-radius: 14px;
+  background-color: @bg;
+  background-image: none;
+  background-clip: border-box;
+  color: @fg;
+}
+
+decoration {
+  border-radius: 14px;
+  box-shadow: none;
+  background-color: @bg;
+}
+
+*,
+label,
+image {
+  color: @fg;
+}
+
+headerbar,
+.titlebar {
+  background-color: rgba(0, 0, 0, 0.60);
+  background-image: none;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  box-shadow: none;
+  border-bottom: 1px solid @line;
+  color: @fg;
+}
+
+headerbar entry,
+headerbar button {
+  background-image: none;
+}
+
+/* Containers: let the window's black show through. */
+toolbar,
+.toolbar,
+menubar,
+.menubar,
+popover,
+popover.background,
+popover contents,
+treeview,
+treeview header,
+treeview header button,
+list,
+list row,
+notebook,
+notebook header,
+notebook stack,
+scrolledwindow,
+viewport,
+stack,
+paned,
+grid,
+box {
+  background-color: transparent;
+  background-image: none;
+}
+
+/* ── File chooser (the portal dialog that renders light by default) ──── */
+filechooser,
+filechooser .view,
+filechooser stack,
+filechooser paned,
+filechooser box,
+placessidebar,
+placessidebar list,
+placessidebar viewport,
+placessidebar scrolledwindow,
+.sidebar,
+.sidebar list {
+  background-color: transparent;
+  background-image: none;
+  color: @fg;
+}
+
+/* The file list itself: darker so text stays legible over the blur. */
+filechooser .view,
+filechooser treeview.view,
+treeview.view {
+  background-color: rgba(0, 0, 0, 0.35);
+  background-image: none;
+  color: @fg;
+}
+
+filechooser .view:selected,
+treeview.view:selected,
+placessidebar row:selected,
+.sidebar row:selected {
+  background-color: @sel;
+  color: @fg;
+}
+
+placessidebar row:hover,
+.sidebar row:hover,
+treeview.view:hover {
+  background-color: @hover;
+}
+
+entry,
+entry.search,
+searchbar entry {
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: none;
+  border: 1px solid @line;
+  border-radius: 8px;
+  color: @fg;
+}
+
+entry:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+pathbar button,
+.path-bar button {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  color: @fg;
+}
+
+pathbar button:checked,
+.path-bar button:checked,
+pathbar button:hover,
+.path-bar button:hover {
+  background-color: @hover;
+  border-radius: 8px;
+}
+
+treeview:selected,
+list row:selected,
+row:selected {
+  background-color: @sel;
+}
+
+/* Bottom toolbar (+ / - / gear on blueman, nm-connection-editor) */
+toolbar,
+.toolbar {
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  padding: 4px;
+}
+
+toolbar button,
+.toolbar button,
+toolbutton,
+toolbutton button,
+button.flat {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  color: @fg;
+}
+
+toolbar button:hover,
+.toolbar button:hover,
+toolbutton button:hover,
+button.flat:hover {
+  background-color: @hover;
+  border-radius: 8px;
+}
+
+/* Regular buttons (Cancel / Select / Open). */
+button {
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: none;
+  border: 1px solid @line;
+  border-radius: 8px;
+  color: @fg;
+  text-shadow: none;
+}
+
+button:hover  { background-color: @hover; }
+button:active,
+button:checked { background-color: rgba(255, 255, 255, 0.20); }
+
+/* Primary action button (Select / Open / Save): pure white with black text.
+   The label/image children are targeted explicitly because the global
+   `*, label, image { color: @fg }` rule above would otherwise repaint the
+   text white and win over an inherited color. */
+button.suggested-action,
+button.default,
+dialog button.suggested-action,
+filechooser button.suggested-action,
+headerbar button.suggested-action {
+  background-color: #ffffff;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  color: #000000;
+}
+
+button.suggested-action label,
+button.suggested-action image,
+button.default label,
+button.default image,
+dialog button.suggested-action label,
+filechooser button.suggested-action label,
+headerbar button.suggested-action label {
+  color: #000000;
+}
+
+button.suggested-action:hover,
+button.default:hover {
+  background-color: #e6e6e6;
+  color: #000000;
+}
+
+button.suggested-action:active,
+button.suggested-action:checked,
+button.default:active {
+  background-color: #cccccc;
+  color: #000000;
+}
+
+/* Insensitive (greyed) Select before a file is picked. The theme paints its
+   own flat grey here, so these need the same specificity as the rules above
+   plus :disabled to take effect. */
+button.suggested-action:disabled,
+button.default:disabled,
+dialog button.suggested-action:disabled,
+filechooser button.suggested-action:disabled,
+headerbar button.suggested-action:disabled {
+  background-color: rgba(255, 255, 255, 0.40);
+  background-image: none;
+  color: rgba(0, 0, 0, 0.60);
+}
+
+button.suggested-action:disabled label,
+button.default:disabled label,
+dialog button.suggested-action:disabled label,
+filechooser button.suggested-action:disabled label,
+headerbar button.suggested-action:disabled label {
+  color: rgba(0, 0, 0, 0.60);
+}
+
+/* Belt-and-braces: GTK's file chooser marks the accept button as the default
+   widget, and some builds label it .text-button rather than
+   .suggested-action. Cover the headerbar's last button either way. */
+.titlebar button.text-button.suggested-action,
+.titlebar button.suggested-action,
+headerbar button.text-button.suggested-action {
+  background-color: #ffffff;
+  background-image: none;
+  color: #000000;
+  border: none;
+}
+
+.titlebar button.text-button.suggested-action label,
+.titlebar button.suggested-action label,
+headerbar button.text-button.suggested-action label {
+  color: #000000;
+}
+
+toolbar image,
+.toolbar image,
+toolbutton image,
+toolbar button image,
+button image {
+  color: @fg;
+  -gtk-icon-shadow: none;
+}
+
+scrollbar,
+scrollbar trough {
+  background-color: transparent;
+  border: none;
+}
+
+scrollbar slider {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  border: none;
+  min-width: 6px;
+  min-height: 6px;
+}
+
+scrollbar slider:hover {
+  background-color: rgba(255, 255, 255, 0.40);
+}
+
+menu,
+.menu,
+popover.background {
+  background-color: rgba(0, 0, 0, 0.92);
+  border: 1px solid @line;
+  border-radius: 10px;
+  color: @fg;
+}
+
+menuitem:hover,
+popover button:hover {
+  background-color: @hover;
+}
