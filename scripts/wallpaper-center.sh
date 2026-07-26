@@ -4,7 +4,7 @@
 # (rofi row metadata: "name\0icon\x1f/path"). Selecting one calls the
 # wallpaper.sh setter. Pure shell -- no python, no GTK.
 
-THEME=/home/prieyan/.config/hypr/apps/rofi/waybar-menu.rasi
+THEME=/home/prieyan/.config/hypr/apps/rofi/wallpaper.rasi
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
 SET_WALLPAPER="$HOME/.config/hypr/scripts/wallpaper.sh"
 
@@ -21,10 +21,11 @@ list_entries() {
       done
 }
 
-# The shared theme sets `show-icons: false`, which would override the
-# -show-icons flag; re-enable icons inline so thumbnails render.
+# wallpaper.rasi renders a pure-black grid of large image previews with
+# filenames hidden. The row still carries the basename as its value, so
+# the selection below resolves to the chosen file.
 selection=$(list_entries | rofi -dmenu -i -p "Wallpaper" \
-  -show-icons -theme "$THEME" -theme-str 'configuration { show-icons: true; }')
+  -show-icons -theme "$THEME")
 [ -z "$selection" ] && exit 0
 
 setsid -f "$SET_WALLPAPER" set "$WALLPAPER_DIR/$selection" >/dev/null 2>&1

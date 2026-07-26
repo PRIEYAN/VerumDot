@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 CACHE_FILE="$HOME/.cache/hypr_wallpaper"
-DEFAULT_WALLPAPER="/usr/share/hypr/wall0.png"
+DEFAULT_WALLPAPER="$HOME/Pictures/Wallpapers/suf.png"
 WATCHER_PID_FILE="$HOME/.cache/hypr_wallpaper_watcher.pid"
 
 # Ensure cache dir exists
@@ -17,19 +17,16 @@ set_wallpaper() {
 
     # Persist choice
     echo "$img" > "$CACHE_FILE"
-    
-    # Preload the image
-    hyprctl hyprpaper preload "$img" >/dev/null 2>&1
-    
-    # Set it on all monitors
-    local monitors=$(hyprctl monitors | grep "Monitor" | awk '{print $2}')
+
+    # hyprpaper v0.8+ unified IPC: the `wallpaper` command auto-loads the
+    # image, so a separate `preload` is unnecessary (and rejected as an
+    # "invalid hyprpaper request" on this version). Setting it directly is
+    # what actually sticks.
+    local monitors
+    monitors=$(hyprctl monitors | grep "Monitor" | awk '{print $2}')
     for m in $monitors; do
         hyprctl hyprpaper wallpaper "$m,$img" >/dev/null 2>&1
     done
-    
-    # Unload all other preloads to keep memory clean
-    hyprctl hyprpaper unload all >/dev/null 2>&1
-    hyprctl hyprpaper preload "$img" >/dev/null 2>&1
 
     # Start watcher for this file
     start_watcher "$img"
@@ -67,15 +64,27 @@ init() {
     if ! pgrep -x "hyprpaper" > /dev/null; then
         hyprpaper &
     fi
-    
-    # Give hyprpaper some time to initialize its IPC socket
-    sleep 1
 
+    # Wait for hyprpaper's IPC socket instead of a blind sleep, so the
+    # first `wallpaper` call doesn't race the daemon's startup.
+    local sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.hyprpaper.sock"
+    for _ in $(seq 1 50); do
+        [[ -S "$sock" ]] && break
+        sleep 0.1
+    done
+
+    local img="$DEFAULT_WALLPAPER"
     if [[ -f "$CACHE_FILE" ]]; then
-        set_wallpaper "$(cat "$CACHE_FILE")"
-    else
-        set_wallpaper "$DEFAULT_WALLPAPER"
+        img="$(cat "$CACHE_FILE")"
     fi
+
+    # Never restore Hyprland's stock wallpaper: if the cached choice is the
+    # old default or no longer exists, fall back to the user's default.
+    if [[ "$img" == /usr/share/hypr/* || ! -f "$img" ]]; then
+        img="$DEFAULT_WALLPAPER"
+    fi
+
+    set_wallpaper "$img"
 }
 
 case "$1" in

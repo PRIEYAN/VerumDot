@@ -1,0 +1,90 @@
+/*
+ * Wallpaper picker theme: pure-black background, grid of large image
+ * previews, no filenames. Icons come from the rofi rows built by
+ * wallpaper-center.sh ("name\0icon\x1f/path").
+ */
+
+configuration {
+  show-icons: true;
+}
+
+* {
+  bg:       #000000;
+  fg:       #ffffff;
+  accent:   #ffffff;
+  selected: rgba(255, 255, 255, 0.16);
+  border:   rgba(255, 255, 255, 0.14);
+}
+
+window {
+  width: 900px;
+  border: 1px;
+  border-color: @border;
+  border-radius: 12px;
+  background-color: @bg;
+}
+
+mainbox {
+  padding: 16px;
+  background-color: transparent;
+  children: [ inputbar, listview ];
+}
+
+inputbar {
+  padding: 10px 12px;
+  margin: 0 0 14px 0;
+  border: 1px;
+  border-color: @border;
+  border-radius: 8px;
+  background-color: #0a0a0a;
+  children: [ prompt, entry ];
+}
+
+prompt {
+  font: "Iosevka Term 12";
+  text-color: @accent;
+  background-color: transparent;
+}
+
+entry {
+  font: "Iosevka Term 12";
+  margin: 0 0 0 8px;
+  text-color: @fg;
+  background-color: transparent;
+  placeholder: "Search wallpapers";
+  placeholder-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Grid: 4 previews per row, several rows visible. */
+listview {
+  columns: 4;
+  lines: 3;
+  spacing: 12px;
+  cycle: true;
+  scrollbar: false;
+  background-color: transparent;
+}
+
+/* Each cell is just the image preview. Text row is hidden below. */
+element {
+  orientation: vertical;
+  padding: 6px;
+  border-radius: 8px;
+  background-color: transparent;
+}
+
+element selected {
+  background-color: @selected;
+}
+
+element-icon {
+  size: 180px;
+  border-radius: 6px;
+  background-color: transparent;
+}
+
+/* Hide the filename entirely -- previews only. */
+element-text {
+  enabled: false;
+  background-color: transparent;
+}

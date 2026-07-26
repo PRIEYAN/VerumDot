@@ -1,5 +1,6 @@
 /**
- * Glassy Power Menu - iPhone Style
+ * Power Menu — pure black, one row of five glyph buttons.
+ * Matches wallpaper.rasi.
  */
 
 configuration {
@@ -7,11 +8,11 @@ configuration {
 }
 
 * {
-    bg-color:            rgba(10, 12, 18, 0.5);
-    bg-selected:         rgba(255, 255, 255, 0.1);
+    bg-color:            #000000;
+    bg-selected:         rgba(255, 255, 255, 0.16);
     fg-color:            #ffffff;
     accent-color:        #ffffff;
-    border-color:        rgba(255, 255, 255, 0.2);
+    border-color:        rgba(255, 255, 255, 0.14);
 }
 
 window {
@@ -39,21 +40,24 @@ listview {
 element {
     padding:             20px;
     border-radius:       16px;
-    background-color:    rgba(255, 255, 255, 0.05);
-    text-color:          @fg-color;
+    background-color:    #0a0a0a;
+    text-color:          #ffffff;
 }
 
+/* Selected inverts: solid white cell, black glyph. */
 element selected {
-    background-color:    rgba(255, 255, 255, 0.2);
-    border:              1px;
-    border-color:        rgba(255, 255, 255, 0.5);
+    background-color:    #ffffff;
+    text-color:          #000000;
+    border:              0px;
 }
 
+/* text-color is inherited from the element so the selected state can flip
+   it to black. power-menu.sh sends bare glyphs with no Pango <span color>,
+   which would otherwise override this. */
 element-text {
     font:                "BlexMono Nerd Font 34";
     horizontal-align:    0.5;
     vertical-align:      0.5;
     text-color:          inherit;
     background-color:    transparent;
-    markup:              true;
 }

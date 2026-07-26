@@ -70,10 +70,10 @@
   "custom/sep3": { "exec": "echo '│'", "interval": "once", "tooltip": false },
 
   "custom/power": {
-    "exec": "/home/prieyan/.config/hypr/scripts/waybar-power.sh",
+    "exec": "/home/prieyan/.config/hypr/scripts/power-menu.sh",
     "interval": 5,
     "return-type": "json",
-    "on-click": "/home/prieyan/.config/hypr/scripts/waybar-power.sh menu"
+    "on-click": "/home/prieyan/.config/hypr/scripts/power-menu.sh menu"
   },
   "custom/battery": {
     "exec": "/home/prieyan/.config/waybar/scripts/battery-status.py",
