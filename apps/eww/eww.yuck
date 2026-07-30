@@ -39,7 +39,7 @@
       (button :class {vol_state.muted ? "vol-mute on" : "vol-mute"}
               :onclick "${SD}/vol-action.sh mute &"
         (label :text {vol_state.muted ? "󰝟" : "󰕾"}))
-      (scale :class "vol-scale" :hexpand true :min 0 :max 100
+      (scale :class "vol-scale" :hexpand true :min 0 :max 150
              :value {vol_state.volume}
              :onchange "${SD}/vol-action.sh set {} &"))))
 

@@ -104,8 +104,8 @@
     "return-type": "json",
     "max-length": 8,
     "on-click": "/home/prieyan/.config/hypr/scripts/waybar-volume.sh menu",
-    "on-scroll-up": "pamixer -i 5",
-    "on-scroll-down": "pamixer -d 5"
+    "on-scroll-up": "pamixer --allow-boost --set-limit 150 -i 5",
+    "on-scroll-down": "pamixer --allow-boost --set-limit 150 -d 5"
   },
   "custom/brightness": {
     "exec": "/home/prieyan/.config/waybar/scripts/brightness-status.sh",
