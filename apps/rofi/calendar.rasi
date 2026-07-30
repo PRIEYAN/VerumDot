@@ -1,258 +1,152 @@
-/*
- * Rofi Theme — Coldgrave
- * Vintage · Dark · Ashen · Serif
- *
- * Palette: deep charcoal base, warm-cold ash ink, rust accent
- * Font: Iosevka Term (swap to any serif mono you have)
- */
+/* Calendar dropdown — pure black / white, under waybar clock */
 
 configuration {
-    show-icons:              true;
-    icon-theme:              "Papirus-Dark";
-    display-drun:            "⊞  Apps";
-    display-run:             "   Run";
-    display-window:          "⊟  Window";
-    display-ssh:             "⌨  SSH";
-    display-filebrowser:     "⊙  Files";
-    drun-display-format:     "{name}";
-    window-format:           "{w} · {c} · {t}";
-    sidebar-mode:            true;
-    hover-select:            true;
-    me-select-entry:         "";
-    me-accept-entry:         "MousePrimary";
-    sorting-method:          "fzf";
-    matching:                "fuzzy";
+    show-icons:          false;
+    disable-history:     true;
+    hover-select:        true;
+    me-select-entry:     "";
+    me-accept-entry:     "MousePrimary";
 }
 
 * {
-    /* ── Coldgrave palette ─────────────────────────── */
-    void:         #050403;
-    cinder:       #0a0908;
-    ashpit:       #0e0d0c;
-    coal:         #131210;
-    soot:         #1a1917;
-    char:         #222018;
-    ember:        #2e2b24;
+    bg:                 #000000;
+    fg:                 #ffffff;
+    muted:              rgba(255, 255, 255, 0.40);
+    accent:             #ffffff;
+    accent-fg:          #000000;
+    line:               rgba(255, 255, 255, 0.18);
 
-    bone:         #c8c0b0;
-    parchment:    #a89f90;
-    fog:          #7a7268;
-    shadow:       #4a4640;
-    ghost:        #302e2a;
-
-    rust:         #8c7358;
-    tarnish:      #6e5c48;
-    pewter:       #9a9488;
-    slate:        #5a6272;
-    mold:         #5a6060;
-
-    /* ── Semantic tokens ───────────────────────────── */
-    bg:           rgba( 14, 13, 12, 0.97);
-    bg-alt:       rgba( 26, 25, 23, 0.82);
-    bg-deep:      rgba( 10,  9,  8, 0.92);
-    fg:           @bone;
-    fg-muted:     @fog;
-    fg-ghost:     @shadow;
-
-    border-col:   rgba(180, 168, 140, 0.18);
-    border-sel:   rgba(180, 168, 140, 0.42);
-    selected:     rgba(180, 168, 140, 0.09);
-
-    urgent:       #7a5040;
-    active:       @slate;
-    accent:       @pewter;
-
-    background-color: transparent;
-    text-color:       @fg;
-    font:             "Iosevka Term 12";
+    background-color:   transparent;
+    text-color:         @fg;
+    font:               "Iosevka Term 10";
 }
 
-/* ── Window ────────────────────────────────────────── */
 window {
     transparency:       "real";
-    location:           center;
-    anchor:             center;
-    width:              700px;
+    location:           north west;
+    anchor:             north west;
+    x-offset:           0px;
+    y-offset:           0px;
+    width:              280px;
     border:             1px solid;
-    border-radius:      10px;
-    border-color:       @border-col;
+    border-color:       @line;
+    border-radius:      0px;
     background-color:   @bg;
-    cursor:             "default";
+    children:           [ mainbox ];
 }
 
 mainbox {
-    padding:            14px;
-    spacing:            0px;
+    padding:            14px 16px 12px 16px;
+    spacing:            8px;
     background-color:   transparent;
-    children:           [ "inputbar", "message", "listview", "mode-switcher" ];
+    children:           [ inputbar, message, listview, footer ];
 }
 
-/* ── Input bar ─────────────────────────────────────── */
 inputbar {
-    spacing:            10px;
-    margin:             0 0 10px 0;
-    padding:            9px 13px;
-    border:             1px solid;
-    border-radius:      7px;
-    border-color:       @border-col;
-    background-color:   @bg-alt;
-    children:           [ "textbox-prompt-colon", "entry",
-                          "num-filtered-rows", "textbox-num-sep",
-                          "num-rows", "case-indicator" ];
+    spacing:            0px;
+    padding:            0px 0px 4px 0px;
+    background-color:   transparent;
+    children:           [ prompt ];
 }
 
-textbox-prompt-colon {
-    expand:             false;
-    str:                "⌖";
-    padding:            0 8px 0 0;
-    text-color:         @accent;
-    font:               "Iosevka Term 14";
+prompt {
+    enabled:            true;
+    expand:             true;
+    horizontal-align:   0.5;
+    text-color:         @fg;
+    font:               "Iosevka Term Medium 11";
+    background-color:   transparent;
 }
 
 entry {
-    placeholder:        "Search…";
-    placeholder-color:  @fg-ghost;
-    cursor:             text;
-    text-color:         @bone;
-    font:               "Iosevka Term 12";
+    enabled:            false;
 }
 
-num-filtered-rows {
-    text-color: @rust;
-    font:       "Iosevka Term 11";
-}
-textbox-num-sep {
-    expand:     false;
-    str:        "/";
-    text-color: @fg-ghost;
-    font:       "Iosevka Term 11";
-}
-num-rows {
-    text-color: @fg-ghost;
-    font:       "Iosevka Term 11";
-}
-case-indicator {
-    text-color: @pewter;
-    font:       "Iosevka Term 11";
-}
-
-/* ── Message bar ───────────────────────────────────── */
 message {
-    margin:             0 0 10px 0;
-    padding:            7px 12px;
-    border:             1px solid;
-    border-radius:      6px;
-    border-color:       @border-col;
-    background-color:   @bg-alt;
+    padding:            0px 0px 2px 0px;
+    background-color:   transparent;
+    border:             0px;
 }
 
 textbox {
-    text-color:         @fg-muted;
-    vertical-align:     0.5;
-    font:               "Iosevka Term Italic 11";
+    horizontal-align:   0.5;
+    text-color:         @fg;
+    background-color:   transparent;
+    font:               "Iosevka Term Medium 10";
     markup:             true;
 }
 
-error-message {
-    padding:            12px;
-    border-radius:      7px;
-    background-color:   @urgent;
-    text-color:         @bone;
-}
-
-/* ── List ──────────────────────────────────────────── */
 listview {
-    columns:            1;
-    lines:              9;
-    cycle:              true;
-    dynamic:            true;
-    scrollbar:          true;
+    columns:            7;
+    lines:              6;
+    cycle:              false;
+    dynamic:            false;
     fixed-height:       true;
-    spacing:            3px;
-    padding:            3px 2px;
+    fixed-columns:      true;
+    flow:               horizontal;
+    scrollbar:          false;
+    spacing:            2px;
+    padding:            2px 0px;
     background-color:   transparent;
-}
-
-scrollbar {
-    handle-width:       3px;
-    handle-color:       @pewter;
-    border-radius:      8px;
-    background-color:   @bg-alt;
 }
 
 element {
-    spacing:            10px;
-    padding:            7px 12px;
-    border-radius:      6px;
-    border:             0px;
-    cursor:             pointer;
+    orientation:        horizontal;
+    padding:            6px 0px;
+    border-radius:      2px;
     background-color:   transparent;
+    text-color:         @fg;
+    cursor:             pointer;
 }
 
-/* normal rows */
-element normal.normal  { text-color: @fg-muted; }
-element normal.urgent  { text-color: @urgent;   }
-element normal.active  { text-color: @active;   }
+element normal.normal,
+element alternate.normal {
+    background-color:   transparent;
+    text-color:         @fg;
+}
 
-/* alternating rows (same as normal — no zebra stripes) */
-element alternate.normal  { text-color: @fg-muted; background-color: transparent; }
-element alternate.urgent  { text-color: @urgent; }
-element alternate.active  { text-color: @active; }
+element normal.urgent,
+element alternate.urgent {
+    background-color:   transparent;
+    text-color:         @muted;
+}
 
-/* selected row */
 element selected.normal {
-    background-color:   @selected;
-    text-color:         @accent;
-    border:             0 0 0 2px solid;
-    border-color:       @border-sel;
-}
-element selected.urgent {
-    background-color:   rgba(122, 80, 64, 0.22);
-    text-color:         @bone;
-    border:             0 0 0 2px solid;
-    border-color:       @urgent;
-}
-element selected.active {
-    background-color:   rgba(90, 98, 114, 0.22);
-    text-color:         @bone;
-    border:             0 0 0 2px solid;
-    border-color:       @slate;
+    background-color:   @accent;
+    text-color:         @accent-fg;
 }
 
-element-icon {
-    size:               20px;
-    cursor:             inherit;
-    text-color:         inherit;
+element selected.urgent {
+    background-color:   transparent;
+    text-color:         @muted;
 }
 
 element-text {
-    cursor:             inherit;
-    text-color:         inherit;
+    horizontal-align:   0.5;
     vertical-align:     0.5;
-    font:               "Iosevka Term 12";
-}
-
-/* ── Mode switcher ─────────────────────────────────── */
-mode-switcher {
-    spacing:            5px;
-    margin:             10px 0 0 0;
+    text-color:         inherit;
     background-color:   transparent;
+    font:               "Iosevka Term 10";
+    markup:             true;
 }
 
-button {
-    padding:            5px 9px;
-    border:             1px solid;
-    border-radius:      5px;
-    border-color:       @border-col;
-    background-color:   @bg-alt;
-    text-color:         @fg-ghost;
-    cursor:             pointer;
-    font:               "Iosevka Term 11";
-    letter-spacing:     1;
+footer {
+    orientation:        horizontal;
+    expand:             false;
+    spacing:            0px;
+    margin:             6px 0px 0px 0px;
+    padding:            8px 0px 0px 0px;
+    border:             1px 0px 0px 0px;
+    border-color:       @line;
+    background-color:   transparent;
+    children:           [ textbox-footer ];
 }
 
-button selected {
-    background-color:   @selected;
-    border-color:       @border-sel;
-    text-color:         @accent;
+textbox-footer {
+    expand:             true;
+    horizontal-align:   0.5;
+    text-color:         @muted;
+    background-color:   transparent;
+    font:               "Iosevka Term 9";
+    str:                "↔ mo   ↕ yr   ↵ today";
 }

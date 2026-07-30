@@ -20,7 +20,7 @@ window {
     height:              180px;
     border:              1px;
     border-color:        @border-color;
-    border-radius:       24px;
+    border-radius:       0px;
     background-color:    @bg-color;
 }
 
@@ -39,7 +39,7 @@ listview {
 
 element {
     padding:             20px;
-    border-radius:       16px;
+    border-radius:       0px;
     background-color:    #0a0a0a;
     text-color:          #ffffff;
 }

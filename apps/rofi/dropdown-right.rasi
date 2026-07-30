@@ -72,7 +72,7 @@ element {
     orientation:        horizontal;
     padding:            9px 10px;
     border:             0px;
-    border-radius:      8px;
+    border-radius:      0px;
     background-color:   transparent;
     text-color:         @fg;
     spacing:            8px;

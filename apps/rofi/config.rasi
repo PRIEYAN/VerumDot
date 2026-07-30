@@ -27,7 +27,7 @@ window {
     width:              520px;
     height:             360px;
     border:             0px;
-    border-radius:      14px;
+    border-radius:      0px;
     background-color:   @bg;
 }
 
@@ -78,7 +78,7 @@ element {
     orientation:        vertical;
     padding:            10px 6px;
     border:             0px;
-    border-radius:      8px;
+    border-radius:      0px;
     background-color:   transparent;
     text-color:         @fg;
     spacing:            6px;

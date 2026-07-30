@@ -1,0 +1,128 @@
+/* Spotify compact card — art | info + controls, pure B/W, sharp */
+
+configuration {
+    show-icons:          false;
+    disable-history:     true;
+    hover-select:        true;
+    me-select-entry:     "";
+    me-accept-entry:     "MousePrimary";
+}
+
+* {
+    bg:                 #000000;
+    fg:                 #ffffff;
+    muted:              rgba(255, 255, 255, 0.45);
+    line:               rgba(255, 255, 255, 0.14);
+    accent:             #ffffff;
+    accent-fg:          #000000;
+
+    background-color:   transparent;
+    text-color:         @fg;
+    font:               "Iosevka Term 11";
+}
+
+window {
+    transparency:       "real";
+    location:           north west;
+    anchor:             north west;
+    x-offset:           200px;
+    y-offset:           0px;
+    width:              400px;
+    border:             1px solid;
+    border-color:       @line;
+    border-radius:      0px;
+    background-color:   @bg;
+    children:           [ mainbox ];
+}
+
+mainbox {
+    orientation:        horizontal;
+    padding:            10px;
+    spacing:            12px;
+    background-color:   transparent;
+    children:           [ icon, body ];
+}
+
+/* Must be named `icon` — that is the rofi image widget type. */
+icon {
+    expand:             false;
+    filename:           "image";
+    size:               96px;
+    padding:            0px;
+    margin:             0px;
+    border:             1px solid;
+    border-color:       @line;
+    background-color:   #111111;
+    vertical-align:     0.5;
+    horizontal-align:   0.5;
+}
+
+body {
+    orientation:        vertical;
+    expand:             true;
+    spacing:            6px;
+    padding:            2px 0px 0px 0px;
+    background-color:   transparent;
+    children:           [ message, listview ];
+}
+
+inputbar {
+    enabled:            false;
+}
+
+message {
+    padding:            0px;
+    border:             0px;
+    background-color:   transparent;
+}
+
+textbox {
+    text-color:         @fg;
+    background-color:   transparent;
+    font:               "Iosevka Term 11";
+    markup:             true;
+}
+
+listview {
+    columns:            3;
+    lines:              1;
+    cycle:              true;
+    dynamic:            false;
+    fixed-height:       true;
+    fixed-columns:      true;
+    flow:               horizontal;
+    scrollbar:          false;
+    spacing:            6px;
+    padding:            2px 0px 0px 0px;
+    background-color:   transparent;
+}
+
+element {
+    orientation:        horizontal;
+    padding:            8px 0px;
+    border:             0px;
+    border-radius:      0px;
+    background-color:   transparent;
+    text-color:         @fg;
+    cursor:             pointer;
+}
+
+element normal.normal,
+element alternate.normal {
+    background-color:   transparent;
+    text-color:         @fg;
+}
+
+element selected.normal {
+    background-color:   @accent;
+    text-color:         @accent-fg;
+}
+
+element-text {
+    horizontal-align:   0.5;
+    vertical-align:     0.5;
+    text-color:         inherit;
+    background-color:   transparent;
+    font:               "Iosevka Term 16";
+    markup:             true;
+}
