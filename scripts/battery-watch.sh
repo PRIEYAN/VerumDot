@@ -6,6 +6,10 @@
 # waiting for the module's poll interval. Falls back to polling sysfs if
 # upower is unavailable.
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 SIG="-RTMIN+10"
 
 poke() { pkill "$SIG" waybar >/dev/null 2>&1; }

@@ -1,0 +1,9 @@
+# Runtime / local
+current-wallpaper
+*.bak.*
+**/__pycache__/
+*.pyc
+
+# Editor
+.DS_Store
+*~

@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
 
 if [ "$1" = "menu" ]; then
   # Run inline (blocking) so rofi attaches to the Wayland session.
-  /home/prieyan/.config/hypr/scripts/spotify-center.sh
+  "${HYPR_SCRIPTS}/spotify-center.sh"
   exit 0
 fi
 

@@ -4,9 +4,13 @@
 # (rofi row metadata: "name\0icon\x1f/path"). Selecting one calls the
 # wallpaper.sh setter. Pure shell -- no python, no GTK.
 
-THEME=/home/prieyan/.config/hypr/apps/rofi/wallpaper.rasi
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
+THEME="${HYPR_ROFI}/wallpaper.rasi"
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
-SET_WALLPAPER="$HOME/.config/hypr/scripts/wallpaper.sh"
+SET_WALLPAPER="${HYPR_DIR}/scripts/wallpaper.sh"
 
 [ -d "$WALLPAPER_DIR" ] || exit 0
 

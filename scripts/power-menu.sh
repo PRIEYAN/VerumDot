@@ -13,9 +13,13 @@
 # the first branch — i.e. an accidental shutdown. Codepoints cannot degrade
 # that way.
 
-THEME="$HOME/.config/hypr/apps/rofi/power.rasi"
-HYPRLOCK_CONF="$HOME/.config/hypr/apps/hyprlock/hyprlock.conf"
-SHUTDOWN_SPLASH="$HOME/.config/hypr/scripts/mogger_shutdown.sh"
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
+THEME="${HYPR_DIR}/apps/rofi/power.rasi"
+HYPRLOCK_CONF="${HYPR_DIR}/apps/hyprlock/hyprlock.conf"
+SHUTDOWN_SPLASH="${HYPR_DIR}/scripts/mogger_shutdown.sh"
 
 if [ "$1" != "menu" ]; then
   printf '{"text":"%s","tooltip":"Power"}\n' $'\uF011'

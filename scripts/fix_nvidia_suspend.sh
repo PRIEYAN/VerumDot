@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 # Exit immediately if a command exits with a non-zero status
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 set -e
 
 echo "=== NVIDIA Suspend/Resume Fixer for Arch Linux ==="

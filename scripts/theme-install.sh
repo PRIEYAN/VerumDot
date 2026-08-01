@@ -10,9 +10,13 @@
 #
 # Pure shell.
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 set -u
 
-HYPR="/home/prieyan/.config/hypr"
+HYPR="$HYPR_DIR"
 T="$HYPR/apps/theme"
 CFG="$HOME/.config"
 SHARE="$HOME/.local/share"

@@ -3,9 +3,13 @@
 # Power action backend for the eww panel. Pure shell.
 # Closes the panel first, then runs the session action.
 
-EWW="eww -c /home/prieyan/.config/hypr/apps/eww"
-HYPR_CONFIG=/home/prieyan/.config/hypr/apps/hyprlock/hyprlock.conf
-SHUTDOWN_SCRIPT=/home/prieyan/.config/hypr/scripts/mogger_shutdown.sh
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/_paths.sh"
+EWW="eww -c "${HYPR_EWW}""
+HYPR_CONFIG="${HYPR_APPS}/hyprlock/hyprlock.conf"
+SHUTDOWN_SCRIPT="${HYPR_SCRIPTS}/mogger_shutdown.sh"
 
 $EWW close power >/dev/null 2>&1
 

@@ -1,4 +1,4 @@
-/* Spotify compact card — art | info + controls, pure B/W, sharp */
+/* Spotify compact card — art | info + controls, dark glass blur */
 
 configuration {
     show-icons:          false;
@@ -9,7 +9,7 @@ configuration {
 }
 
 * {
-    bg:                 #000000;
+    bg:                 rgba(0, 0, 0, 0.55);
     fg:                 #ffffff;
     muted:              rgba(255, 255, 255, 0.45);
     line:               rgba(255, 255, 255, 0.14);
@@ -30,7 +30,7 @@ window {
     width:              400px;
     border:             1px solid;
     border-color:       @line;
-    border-radius:      0px;
+    border-radius:      12px;
     background-color:   @bg;
     children:           [ mainbox ];
 }

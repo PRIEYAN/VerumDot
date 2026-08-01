@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
@@ -12,7 +16,7 @@ connected_devices() {
   bluetoothctl devices Connected 2>/dev/null | sed 's/^Device [^ ]* //'
 }
 
-THEME=/home/prieyan/.config/hypr/apps/rofi/dropdown-right.rasi
+THEME="${HYPR_ROFI}/dropdown-right.rasi"
 rmenu()   { rofi -dmenu -i -theme "$THEME" -p "$1"; }
 rnotify() { command -v notify-send >/dev/null 2>&1 && notify-send -a "Bluetooth" "$1" "$2"; }
 

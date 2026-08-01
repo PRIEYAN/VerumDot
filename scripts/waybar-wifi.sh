@@ -4,6 +4,10 @@
 # connection is up, otherwise the connected SSID. Click opens
 # nm-connection-editor. Pure shell.
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
@@ -17,7 +21,7 @@ current_ssid() {
   nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}'
 }
 
-THEME=/home/prieyan/.config/hypr/apps/rofi/dropdown-right.rasi
+THEME="${HYPR_ROFI}/dropdown-right.rasi"
 
 # rofi helpers, all anchored top-right via the dropdown theme.
 rmenu()  { rofi -dmenu -i -theme "$THEME" -p "$1"; }

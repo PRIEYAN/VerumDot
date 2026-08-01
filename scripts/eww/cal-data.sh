@@ -5,6 +5,10 @@
 # Emits JSON: {"label":"November 2024","weeks":[[{d,today},...],...]}
 # offset = months relative to the current month (negative = past).
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/_paths.sh"
 offset=${1:-0}
 
 year=$(date +%Y)

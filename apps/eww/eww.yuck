@@ -6,18 +6,18 @@
 ;; Wifi/Bluetooth use nm-connection-editor / blueman-manager instead.
 ;;
 ;; NOTE on syntax:
-;;  - defpoll/deflisten commands are run by eww's own shell; eww vars are
-;;    NOT interpolated there, so those use literal absolute paths.
+;;  - defpoll commands run via eww's shell, so $HOME/... paths work.
+;;  - eww vars (${SD}) are NOT expanded inside defpoll command strings.
 ;;  - class strings that combine a static part with a condition use
 ;;    expression concatenation {"base " + (cond ? "x" : "")} to avoid
 ;;    nested double-quotes inside a quoted string (which the parser rejects).
 ;; ─────────────────────────────────────────────────────────────────────
 
-(defvar SD "/home/prieyan/.config/hypr/scripts/eww")
-(defvar CAL "/home/prieyan/.config/hypr/scripts/eww-cal.sh")
+(defvar SD "$HOME/.config/hypr/scripts/eww")
+(defvar CAL "$HOME/.config/hypr/scripts/eww-cal.sh")
 
 ;; ─── polled data variables (literal paths — no ${SD} here) ────────────
-(defpoll vol_state   :interval "1s" :initial '{"volume":0,"muted":false}' "/home/prieyan/.config/hypr/scripts/eww/vol-data.sh")
+(defpoll vol_state   :interval "1s" :initial '{"volume":0,"muted":false}' "$HOME/.config/hypr/scripts/eww/vol-data.sh")
 
 ;; ─── UI-only state ────────────────────────────────────────────────────
 (defvar cal_offset 0)                 ;; month offset for the calendar

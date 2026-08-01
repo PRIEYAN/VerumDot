@@ -4,4 +4,8 @@
 # short and free of nested quotes. Pure shell.
 #   eww-set.sh <var> <value>
 
-eww -c /home/prieyan/.config/hypr/apps/eww update "$1=$2" >/dev/null 2>&1
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
+eww -c "${HYPR_EWW}" update "$1=$2" >/dev/null 2>&1

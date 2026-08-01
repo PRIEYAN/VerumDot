@@ -6,8 +6,12 @@
 #
 #   eww-cal.sh prev | next | reset
 
-EWW="eww -c /home/prieyan/.config/hypr/apps/eww"
-SD=/home/prieyan/.config/hypr/scripts/eww
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
+EWW="eww -c "${HYPR_EWW}""
+SD="${HYPR_SCRIPTS}/eww"
 OFFSET_FILE=/tmp/eww-cal.offset
 
 offset=0

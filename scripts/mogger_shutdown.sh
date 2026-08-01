@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 # Create a temporary rofi theme for the splash screen
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 cat << 'EOF' > /tmp/mogger.rasi
 * {
     background-color: black;

@@ -4,9 +4,13 @@
 # Left/Right = month, Up/Down = year, Return = today, Esc = close.
 # Click the clock again while open to dismiss.
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 set -euo pipefail
 
-THEME=/home/prieyan/.config/hypr/apps/rofi/calendar.rasi
+THEME="${HYPR_ROFI}/calendar.rasi"
 TMPDIR=${XDG_RUNTIME_DIR:-/tmp}
 DAYS_FILE="$TMPDIR/rofi-cal-days.$$"
 SEL_FILE="$TMPDIR/rofi-cal-sel.$$"

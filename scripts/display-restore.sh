@@ -13,6 +13,10 @@
 # Everything here is idempotent: re-declaring a monitor that is already
 # correct is a no-op, so this is safe to fire on every lid-open and resume.
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 MONITOR_LINE="eDP-1,preferred,auto,1.0"
 
 # DRM can need a moment to settle coming out of suspend, so re-assert a few

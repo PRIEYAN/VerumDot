@@ -3,13 +3,17 @@
 # Compact Spotify dropdown (rofi).
 # Layout: [ art | title/artist/progress/times + prev · play/pause · next ]
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 set -euo pipefail
 
-THEME=/home/prieyan/.config/hypr/apps/rofi/spotify.rasi
+THEME="${HYPR_ROFI}/spotify.rasi"
 PLAYER=spotify
 ART_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr-spotify-art.jpg"
 ART_URL_FILE="${ART_CACHE}.url"
-FALLBACK_ART=/home/prieyan/.config/hypr/apps/rofi/spotify-fallback.png
+FALLBACK_ART="${HYPR_ROFI}/spotify-fallback.png"
 
 # Toggle: second click closes.
 if pgrep -x rofi >/dev/null 2>&1 && pgrep -af '[r]ofi' | grep -q 'spotify\.rasi'; then

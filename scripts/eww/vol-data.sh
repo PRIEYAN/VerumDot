@@ -3,6 +3,10 @@
 # Volume data backend for the eww panel. Pure shell.
 # Emits {volume, muted} as JSON. Falls back from pamixer to wpctl.
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/_paths.sh"
 if command -v pamixer >/dev/null 2>&1; then
   vol=$(pamixer --get-volume 2>/dev/null)
   if pamixer --get-mute 2>/dev/null | grep -Eq 'true|1'; then muted=true; else muted=false; fi

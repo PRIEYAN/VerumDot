@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
-CACHE_FILE="$HOME/.cache/hypr_wallpaper"
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
+CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_wallpaper"
 DEFAULT_WALLPAPER="$HOME/Pictures/Wallpapers/suf.png"
-WATCHER_PID_FILE="$HOME/.cache/hypr_wallpaper_watcher.pid"
+CURRENT_LINK="${HYPR_DIR}/current-wallpaper"
+WATCHER_PID_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_wallpaper_watcher.pid"
 
 # Ensure cache dir exists
 mkdir -p "$(dirname "$CACHE_FILE")"
@@ -15,8 +20,9 @@ set_wallpaper() {
         img="$DEFAULT_WALLPAPER"
     fi
 
-    # Persist choice
+    # Persist choice + stable symlink for hyprlock / other tools
     echo "$img" > "$CACHE_FILE"
+    ln -sfn "$img" "$CURRENT_LINK"
 
     # hyprpaper v0.8+ unified IPC: the `wallpaper` command auto-loads the
     # image, so a separate `preload` is unnecessary (and rejected as an

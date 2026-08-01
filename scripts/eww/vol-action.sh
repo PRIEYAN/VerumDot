@@ -4,8 +4,12 @@
 #   vol-action.sh set <0-150>
 #   vol-action.sh mute
 
-EWW="eww -c /home/prieyan/.config/hypr/apps/eww"
-DIR=/home/prieyan/.config/hypr/scripts/eww
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/_paths.sh"
+EWW="eww -c "${HYPR_EWW}""
+DIR="${HYPR_SCRIPTS}/eww"
 
 case "$1" in
   set)

@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
 # File paths
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 STATE_FILE="$HOME/.cache/hypr_brightness_boost"
-SHADER_DIR="$HOME/.config/hypr/shaders"
+SHADER_DIR="${HYPR_DIR}/shaders"
 SHADER_FILE="$SHADER_DIR/active_boost.glsl"
 
 # Ensure directories exist

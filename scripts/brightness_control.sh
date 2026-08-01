@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
+
+# Resolve rice root (portable)
+# shellcheck source=/dev/null
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 STATE_FILE="$HOME/.cache/hypr_brightness_boost"
-SHADER_DIR="$HOME/.config/hypr/shaders"
+SHADER_DIR="${HYPR_DIR}/shaders"
 SHADER_FILE="$SHADER_DIR/active_boost.glsl"
 TEMP_SHADER_FILE="$SHADER_DIR/active_boost.glsl.tmp"
 
