@@ -47,7 +47,7 @@ mainbox {
 icon {
     expand:             false;
     filename:           "image";
-    size:               96px;
+    size:               100px;
     padding:            0px;
     margin:             0px;
     border:             1px solid;
