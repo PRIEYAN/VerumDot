@@ -204,6 +204,21 @@ PY
   # Enable user services commonly needed
   systemctl --user enable --now pipewire pipewire-pulse wireplumber 2>/dev/null || true
 
+  # Lid close: lock + blank only (no suspend/hibernate). Needs root once.
+  if [[ -f "$TARGET/apps/systemd/10-lid-lock.conf" ]]; then
+    if [[ -w /etc/systemd/logind.conf.d ]] || command -v sudo >/dev/null 2>&1; then
+      log "Installing logind lid policy (lock only, no hibernate)"
+      sudo mkdir -p /etc/systemd/logind.conf.d
+      sudo cp "$TARGET/apps/systemd/10-lid-lock.conf" /etc/systemd/logind.conf.d/10-lid-lock.conf
+      sudo rm -f /etc/systemd/logind.conf.d/10-lid-hibernate.conf
+      sudo systemctl restart systemd-logind 2>/dev/null \
+        && ok "logind updated (HandleLidSwitch=ignore)" \
+        || warn "copied lid policy — reboot if lid still hibernates"
+    else
+      warn "skip logind lid policy (need sudo). See apps/systemd/10-lid-lock.conf"
+    fi
+  fi
+
   cat <<EOF
 
 ────────────────────────────────────────────────────────────

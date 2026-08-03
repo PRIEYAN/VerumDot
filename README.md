@@ -2,7 +2,10 @@
 
 # VerumDot
 
-**A monochrome Hyprland rice — pure black glass, sharp contrast, one-command setup.**
+**Truth in black. Nothing else.**
+
+*A Hyprland rice built on absolute contrast — ink-void panels, frosted glass, white type.
+No accent rainbow. No noise. Just signal.*
 
 <br/>
 
@@ -13,6 +16,16 @@
 `Hyprland` · `Waybar` · `Rofi` · `eww` · `Kitty` · `hyprlock` · `PureBlackGlass`
 
 </div>
+
+---
+
+## Philosophy
+
+VerumDot strips the desktop down to what actually matters: **readability, speed, and presence**.
+
+Black is the canvas. White is the ink. Glass is the depth — wallpaper bleeding through translucent bars, menus, and windows so the machine feels like one surface instead of a stack of chrome boxes. Every dropdown, lock screen, and tile follows the same grammar: sharp edges of meaning, soft edges of light.
+
+Portable by design. Clone it, run `./setup.sh`, and VerumDot is yours — no username baked in, no scavenger hunt across `~/.config`.
 
 ---
 
@@ -51,7 +64,7 @@
 
 ## Overview
 
-VerumDot is a portable Arch/Hyprland configuration: dark glass UI, white typography, no purple fluff. Everything lives in one folder and installs with `./setup.sh`.
+VerumDot is a complete Arch + Hyprland environment: dark glass UI, white typography, zero decorative clutter. One folder. One installer. Everything speaks the same language.
 
 | Layer | What you get |
 |-------|----------------|
@@ -62,8 +75,6 @@ VerumDot is a portable Arch/Hyprland configuration: dark glass UI, white typogra
 | **Lock / idle** | hyprlock + hypridle |
 | **Theme** | PureBlackGlass (Kvantum) + matching GTK / portal |
 | **Apps** | Kitty, mako, hyprpaper, Firefox, Nautilus |
-
-Paths resolve via `$HOME` and `scripts/_paths.sh` — no hardcoded username. Copy the repo to another machine and re-run setup.
 
 ---
 
@@ -171,6 +182,6 @@ VerumDot/
 
 <div align="center">
 
-**VerumDot** — black glass Hyprland
+**VerumDot** — where the desktop stops arguing with itself.
 
 </div>

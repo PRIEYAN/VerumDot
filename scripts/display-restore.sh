@@ -27,6 +27,9 @@ for _ in 1 2 3 4 5; do
 
     # dpmsStatus 1 = panel powered. Stop as soon as it reports back.
     if hyprctl -j monitors 2>/dev/null | grep -q '"dpmsStatus": *true'; then
+        if ! pidof hyprlock >/dev/null 2>&1; then
+          loginctl lock-session 2>/dev/null || hyprlock &
+        fi
         exit 0
     fi
     sleep 0.4
@@ -35,4 +38,9 @@ done
 # Last-ditch: even if the status probe never confirmed, leave the panel
 # commanded on rather than exiting with it dark.
 hyprctl dispatch dpms on >/dev/null 2>&1
+
+# Ensure the lock screen is visible after lid open.
+if ! pidof hyprlock >/dev/null 2>&1; then
+  loginctl lock-session 2>/dev/null || hyprlock &
+fi
 exit 0

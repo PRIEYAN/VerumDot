@@ -55,6 +55,11 @@ export ADB_MDNS_OPENSCREEN=1
 export PATH="$HOME/.local/bin:$PATH"
 export PS1="%F{red}%1~ >%f "
 
+# VerumDot mark — printed once on shell open; `clear` removes it
+print -P '%F{#ffffff}┏┳┓┏┓┏┓┏┓┏┓┏┓
+┛┗┗┗┛┗┫┗┫┗ ┛ 
+      ┛ ┛    %f'
+
 # Theme
 # ZSH_THEME="agnoster"
 
