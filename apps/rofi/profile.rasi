@@ -1,0 +1,81 @@
+/**
+ * Profile dropdown — pure black / pure white, sharp edges.
+ * Opened from the waybar star icon (custom/profile), left-anchored
+ * so it drops down under the icon in the top-left corner.
+ */
+
+configuration {
+    show-icons:                 false;
+}
+
+* {
+    bg-color:            #000000;
+    fg-color:            #ffffff;
+    fg-muted:            rgba(255, 255, 255, 0.55);
+    line:                rgba(255, 255, 255, 0.15);
+    alert-color:         #ff0000;
+    accent:              #ffffff;
+    accent-fg:           #000000;
+}
+
+window {
+    transparency:        "real";
+    location:            north west;
+    anchor:              north west;
+    x-offset:            6px;
+    y-offset:            0px;
+    width:               320px;
+    border:              1px;
+    border-color:        @fg-color;
+    border-radius:       0px;
+    background-color:    @bg-color;
+}
+
+mainbox {
+    padding:             0px;
+    background-color:    transparent;
+    children:            [ message, listview ];
+}
+
+message {
+    padding:             10px 12px;
+    border:              0px 0px 1px 0px;
+    border-color:        @line;
+    background-color:    transparent;
+}
+
+textbox {
+    text-color:          @fg-muted;
+    font:                "Iosevka Term 10";
+}
+
+listview {
+    lines:               10;
+    spacing:             0px;
+    padding:             4px 0px;
+    cycle:               true;
+    dynamic:             true;
+    layout:              vertical;
+    background-color:    transparent;
+    fixed-height:        false;
+    scrollbar:           false;
+}
+
+element {
+    padding:             7px 12px;
+    border:              0px;
+    border-radius:       0px;
+    background-color:    transparent;
+    text-color:          @fg-color;
+}
+
+element selected {
+    background-color:    @accent;
+    text-color:          @accent-fg;
+}
+
+element-text {
+    font:                "Iosevka Term 11";
+    text-color:          inherit;
+    background-color:    transparent;
+}

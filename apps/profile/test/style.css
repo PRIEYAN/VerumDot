@@ -1,0 +1,323 @@
+/* ==========================================================
+   Profile dropdown — mockup
+   Palette: pure black (#000000), white text/icons, inverted
+   selection. Matches apps/waybar/style.css + apps/rofi conventions.
+   ========================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-family: "Iosevka Term", "Symbols Nerd Font", "BlexMono Nerd Font", "JetBrains Mono", monospace;
+}
+
+body {
+  background: #0d0d0d;
+  color: #ffffff;
+  min-height: 100vh;
+  padding: 40px;
+}
+
+/* -------------------- fake waybar, just for context -------------------- */
+
+.fake-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  background: rgba(0, 0, 0, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  font-weight: 500;
+  max-width: 720px;
+  margin: 0 auto 0;
+}
+
+.fake-item {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fake-item-active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* -------------------- dropdown shell -------------------- */
+
+.dropdown {
+  width: 300px;
+  margin: 0 auto;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.dd-section {
+  padding: 12px 14px;
+}
+
+.dd-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.dd-label {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 9px;
+}
+
+.dd-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.dd-label-row .dd-label {
+  margin-bottom: 0;
+}
+
+.dd-label-count {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+}
+
+/* -------------------- header / identity -------------------- */
+
+.dd-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 8px;
+}
+
+.identity-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.identity-sub {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 2px;
+}
+
+/* -------------------- system stats -------------------- */
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 20px;
+}
+
+.stat-row + .stat-row {
+  margin-top: 5px;
+}
+
+.stat-icon {
+  width: 14px;
+  flex-shrink: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+}
+
+.stat-name {
+  width: 34px;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+
+.meter {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 2px;
+}
+
+.meter-fill.meter-warn {
+  background: #f7768e;
+}
+
+.stat-value {
+  width: 52px;
+  flex-shrink: 0;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* -------------------- todo list -------------------- */
+
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.todo-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.todo-item input[type="checkbox"] {
+  display: none;
+}
+
+.todo-box {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  position: relative;
+}
+
+.todo-item input[type="checkbox"]:checked + .todo-box {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.todo-item input[type="checkbox"]:checked + .todo-box::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 4px;
+  height: 7px;
+  border: solid #000000;
+  border-width: 0 1.6px 1.6px 0;
+  transform: rotate(45deg);
+}
+
+.todo-text {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.todo-item input[type="checkbox"]:checked ~ .todo-text {
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: line-through;
+}
+
+.todo-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+}
+
+.todo-add-icon {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+}
+
+.todo-add-input {
+  flex: 1;
+  background: transparent;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-family: inherit;
+  outline: none;
+}
+
+.todo-add-input::placeholder {
+  color: rgba(255, 255, 255, 0.30);
+}
+
+/* -------------------- timer -------------------- */
+
+.timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timer-display {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.timer-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.timer-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.timer-btn-primary {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.timer-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.85);
+}

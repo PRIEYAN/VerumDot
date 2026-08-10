@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Profile Dropdown — Mockup</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Fake top bar, just to anchor the dropdown like waybar would -->
+  <div class="fake-topbar">
+    <div class="fake-topbar-left">
+      <span class="fake-item fake-item-active">󰀄  prieyan</span>
+    </div>
+    <div class="fake-topbar-right">
+      <span class="fake-item">Fri 08 Aug  14:32</span>
+    </div>
+  </div>
+
+  <!-- ============ DROPDOWN ============ -->
+  <div class="dropdown">
+
+    <!-- Header: identity -->
+    <div class="dd-section dd-header">
+      <div class="avatar">P</div>
+      <div class="identity">
+        <div class="identity-name">prieyan</div>
+        <div class="identity-sub">prieyan@archlinux · uptime 4h 12m</div>
+      </div>
+    </div>
+
+    <div class="dd-divider"></div>
+
+    <!-- System stats -->
+    <div class="dd-section">
+      <div class="dd-label">System</div>
+
+      <div class="stat-row">
+        <span class="stat-icon">󰻠</span>
+        <span class="stat-name">CPU</span>
+        <div class="meter"><div class="meter-fill" style="width:37%"></div></div>
+        <span class="stat-value">37%</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-icon">󰍛</span>
+        <span class="stat-name">RAM</span>
+        <div class="meter"><div class="meter-fill" style="width:62%"></div></div>
+        <span class="stat-value">9.9G/16G</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-icon">󰢮</span>
+        <span class="stat-name">GPU</span>
+        <div class="meter"><div class="meter-fill" style="width:18%"></div></div>
+        <span class="stat-value">18%</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-icon">󰓡</span>
+        <span class="stat-name">SWAP</span>
+        <div class="meter"><div class="meter-fill" style="width:4%"></div></div>
+        <span class="stat-value">0.3G/8G</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-icon">󰔏</span>
+        <span class="stat-name">TEMP</span>
+        <div class="meter"><div class="meter-fill meter-warn" style="width:58%"></div></div>
+        <span class="stat-value">58°C</span>
+      </div>
+    </div>
+
+    <div class="dd-divider"></div>
+
+    <!-- Todo list -->
+    <div class="dd-section">
+      <div class="dd-label-row">
+        <span class="dd-label">Todo</span>
+        <span class="dd-label-count">2/5</span>
+      </div>
+
+      <div class="todo-list">
+        <label class="todo-item">
+          <input type="checkbox" checked>
+          <span class="todo-box"></span>
+          <span class="todo-text">push waybar dropdown mockup</span>
+        </label>
+        <label class="todo-item">
+          <input type="checkbox" checked>
+          <span class="todo-box"></span>
+          <span class="todo-text">fix battery-alert threshold</span>
+        </label>
+        <label class="todo-item">
+          <input type="checkbox">
+          <span class="todo-box"></span>
+          <span class="todo-text">wire rofi theme for profile popup</span>
+        </label>
+        <label class="todo-item">
+          <input type="checkbox">
+          <span class="todo-box"></span>
+          <span class="todo-text">review PR #42</span>
+        </label>
+        <label class="todo-item">
+          <input type="checkbox">
+          <span class="todo-box"></span>
+          <span class="todo-text">clean up gtk.css leftovers</span>
+        </label>
+      </div>
+
+      <div class="todo-add">
+        <span class="todo-add-icon">+</span>
+        <input type="text" placeholder="add a task…" class="todo-add-input">
+      </div>
+    </div>
+
+    <div class="dd-divider"></div>
+
+    <!-- Timer / stopwatch -->
+    <div class="dd-section dd-timer">
+      <div class="dd-label">Timer</div>
+      <div class="timer-row">
+        <div class="timer-display">00:12:47</div>
+        <div class="timer-controls">
+          <button class="timer-btn" title="Reset">↺</button>
+          <button class="timer-btn timer-btn-primary" title="Pause">⏸</button>
+          <button class="timer-btn" title="Stop">■</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ============ /DROPDOWN ============ -->
+
+</body>
+</html>

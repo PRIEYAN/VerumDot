@@ -32,9 +32,8 @@ GLYPHS=(
   $'\uEAD2'      # nf-cod-debug_restart
   $'\uF08B'      # nf-fa-sign_out
   $'\uF023'      # nf-fa-lock
-  $'\U000F073A'  # nf-md-power_sleep
 )
-ACTIONS=( shutdown reboot logout lock suspend )
+ACTIONS=( shutdown reboot logout lock )
 
 # Rows are the bare glyphs, deliberately unwrapped by Pango markup: an
 # inline <span color> beats the theme's text-color, which would pin the
@@ -70,5 +69,4 @@ case "$action" in
   reboot)   exec systemctl reboot ;;
   logout)   exec hyprctl dispatch exit ;;
   lock)     exec hyprlock -c "$HYPRLOCK_CONF" ;;
-  suspend)  exec systemctl suspend ;;
 esac

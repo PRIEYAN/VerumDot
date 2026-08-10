@@ -47,12 +47,12 @@ while :; do
     # Discharging (or Unknown): fire thresholds once each.
     if (( cap <= 15 )); then
       notify_once 15 "Battery critical — ${cap}%" \
-        "Plug in soon. Battery is at ${cap}%." critical
+        "Yo am dieing please charge it son"
       # Hitting 15 also covers 20 — mark both so we don't double-spam.
       : >"$STATE_DIR/notified-20"
     elif (( cap <= 20 )); then
       notify_once 20 "Battery low — ${cap}%" \
-        "Battery is at ${cap}%. Consider plugging in." critical
+        "Battery is at ${cap}%. charge it dude" critical
     else
       # Climbed back above a threshold without AC (rare) → allow re-alert.
       (( cap > 20 )) && clear_flag 20

@@ -103,7 +103,7 @@ placessidebar scrolledwindow,
 filechooser .view,
 filechooser treeview.view,
 treeview.view {
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: rgba(0, 0, 0, 0.192);
   background-image: none;
   color: @fg;
 }
