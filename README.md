@@ -25,7 +25,7 @@ VerumDot strips the desktop down to what actually matters: **readability, speed,
 
 Black is the canvas. White is the ink. Glass is the depth — wallpaper bleeding through translucent bars, menus, and windows so the machine feels like one surface instead of a stack of chrome boxes. Every dropdown, lock screen, and tile follows the same grammar: sharp edges of meaning, soft edges of light.
 
-Portable by design. Clone it, run `./setup.sh`, and VerumDot is yours — no username baked in, no scavenger hunt across `~/.config`.
+Portable by design. One command and VerumDot is yours — no username baked in, no scavenger hunt across `~/.config`.
 
 ---
 
@@ -80,43 +80,76 @@ VerumDot is a complete Arch + Hyprland environment: dark glass UI, white typogra
 
 ## Quick start
 
-**Requirements:** Arch Linux (or derivative) · `pacman` · `yay` or `paru` (for AUR)
+**Requirements:** Arch Linux (or derivative) · `pacman` · a working internet connection
+
+### One command, fresh machine
 
 ```bash
-chmod +x setup.sh
-./setup.sh
+bash <(curl -fsSL https://github.com/PRIEYAN/VerumDot/raw/main/install.sh)
 ```
 
-One run will:
+That clones the rice, installs every dependency, and deploys the config. Nothing
+else to fetch, nothing to symlink by hand.
 
-1. Install packages from `packages.txt` (`pacman` + AUR)
-2. Deploy the rice to `~/.config/hypr`
-3. Link Waybar into `~/.config/waybar`
-4. Install the PureBlackGlass GTK / Qt / portal theme
-5. Create `~/Pictures/Wallpapers/` with a placeholder
+### From a clone
+
+```bash
+git clone https://github.com/PRIEYAN/VerumDot.git
+cd VerumDot && ./setup.sh
+```
+
+### The installer
+
+`setup.sh` opens an interactive wizard. It reads the machine first — distro, AUR
+helper, GPU, battery, connected outputs, existing config — then asks what to do
+with it. Arrow keys move, space toggles, enter confirms; every question has a
+default, so holding enter is a valid answer.
+
+| It asks | It does |
+|---------|---------|
+| Full / config-only / packages-only | scopes the run |
+| Which package groups | audio, capture, network, power, theming, fonts, apps, AUR |
+| Terminal · browser · file manager · editor | installs your picks and rewrites the binds in `hypr.conf` |
+| Which output, which scale | writes the real `monitor =` line — no more editing `eDP-1` by hand |
+| Wallpaper folder | creates it, seeds a placeholder, links `current-wallpaper` |
+| Theme · services · lid policy | PureBlackGlass, pipewire, lock-don't-suspend |
+
+Then it prints the full plan and waits for a yes before touching anything.
+Everything it replaces is backed up as `<path>.bak.<timestamp>` — nothing is
+deleted — and the whole run is logged to `~/.cache/verumdot-install-*.log`.
 
 ### Flags
 
 ```bash
-./setup.sh              # packages + config (default)
+./setup.sh              # interactive wizard
+./setup.sh --auto       # zero questions, everything, sane defaults
 ./setup.sh --packages   # dependencies only
-./setup.sh --config     # config / theme only
+./setup.sh --config     # config + theme only
+./setup.sh --dry-run    # print the plan, change nothing
+./setup.sh --no-anim    # skip the intro animation
 ./setup.sh --help
+```
+
+Flags pass through the bootstrap too:
+
+```bash
+bash <(curl -fsSL https://github.com/PRIEYAN/VerumDot/raw/main/install.sh) --auto
 ```
 
 ### After install
 
-1. Put wallpapers in `~/Pictures/Wallpapers/`
-2. Fix your output name in `~/.config/hypr/hypr.conf` (`eDP-1` → your monitor; `hyprctl monitors`)
-3. Start a **Hyprland** session
-4. Reload anytime: `hyprctl reload`
+1. Drop wallpapers into `~/Pictures/Wallpapers/`
+2. Log out, pick the **Hyprland** session, log back in
+3. Reload anytime: `hyprctl reload`
+
+If you skipped the output question, set yours in `~/.config/hypr/hypr.conf`
+(`hyprctl monitors` lists them).
 
 ### Migrate
 
 ```bash
-# on the new machine, from this folder:
 ./setup.sh          # full
-./setup.sh --config # if packages already installed
+./setup.sh --config # if packages are already installed
 ```
 
 Live config always lands at `~/.config/hypr`.
@@ -148,8 +181,9 @@ Screenshots → `~/Pictures/Screenshots` (+ clipboard).
 
 ```
 VerumDot/
-├── setup.sh              # installer
-├── packages.txt          # pacman + AUR deps
+├── install.sh            # one-command bootstrap (clone + setup)
+├── setup.sh              # interactive installer
+├── packages.txt          # pacman + AUR manifest
 ├── hyprland.conf         # entry → ./hypr.conf
 ├── hypr.conf             # binds, blur, rules
 ├── screenshots/          # gallery assets

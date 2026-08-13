@@ -1,4 +1,10 @@
-# Official Arch packages (pacman)
+# VerumDot — dependency manifest
+#
+# This file documents what ./setup.sh installs. The installer is the source of
+# truth (see pkgs_for / aur_for in setup.sh); groups here mirror the ones the
+# wizard offers. Core is always installed, every other group is a checkbox.
+
+# ── core (always) ──────────────────────────────────────────────────────
 hyprland
 hyprpaper
 hypridle
@@ -9,36 +15,63 @@ xdg-desktop-portal-gtk
 waybar
 rofi
 mako
-kitty
+jq
+inotify-tools
+python
+curl
+rsync
+
+# ── audio ──────────────────────────────────────────────────────────────
 pipewire
 pipewire-pulse
+pipewire-alsa
 wireplumber
 pamixer
 playerctl
-brightnessctl
-inotify-tools
-jq
+
+# ── capture ────────────────────────────────────────────────────────────
 grim
 slurp
-wl-clipboard
 swappy
+wl-clipboard
+
+# ── network + bluetooth ────────────────────────────────────────────────
+networkmanager
 network-manager-applet
+bluez
+bluez-utils
 blueman
+
+# ── power / brightness ─────────────────────────────────────────────────
+brightnessctl
+power-profiles-daemon
+upower
+
+# ── theming (PureBlackGlass targets) ───────────────────────────────────
 kvantum
 qt6ct
+
+# ── fonts ──────────────────────────────────────────────────────────────
 ttf-jetbrains-mono-nerd
 ttf-iosevka-nerd
 ttf-nerd-fonts-symbols
 noto-fonts
 noto-fonts-emoji
+
+# ── desktop apps (the wizard lets you swap each one) ───────────────────
+# terminal:     kitty | alacritty | foot | wezterm | ghostty
+# browser:      firefox | chromium | brave-bin (AUR) | zen-browser-bin (AUR)
+# file manager: nautilus | thunar | dolphin | nemo
+# editor:       visual-studio-code-bin (AUR) | neovim | zed
+kitty
 firefox
 nautilus
-power-profiles-daemon
-python
 
-# AUR (yay / paru) — installed by setup.sh
-eww-git
+# ── AUR (yay / paru; setup.sh can bootstrap yay-bin) ───────────────────
 spotify
-visual-studio-code-bin
 kora-icon-theme
 qt5ct
+visual-studio-code-bin
+
+# ── optional, off by default ───────────────────────────────────────────
+# eww   legacy volume/power/calendar panels; rofi versions replaced them
