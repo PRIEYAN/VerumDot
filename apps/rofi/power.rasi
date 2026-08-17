@@ -8,11 +8,11 @@ configuration {
 }
 
 * {
-    bg-color:            #000000;
+    bg-color:            rgba(0, 0, 0, 0.62);   /* glass: blurred by the rofi layerrule */
     bg-selected:         rgba(255, 255, 255, 0.16);
     fg-color:            #ffffff;
     accent-color:        #ffffff;
-    border-color:        rgba(255, 255, 255, 0.14);
+    border-color:        rgba(255, 255, 255, 0.22);
 }
 
 window {
@@ -40,7 +40,7 @@ listview {
 element {
     padding:             20px;
     border-radius:       0px;
-    background-color:    #0a0a0a;
+    background-color:    rgba(255, 255, 255, 0.05);
     text-color:          #ffffff;
 }
 
