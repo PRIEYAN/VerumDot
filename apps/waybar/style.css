@@ -33,7 +33,7 @@ tooltip label {
 /* ──────────────────────────────────────────────────────────
    ALL modules: pure white, no background, hover dims slightly
    ────────────────────────────────────────────────────────── */
-#clock,
+#custom-clock,
 #custom-app_launcher,
 #custom-app_info,
 #custom-spotify,
@@ -59,10 +59,18 @@ tooltip label {
 }
 
 /* Left side keeps the subtle dim-on-hover */
-#clock:hover,
+#custom-clock:hover,
 #custom-app_launcher:hover {
   color: rgba(255, 255, 255, 0.55);
   background: transparent;
+}
+
+/* Hidden workspace is active: clock turns pure red as an indicator */
+#custom-clock.hidden-ws {
+  color: #ff0000;
+}
+#custom-clock.hidden-ws:hover {
+  color: #ff4d4d;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -86,7 +94,7 @@ tooltip label {
 /* ──────────────────────────────────────────────────────────
    Left
    ────────────────────────────────────────────────────────── */
-#clock {
+#custom-clock {
   font-weight: 600;
   letter-spacing: 0.4px;
   padding: 0 14px 0 14px;

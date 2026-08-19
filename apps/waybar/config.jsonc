@@ -5,7 +5,7 @@
   "height": 34,
   "spacing": 0,
   "font": "Iosevka Term 10",
-  "modules-left": ["clock", "custom/app_launcher", "custom/app_info", "custom/spotify"],
+  "modules-left": ["custom/clock", "custom/app_launcher", "custom/app_info", "custom/spotify"],
   "modules-center": ["custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5", "custom/ws6", "custom/ws7", "custom/ws8", "custom/ws9"],
   "modules-right": [
     "custom/screenshot",
@@ -23,9 +23,9 @@
     "custom/power"
   ],
 
-  "clock": {
-    "format": "{:%a %d %b  %H:%M}",
-    "tooltip-format": "{:%A, %d %B %Y  %H:%M:%S}",
+  "custom/clock": {
+    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/clock-status.py",
+    "return-type": "json",
     "on-click": "${HOME}/.config/hypr/scripts/calendar-popup.sh"
   },
 
