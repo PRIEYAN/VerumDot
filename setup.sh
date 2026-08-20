@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #   VerumDot — installer
-#   Real Eyes - Realize - Real Lies
+#   Truth in black. Nothing else.
 #
 #   One command, fresh machine:
 #     bash <(curl -fsSL https://raw.githubusercontent.com/PRIEYAN/VerumDot/main/install.sh)

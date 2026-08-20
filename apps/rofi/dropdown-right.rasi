@@ -3,11 +3,10 @@
 // from under their icons in the top-right corner.
 
 * {
-    bg:                 rgba(0, 0, 0, 0.62);   // glass: black tint, blurred by Hyprland
+    bg:                 #000000;   // pure black panel
     fg:                 #ffffff;   // pure white text
     fg-muted:           rgba(255, 255, 255, 0.55);
     line:               rgba(255, 255, 255, 0.15);
-    glass-edge:         rgba(255, 255, 255, 0.22);
     accent:             #ffffff;   // selection: pure white
     accent-fg:          #000000;   // selection text: pure black
     hover:              rgba(255, 255, 255, 0.10);
@@ -24,8 +23,7 @@ window {
     x-offset:           0px;
     y-offset:           0px;
     width:              340px;
-    border:             1px solid;
-    border-color:       @glass-edge;
+    border:             0px;
     border-radius:      0px;
     background-color:   @bg;
 }

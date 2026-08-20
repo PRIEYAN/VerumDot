@@ -9,7 +9,7 @@ configuration {
 }
 
 * {
-    bg:                 rgba(0, 0, 0, 0.62);   /* glass: blurred by the rofi layerrule */
+    bg:                 #000000;
     fg:                 #ffffff;
     muted:              rgba(255, 255, 255, 0.40);
     accent:             #ffffff;
@@ -29,7 +29,7 @@ window {
     y-offset:           0px;
     width:              280px;
     border:             1px solid;
-    border-color:       rgba(255, 255, 255, 0.22);
+    border-color:       @line;
     border-radius:      0px;
     background-color:   @bg;
     children:           [ mainbox ];
