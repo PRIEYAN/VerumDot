@@ -319,3 +319,73 @@ menuitem:hover,
 popover button:hover {
   background-color: @hover;
 }
+
+/* ── AnyDesk ──────────────────────────────────────────────────────────────
+   AnyDesk is a GTK3 app, but it custom-draws its tab strip and the address /
+   "Set password" / "What's new" tiles, so the generic container rules above
+   don't reach them and they stay white. These opaque overrides catch the
+   parts that are real GTK widgets. The custom-drawn tiles only go dark via
+   AnyDesk's own Settings -> Appearance -> Theme -> Dark Mode. */
+window.anydesk,
+window.anydesk box,
+window.anydesk grid,
+window.anydesk stack,
+window.anydesk scrolledwindow,
+window.anydesk viewport,
+window.anydesk notebook,
+window.anydesk notebook stack,
+window.anydesk frame,
+window.anydesk .view {
+  background-color: #000000;
+  background-image: none;
+  color: @fg;
+}
+
+window.anydesk notebook header,
+window.anydesk notebook tab {
+  background-color: #000000;
+  background-image: none;
+  border-color: @line;
+  color: @fg;
+}
+
+window.anydesk notebook tab:checked {
+  background-color: rgba(255, 255, 255, 0.10);
+  color: @fg;
+}
+
+/* Text: labels don't reliably inherit the container `color`, so the label and
+   image children are targeted explicitly (same reason the .suggested-action
+   rules above spell out their children). White so it reads on the black. */
+window.anydesk,
+window.anydesk *,
+window.anydesk label,
+window.anydesk image,
+window.anydesk button label,
+window.anydesk notebook tab label,
+window.anydesk list row label,
+window.anydesk entry {
+  color: #ffffff;
+  text-shadow: none;
+}
+
+/* Entries need a visible field behind the white text. */
+window.anydesk entry,
+window.anydesk entry.search {
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: none;
+  border: 1px solid @line;
+  color: #ffffff;
+}
+
+window.anydesk entry placeholder,
+window.anydesk entry:disabled {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Links (Invite via email, Learn more) stay distinguishable but light. */
+window.anydesk link,
+window.anydesk button.link,
+window.anydesk button.link label {
+  color: rgba(255, 255, 255, 0.85);
+}

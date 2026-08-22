@@ -9,6 +9,11 @@ DEFAULT_WALLPAPER="$HOME/Pictures/Wallpapers/suf.png"
 CURRENT_LINK="${HYPR_DIR}/current-wallpaper"
 WATCHER_PID_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_wallpaper_watcher.pid"
 
+# Lock screen keeps its own choice, independent of the desktop wallpaper.
+# hyprlock.conf reads the symlink; until one is picked it tracks the desktop.
+LOCK_CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_lock_wallpaper"
+LOCK_LINK="${HYPR_DIR}/lock-wallpaper"
+
 # Ensure cache dir exists
 mkdir -p "$(dirname "$CACHE_FILE")"
 
@@ -36,6 +41,19 @@ set_wallpaper() {
 
     # Start watcher for this file
     start_watcher "$img"
+}
+
+set_lock_wallpaper() {
+    local img="$1"
+
+    if [[ ! -f "$img" ]]; then
+        img="$DEFAULT_WALLPAPER"
+    fi
+
+    # hyprlock reads the image at lock time, so there is no daemon to poke --
+    # persisting the choice and repointing the symlink is the whole job.
+    echo "$img" > "$LOCK_CACHE_FILE"
+    ln -sfn "$img" "$LOCK_LINK"
 }
 
 start_watcher() {
@@ -91,17 +109,31 @@ init() {
     fi
 
     set_wallpaper "$img"
+
+    # Lock screen: restore its own choice, or track the desktop wallpaper
+    # until one is picked, so hyprlock never falls back to the flat color.
+    local lock_img=""
+    if [[ -f "$LOCK_CACHE_FILE" ]]; then
+        lock_img="$(cat "$LOCK_CACHE_FILE")"
+    fi
+    if [[ -z "$lock_img" || ! -f "$lock_img" ]]; then
+        lock_img="$img"
+    fi
+    ln -sfn "$lock_img" "$LOCK_LINK"
 }
 
 case "$1" in
     set)
         set_wallpaper "$2"
         ;;
+    set-lock)
+        set_lock_wallpaper "$2"
+        ;;
     init)
         init
         ;;
     *)
-        echo "Usage: $0 {set path/to/img|init}"
+        echo "Usage: $0 {set path/to/img|set-lock path/to/img|init}"
         exit 1
         ;;
 esac
