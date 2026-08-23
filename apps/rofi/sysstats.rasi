@@ -1,0 +1,125 @@
+/* System stats dropdown — pure black / white, under the waybar battery.
+   Read-only panel: the entry is disabled and the selection highlight is
+   suppressed, since no row is actionable. Esc closes, Return refreshes. */
+
+configuration {
+    show-icons:          false;
+    disable-history:     true;
+    me-select-entry:     "";
+    me-accept-entry:     "MousePrimary";
+}
+
+* {
+    bg:                 #000000;
+    fg:                 #ffffff;
+    muted:              rgba(255, 255, 255, 0.40);
+    line:               rgba(255, 255, 255, 0.18);
+
+    background-color:   transparent;
+    text-color:         @fg;
+    font:               "Iosevka Term 10";
+}
+
+window {
+    transparency:       "real";
+    location:           north east;
+    anchor:             north east;
+    x-offset:           0px;
+    y-offset:           0px;
+    width:              400px;
+    border:             1px solid;
+    border-color:       @line;
+    border-radius:      0px;
+    background-color:   @bg;
+    children:           [ mainbox ];
+}
+
+mainbox {
+    padding:            12px 14px 10px 14px;
+    spacing:            6px;
+    background-color:   transparent;
+    children:           [ inputbar, listview, footer ];
+}
+
+inputbar {
+    spacing:            0px;
+    padding:            0px 0px 8px 0px;
+    border:             0px 0px 1px 0px;
+    border-color:       @line;
+    background-color:   transparent;
+    children:           [ prompt ];
+}
+
+prompt {
+    enabled:            true;
+    expand:             true;
+    horizontal-align:   0.0;
+    text-color:         @fg;
+    font:               "Iosevka Term Medium 11";
+    background-color:   transparent;
+}
+
+entry {
+    enabled:            false;
+}
+
+listview {
+    lines:              5;
+    columns:            1;
+    cycle:              false;
+    dynamic:            true;
+    fixed-height:       false;
+    scrollbar:          false;
+    spacing:            1px;
+    padding:            4px 0px 0px 0px;
+    background-color:   transparent;
+}
+
+element {
+    orientation:        horizontal;
+    padding:            4px 0px;
+    border:             0px;
+    border-radius:      0px;
+    background-color:   transparent;
+    text-color:         @fg;
+    cursor:             default;
+}
+
+/* Nothing here is clickable, so every state looks the same — no inverted row. */
+element normal.normal,
+element alternate.normal,
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color:   transparent;
+    text-color:         @fg;
+}
+
+element-text {
+    horizontal-align:   0.0;
+    vertical-align:     0.5;
+    text-color:         inherit;
+    background-color:   transparent;
+    markup:             true;
+}
+
+footer {
+    orientation:        horizontal;
+    expand:             false;
+    spacing:            0px;
+    margin:             6px 0px 0px 0px;
+    padding:            7px 0px 0px 0px;
+    border:             1px 0px 0px 0px;
+    border-color:       @line;
+    background-color:   transparent;
+    children:           [ textbox-footer ];
+}
+
+textbox-footer {
+    expand:             true;
+    horizontal-align:   0.5;
+    text-color:         @muted;
+    background-color:   transparent;
+    font:               "Iosevka Term 9";
+    str:                "↵ refresh   Esc close";
+}

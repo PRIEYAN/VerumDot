@@ -28,6 +28,8 @@ tooltip label {
   color: #ffffff;
   padding: 6px 8px;
   font-size: 11px;
+  /* Monospace so the battery hover stats table keeps its columns aligned. */
+  font-family: "Iosevka Term", "JetBrainsMono Nerd Font", monospace;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -38,7 +40,6 @@ tooltip label {
 #custom-app_info,
 #custom-spotify,
 #custom-screenshot,
-#custom-performance,
 #custom-mic,
 #custom-volume,
 #custom-brightness,
@@ -78,7 +79,6 @@ tooltip label {
    accent colour on hover. Tweak the hex values to taste.
    ────────────────────────────────────────────────────────── */
 #custom-screenshot:hover   { color: #7aa2f7; }  /* blue   */
-#custom-performance:hover  { color: #e0af68; }  /* amber  */
 #idle_inhibitor:hover      { color: #e0af68; }  /* amber  */
 #custom-mic:hover          { color: #f7768e; }  /* red    */
 #custom-volume:hover       { color: #7dcfff; }  /* cyan   */
@@ -86,6 +86,19 @@ tooltip label {
 #custom-bluetooth:hover    { color: #2ac3de; }  /* teal   */
 #custom-wifi:hover         { color: #bb9af7; }  /* purple */
 #custom-battery:hover      { color: #9ece6a; }  /* green  */
+
+/* Eye comfort mode (hyprsunset warm tint) — brightness icon goes yellow. */
+#custom-brightness.eye-comfort       { color: #f9e2af; }
+#custom-brightness.eye-comfort:hover { color: #ffefc0; }
+
+/* Power mode (Super+P): the battery glyph carries the indicator.
+   performance → red, battery saver → green, balanced → white. */
+#custom-battery.mode-performance        { color: #ff0000; }
+#custom-battery.mode-performance:hover  { color: #ff4d4d; }
+#custom-battery.mode-battery            { color: #00ff00; }
+#custom-battery.mode-battery:hover      { color: #66ff66; }
+#custom-battery.mode-normal             { color: #ffffff; }
+#custom-battery.mode-normal:hover       { color: #9ece6a; }
 
 /* Stay-awake toggle: amber while keeping the system awake */
 #idle_inhibitor.activated   { color: #e0af68; }
@@ -194,7 +207,6 @@ tooltip label {
    ────────────────────────────────────────────────────────── */
 
 #custom-screenshot,
-#custom-performance,
 #idle_inhibitor,
 #custom-mic,
 #custom-volume,

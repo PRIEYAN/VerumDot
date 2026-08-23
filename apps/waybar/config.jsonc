@@ -11,7 +11,6 @@
     "custom/screenshot",
     "idle_inhibitor",
     "custom/sep1",
-    "custom/performance",
     "custom/mic",
     "custom/volume",
     "custom/brightness",
@@ -24,13 +23,13 @@
   ],
 
   "custom/clock": {
-    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/clock-status.py",
+    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/clock-status.sh",
     "return-type": "json",
     "on-click": "${HOME}/.config/hypr/scripts/calendar-popup.sh"
   },
 
   "custom/app_info": {
-    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/app-info.py",
+    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/app-info.sh",
     "interval": 1,
     "return-type": "json",
     "max-length": 32,
@@ -55,15 +54,15 @@
     "on-click": "setsid -f rofi -show drun -theme ${HOME}/.config/hypr/apps/rofi/config.rasi"
   },
 
-  "custom/ws1": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 1", "return-type": "json", "on-click": "hyprctl dispatch workspace 1" },
-  "custom/ws2": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 2", "return-type": "json", "on-click": "hyprctl dispatch workspace 2" },
-  "custom/ws3": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 3", "return-type": "json", "on-click": "hyprctl dispatch workspace 3" },
-  "custom/ws4": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 4", "return-type": "json", "on-click": "hyprctl dispatch workspace 4" },
-  "custom/ws5": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 5", "return-type": "json", "on-click": "hyprctl dispatch workspace 5" },
-  "custom/ws6": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 6", "return-type": "json", "on-click": "hyprctl dispatch workspace 6" },
-  "custom/ws7": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 7", "return-type": "json", "on-click": "hyprctl dispatch workspace 7" },
-  "custom/ws8": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 8", "return-type": "json", "on-click": "hyprctl dispatch workspace 8" },
-  "custom/ws9": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.py 9", "return-type": "json", "on-click": "hyprctl dispatch workspace 9" },
+  "custom/ws1": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 1", "return-type": "json", "on-click": "hyprctl dispatch workspace 1" },
+  "custom/ws2": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 2", "return-type": "json", "on-click": "hyprctl dispatch workspace 2" },
+  "custom/ws3": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 3", "return-type": "json", "on-click": "hyprctl dispatch workspace 3" },
+  "custom/ws4": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 4", "return-type": "json", "on-click": "hyprctl dispatch workspace 4" },
+  "custom/ws5": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 5", "return-type": "json", "on-click": "hyprctl dispatch workspace 5" },
+  "custom/ws6": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 6", "return-type": "json", "on-click": "hyprctl dispatch workspace 6" },
+  "custom/ws7": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 7", "return-type": "json", "on-click": "hyprctl dispatch workspace 7" },
+  "custom/ws8": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 8", "return-type": "json", "on-click": "hyprctl dispatch workspace 8" },
+  "custom/ws9": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 9", "return-type": "json", "on-click": "hyprctl dispatch workspace 9" },
 
   "custom/sep1": { "exec": "echo '│'", "interval": "once", "tooltip": false },
   "custom/sep2": { "exec": "echo '│'", "interval": "once", "tooltip": false },
@@ -76,11 +75,12 @@
     "on-click": "${HOME}/.config/hypr/scripts/power-menu.sh menu"
   },
   "custom/battery": {
-    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/battery-status.py",
+    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/battery-status.sh",
     "interval": 5,
     "signal": 10,
     "return-type": "json",
-    "max-length": 8
+    "max-length": 8,
+    "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/battery-status.sh menu"
   },
   "custom/wifi": {
     "exec": "${HOME}/.config/hypr/scripts/waybar-wifi.sh",
@@ -110,8 +110,10 @@
   "custom/brightness": {
     "exec": "${HOME}/.config/hypr/apps/waybar/scripts/brightness-status.sh",
     "interval": 10,
+    "signal": 1,
     "return-type": "json",
     "max-length": 8,
+    "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/eye-comfort-toggle.sh",
     "on-scroll-up": "${HOME}/.config/hypr/apps/waybar/scripts/brightness-adjust.sh up",
     "on-scroll-down": "${HOME}/.config/hypr/apps/waybar/scripts/brightness-adjust.sh down"
   },
@@ -121,13 +123,6 @@
     "return-type": "json",
     "max-length": 4,
     "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/mic-toggle.sh"
-  },
-  "custom/performance": {
-    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/performance-mode.sh",
-    "interval": 10,
-    "return-type": "json",
-    "max-length": 10,
-    "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/performance-mode.sh toggle"
   },
   "custom/screenshot": {
     "exec": "${HOME}/.config/hypr/apps/waybar/scripts/screenshot.sh",

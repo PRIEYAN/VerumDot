@@ -21,6 +21,16 @@ if [ "$1" = "toggle" ]; then
       sudo cpupower frequency-set -g ondemand
     fi
   fi
+  # Repaint the battery module, which colours its glyph by mode
+  # (red = performance, green = battery, white = normal).
+  pkill -RTMIN+10 waybar >/dev/null 2>&1 || true
+  if command -v notify-send >/dev/null 2>&1; then
+    case "$mode" in
+      performance) notify-send -t 1500 -h string:x-canonical-private-synchronous:perf-mode "(ᗒᗣᗕ)՞" ;;
+      battery)     notify-send -t 1500 -h string:x-canonical-private-synchronous:perf-mode "(˶ᵔ ᵕ ᵔ˶)" ;;
+      normal)      notify-send -t 1500 -h string:x-canonical-private-synchronous:perf-mode "ツ" ;;
+    esac
+  fi
   exit 0
 fi
 icon=''

@@ -19,9 +19,9 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
 set -uo pipefail
 
 THEME="${HYPR_ROFI}/profile.rasi"
-STATS_PY="${HYPR_WAYBAR_SCRIPTS}/profile-stats.py"
-TODOS_PY="${HYPR_WAYBAR_SCRIPTS}/profile-todos.py"
-TIMER_PY="${HYPR_WAYBAR_SCRIPTS}/profile-timer.py"
+STATS_SH="${HYPR_WAYBAR_SCRIPTS}/profile-stats.sh"
+TODOS_SH="${HYPR_WAYBAR_SCRIPTS}/profile-todos.sh"
+TIMER_SH="${HYPR_WAYBAR_SCRIPTS}/profile-timer.sh"
 
 STATE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/hypr"
 mkdir -p "$STATE_DIR"
@@ -48,7 +48,7 @@ bar() {
 
 # Alert thresholds: temp > 75C, any other meter > 90%.
 stat_rows() {
-  "$STATS_PY" | while read -r key pct label unit; do
+  "$STATS_SH" | while read -r key pct label unit; do
     local limit=90 color="#ffffff"
     [ "$unit" = "temp" ] && limit=75
     if (( pct > limit )); then
@@ -61,7 +61,7 @@ stat_rows() {
 }
 
 todo_rows() {
-  "$TODOS_PY" list
+  "$TODOS_SH" list
 }
 
 # Rows before the todo block: N stat rows, separator.
@@ -73,7 +73,7 @@ rows_before_todos() {
 
 build_menu() {
   local timer_line
-  timer_line=$("$TIMER_PY" status)
+  timer_line=$("$TIMER_SH" status)
 
   {
     stat_rows
@@ -112,19 +112,19 @@ while true; do
   # Alt+Return only ever means "remove" and only applies to todo rows.
   if [ "$code" = "10" ]; then
     if (( sel >= before && sel < before + n_todos )); then
-      "$TODOS_PY" remove $(( sel - before )) >/dev/null
+      "$TODOS_SH" remove $(( sel - before )) >/dev/null
     fi
     continue
   fi
 
   if (( sel >= before && sel < before + n_todos )); then
-    "$TODOS_PY" toggle $(( sel - before )) >/dev/null
+    "$TODOS_SH" toggle $(( sel - before )) >/dev/null
   elif (( sel == add_todo_idx )); then
     new_todo=$(prompt_text "New todo")
-    [ -n "$new_todo" ] && "$TODOS_PY" add "$new_todo" >/dev/null
+    [ -n "$new_todo" ] && "$TODOS_SH" add "$new_todo" >/dev/null
   elif (( sel == timer_idx )); then
-    "$TIMER_PY" toggle >/dev/null
+    "$TIMER_SH" toggle >/dev/null
   elif (( sel == reset_idx )); then
-    "$TIMER_PY" reset >/dev/null
+    "$TIMER_SH" reset >/dev/null
   fi
 done
