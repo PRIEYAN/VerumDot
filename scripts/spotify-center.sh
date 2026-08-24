@@ -66,10 +66,20 @@ cache_art() {
       local prev
       prev=$(cat "$ART_URL_FILE" 2>/dev/null || true)
       if [ "$prev" != "$url" ] || [ ! -s "$ART_CACHE" ]; then
-        if curl -fsSL --max-time 3 "$url" -o "${ART_CACHE}.tmp" 2>/dev/null; then
-          mv -f "${ART_CACHE}.tmp" "$ART_CACHE"
-          printf '%s' "$url" >"$ART_URL_FILE"
-        fi
+        # Never block the popup on the network. A cache miss shows the last
+        # art (or the fallback) immediately and fetches in the background, so
+        # the correct cover is ready the next time the menu opens. The old
+        # inline curl stalled the whole popup for its full --max-time.
+        (
+          tmp="${ART_CACHE}.$$.tmp"
+          if curl -fsSL --max-time 5 "$url" -o "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+            mv -f "$tmp" "$ART_CACHE"
+            printf '%s' "$url" >"$ART_URL_FILE"
+          else
+            rm -f "$tmp"
+          fi
+        ) >/dev/null 2>&1 &
+        disown 2>/dev/null || true
       fi
       [ -s "$ART_CACHE" ] && printf '%s' "$ART_CACHE"
       ;;
@@ -143,12 +153,14 @@ show() {
       -p ""
   ) || exit 0
 
+  # Act and close. Re-invoking show() here made rofi exit and relaunch, which
+  # is the visible close-then-reopen flicker.
   case "$choice" in
-    0) pc previous;   refresh_waybar; show ;;
-    1) pc play-pause; refresh_waybar; show ;;
-    2) pc next;       refresh_waybar; show ;;
-    *) exit 0 ;;
+    0) pc previous;   refresh_waybar ;;
+    1) pc play-pause; refresh_waybar ;;
+    2) pc next;       refresh_waybar ;;
   esac
+  exit 0
 }
 
 show

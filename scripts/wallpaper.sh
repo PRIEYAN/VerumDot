@@ -11,6 +11,8 @@ WATCHER_PID_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_wallpaper_watcher.pid"
 
 # Lock screen keeps its own choice, independent of the desktop wallpaper.
 # hyprlock.conf reads the symlink; until one is picked it tracks the desktop.
+# Neither symlink is git-tracked (see .gitignore) -- they are per-machine
+# runtime state, and tracking one made git operations revert the lock screen.
 LOCK_CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_lock_wallpaper"
 LOCK_LINK="${HYPR_DIR}/lock-wallpaper"
 
@@ -28,6 +30,16 @@ set_wallpaper() {
     # Persist choice + stable symlink for hyprlock / other tools
     echo "$img" > "$CACHE_FILE"
     ln -sfn "$img" "$CURRENT_LINK"
+
+    # The lock screen follows the desktop ONLY until a lock-specific wallpaper
+    # is picked; LOCK_CACHE_FILE is that flag. Once it exists, changing the
+    # desktop wallpaper must never touch the lock screen again -- that is the
+    # whole point of SUPER CTRL SHIFT W. Without this the tracking promise in
+    # hyprlock.conf was only honoured at startup, so an untracked lock screen
+    # kept showing a stale desktop wallpaper until the next Hyprland restart.
+    if [[ ! -s "$LOCK_CACHE_FILE" ]]; then
+        ln -sfn "$img" "$LOCK_LINK"
+    fi
 
     # hyprpaper v0.8+ unified IPC: the `wallpaper` command auto-loads the
     # image, so a separate `preload` is unnecessary (and rejected as an

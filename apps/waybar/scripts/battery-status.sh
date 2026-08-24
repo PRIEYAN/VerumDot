@@ -2,20 +2,28 @@
 #
 # Battery module for waybar, plus the CPU power-mode indicator colour.
 #
-# Two modes:
-#   (no args)  emit the waybar module JSON — glyph, capacity, and a hover
-#              tooltip carrying the system stats table
-#   menu       open the same stats as a rofi dropdown under the battery
-#              (click again or Esc to close, Return to refresh)
+# Three modes:
+#   (no args)  emit the waybar module JSON — glyph and capacity, no tooltip
+#   menu       open the system stats as a rofi dropdown under the battery
+#              (click again or Esc to close)
+#   rows       rofi script-mode backend; rofi re-execs this on every keypress
+#              it is told to act on, which is how the panel refreshes
+#
+# Why script mode and not -dmenu: rofi has no refresh timer and no IPC, so a
+# dmenu panel can only update by exiting and being relaunched — a measured 58ms
+# window teardown every time. In script mode rofi re-runs this script itself and
+# repaints the existing window, so Return/r/space update the numbers in place
+# with no flicker and no lost cursor position (\0keep-selection).
 #
 # The class (mode-performance / mode-battery / mode-normal) is what style.css
 # uses to tint the glyph red / green / white. See performance-mode.sh.
 #
 # Stats notes:
 #   * CPU load and Intel GPU busy are rate counters, so they are diffed against
-#     the previous poll cached in STATE_FILE — no in-script sleep, so the bar
-#     never stalls. Only the waybar poll writes that cache; the dropdown just
-#     reads it, so opening the panel cannot skew the bar's own sampling window.
+#     the previous sample cached in STATE_FILE. The dropdown is the only reader
+#     now, so a first open (or one more than 30s after the last) takes a short
+#     inline sample instead; each in-place refresh diffs against the sample the
+#     previous repaint left behind, which is what makes the deltas meaningful.
 #   * The NVIDIA card is only queried while awake: nvidia-smi on a
 #     runtime-suspended dGPU spins it up and eats battery.
 #   * Nerd Font glyphs are built with $'\uXXXX' escapes rather than pasted in
@@ -119,8 +127,9 @@ collect() {
     eng_now=$(igpu_sample)
   fi
 
-  # Only the bar's own poll owns the cache — see the header note.
-  [ "$ACTION" = menu ] || printf '%s %s %s\n%s\n' "$now" "$cpu_busy" "$cpu_total" "$eng_now" > "$STATE_FILE"
+  # Leave a baseline behind so a Return-refresh (or the next open) has a real
+  # interval to diff against instead of paying for another inline sample.
+  printf '%s %s %s\n%s\n' "$now" "$cpu_busy" "$cpu_total" "$eng_now" > "$STATE_FILE"
 
   elapsed_ns=$(( now - prev_t ))
   d_busy=$(( cpu_busy - prev_busy ))
@@ -240,6 +249,25 @@ stat_rows() {   # one markup row per line
 
 # ── battery ──────────────────────────────────────────────────────────────────
 
+# Health = present full-charge capacity vs the factory design capacity, i.e.
+# how much of the original battery is left. upower reports it directly (13ms,
+# cheap enough for the 5s poll); the sysfs arithmetic below is the identical
+# number, kept for when upower isn't installed.
+battery_health() {
+  local dev pct=''
+  if command -v upower >/dev/null 2>&1; then
+    dev=$(upower -e 2>/dev/null | grep -m1 BAT)
+    [ -n "$dev" ] && pct=$(upower -i "$dev" 2>/dev/null | awk '/capacity:/ { print $2 }')
+  fi
+  if [ -z "$pct" ]; then
+    pct=$(awk -v f="$(cat "$BAT/energy_full" 2>/dev/null)" \
+              -v d="$(cat "$BAT/energy_full_design" 2>/dev/null)" \
+              'BEGIN{ if (d+0 > 0) print f/d*100 }')
+  fi
+  pct=${pct%\%}
+  if [ -n "$pct" ]; then printf '%.0f%%' "$pct"; else printf 'n/a'; fi
+}
+
 read_battery() {
   mode=$(cat "$MODE_FILE" 2>/dev/null || echo normal)
   case "$mode" in
@@ -252,7 +280,7 @@ read_battery() {
   if [ -d "$BAT" ]; then
     status=$(cat "$BAT/status" 2>/dev/null || echo Unknown)
     capacity=$(cat "$BAT/capacity" 2>/dev/null || echo 0)
-    if [ -r "$BAT/health" ]; then health=$(cat "$BAT/health"); else health=Unknown; fi
+    health=$(battery_health)
 
     if   [ "$capacity" -gt 80 ]; then icon=$''
     elif [ "$capacity" -gt 40 ]; then icon=$''
@@ -267,7 +295,7 @@ read_battery() {
     esac
 
     text="${bolt}${icon} ${capacity}%"
-    head_plain="${icon} ${capacity}%  ·  ${status} · ${mode_label}"
+    head_plain="${icon} ${capacity}%  ·  ${status} · ${mode_label} · health ${health}"
     head_markup=$(printf '<span size="large">%s %s%%</span>  %s' \
       "$icon" "$capacity" "$(dim "${status} · ${mode_label} · health ${health}")")
   else
@@ -280,28 +308,38 @@ read_battery() {
 
 # ── output ───────────────────────────────────────────────────────────────────
 
-if [ "$ACTION" = menu ]; then
-  while true; do
-    collect
-    read_battery
-    # Return refreshes (exit 10), Esc / focus loss closes. No row is selectable,
-    # so the default accept binding is cleared before Return is rebound.
-    stat_rows | rofi -dmenu -markup-rows -no-custom -theme "$THEME" -p "$head_plain" \
-      -kb-accept-entry '' \
-      -kb-custom-1 'Return,KP_Enter,r' \
-      >/dev/null
-    [ $? -eq 10 ] || exit 0
-  done
+# rofi script-mode backend. Rofi execs us with ROFI_RETV=0 for the first paint
+# and 1 when a row is "selected" (Return, or a click) — both just re-render, so
+# every such keypress is a live refresh of the same window.
+if [ "$ACTION" = rows ]; then
+  collect
+  read_battery
+  # Header/footer are reset on each pass so the battery line and prompt stay
+  # current too, not just the table.
+  printf '\0prompt\x1f%s\n' "$head_plain"
+  printf '\0markup-rows\x1ftrue\n'
+  printf '\0no-custom\x1ftrue\n'
+  printf '\0keep-selection\x1ftrue\n'
+  # The rows are deliberately left selectable even though nothing "opens": a
+  # nonselectable row cannot be activated, which would make Return a no-op and
+  # kill the refresh. The theme suppresses the highlight instead, so the panel
+  # still reads as a table rather than a menu. The hint lives in the theme
+  # footer, so no \0message (and no message widget in the theme) is needed.
+  stat_rows
+  exit 0
 fi
 
-collect
+if [ "$ACTION" = menu ]; then
+  # Esc closes (kb-cancel, untouched). 'r' and space are wired to the same
+  # re-render as Return via kb-accept-entry, so any of them refreshes in place.
+  exec rofi -show stats -modi "stats:$0 rows" -theme "$THEME" \
+    -kb-accept-entry 'Return,KP_Enter,r,space'
+fi
+
+# Bar module: battery only. The stats live in the click dropdown, so the poll
+# skips collect() entirely — no /proc/*/fdinfo walk, no nvidia-smi, and the
+# rate-counter cache is left to the panel to sample for itself.
 read_battery
 
-tooltip=$head_markup
-tooltip+=$(printf '\n%s' "$(dim '────────────────────────────────────────')")
-while IFS= read -r line; do
-  [ -n "$line" ] && tooltip+=$'\n'"$line"
-done < <(stat_rows)
-
-jq -nc --arg t "$text" --arg tt "$tooltip" --arg c "mode-$mode" \
-  '{text:$t, tooltip:$tt, class:$c}'
+jq -nc --arg t "$text" --arg c "mode-$mode" \
+  '{text:$t, tooltip:"", class:$c}'

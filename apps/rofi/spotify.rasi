@@ -30,7 +30,7 @@ window {
     width:              400px;
     border:             1px solid;
     border-color:       @line;
-    border-radius:      12px;
+    border-radius:      0px;
     background-color:   @bg;
     children:           [ mainbox ];
 }
