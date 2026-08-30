@@ -485,7 +485,7 @@ pkgs_for() { # -> newline separated pacman packages
     audio) printf '%s\n' pipewire pipewire-pulse pipewire-alsa wireplumber pamixer playerctl ;;
     shot)  printf '%s\n' grim slurp swappy wl-clipboard ;;
     net)   printf '%s\n' networkmanager network-manager-applet bluez bluez-utils blueman ;;
-    power) printf '%s\n' brightnessctl power-profiles-daemon upower ;;
+    power) printf '%s\n' brightnessctl power-profiles-daemon upower hyprsunset cpupower ;;
     theme) printf '%s\n' kvantum qt6ct ;;
     fonts) printf '%s\n' ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-nerd-fonts-symbols \
              noto-fonts noto-fonts-emoji ;;

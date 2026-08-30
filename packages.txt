@@ -46,6 +46,8 @@ blueman
 brightnessctl
 power-profiles-daemon
 upower
+hyprsunset          # eye comfort mode (3000K warm tint via the compositor)
+cpupower            # performance-mode governor switching (SUPER+P)
 
 # ── theming (PureBlackGlass targets) ───────────────────────────────────
 kvantum

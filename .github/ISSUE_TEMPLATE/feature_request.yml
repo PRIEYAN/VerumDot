@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest a module, script, menu, or tweak for VerumDot
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like VerumDot to do?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it belong here?
+      description: VerumDot is deliberately minimal - pure black, white type, no accent colors. Tell us how this fits that grammar.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Area
+      options:
+        - label: Waybar module
+        - label: Rofi menu
+        - label: Hyprland behaviour (binds, rules, gestures)
+        - label: Installer / setup.sh
+        - label: Theme (GTK / Qt / Kvantum)

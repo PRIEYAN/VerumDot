@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in VerumDot is broken or behaves unexpectedly
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report this. Fill in what you can.
+  - type: input
+    id: distro
+    attributes:
+      label: Distro
+      placeholder: Arch Linux / EndeavourOS / CachyOS ...
+    validations:
+      required: true
+  - type: input
+    id: hyprland
+    attributes:
+      label: Hyprland version
+      description: Output of `hyprctl version | head -1`
+      placeholder: v0.4x.x
+    validations:
+      required: true
+  - type: dropdown
+    id: gpu
+    attributes:
+      label: GPU
+      options: [Intel, AMD, NVIDIA, Hybrid (Intel + NVIDIA), Hybrid (AMD + NVIDIA), Other]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run ...
+        2. Click ...
+        3. See ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: "Installer log: `~/.cache/verumdot-install-*.log`. Compositor: `hyprctl rollinglog --tail`."
+      render: shell

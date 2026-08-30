@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Show off your VerumDot setup
+    url: https://github.com/PRIEYAN/VerumDot/discussions
+    about: Post a screenshot of your rice, share tweaks, or ask a setup question.
