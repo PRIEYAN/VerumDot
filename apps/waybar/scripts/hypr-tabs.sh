@@ -11,7 +11,9 @@ case "$workspace_id" in
   ''|*[!0-9]*) exit 0 ;;
 esac
 
-DEFAULT_ICON=''
+# Must never be empty: waybar hides a custom module whose text is "", which
+# made workspaces holding an unlisted app disappear from the bar entirely.
+DEFAULT_ICON='●'
 
 icon_for() {
   # Exact match first, then substring, mirroring the old lookup order.
@@ -19,9 +21,10 @@ icon_for() {
     kitty|wezterm)                     printf '󰄛'; return ;;
     alacritty|foot)                    printf '󰆍'; return ;;
     firefox)                           printf '󰈹'; return ;;
-    chromium)                          printf ''; return ;;
+    chromium|chromium-browser)         printf '\U000F02AF'; return ;;
     brave|brave-browser|vivaldi)       printf '󰖟'; return ;;
-    google-chrome)                     printf ''; return ;;
+    google-chrome|google-chrome-stable|google-chrome-beta|chrome)
+                                       printf '\U000F02AF'; return ;;
     code|code-oss|visual-studio-code-bin) printf '󰨞'; return ;;
     jetbrains-idea)                    printf '󰗚'; return ;;
     obsidian)                          printf '󱓧'; return ;;
@@ -35,12 +38,23 @@ icon_for() {
     steam)                             printf '󰓓'; return ;;
     pavucontrol)                       printf '󰓃'; return ;;
     antigravity)                       printf '󰚩'; return ;;
+    libreoffice-writer|libreoffice-startcenter|soffice) printf '󰈙'; return ;;
+    libreoffice-calc)                  printf '󰈛'; return ;;
+    libreoffice-impress)               printf '󰈩'; return ;;
+    libreoffice-draw)                  printf '󰈟'; return ;;
+    zathura|org.pwmt.zathura|evince|okular) printf '󰈦'; return ;;
+    org.gnome.nautilus|nemo|pcmanfm-qt) printf '󰉋'; return ;;
+    whatsapp|whatsapp-for-linux)       printf '󰖣'; return ;;
+    rofi)                              printf '󰍉'; return ;;
+    imv|feh|eog|loupe)                 printf '󰋩'; return ;;
+    virt-manager|qemu)                 printf '󰢹'; return ;;
+    org.telegram.desktop)              printf '󰔁'; return ;;
   esac
   case "$1" in
     *kitty*|*wezterm*)   printf '󰄛'; return ;;
     *alacritty*|*foot*)  printf '󰆍'; return ;;
     *firefox*)           printf '󰈹'; return ;;
-    *chrom*)             printf ''; return ;;
+    *chrom*)             printf '\U000F02AF'; return ;;
     *brave*|*vivaldi*)   printf '󰖟'; return ;;
     *code*)              printf '󰨞'; return ;;
     *obsidian*)          printf '󱓧'; return ;;
@@ -49,6 +63,11 @@ icon_for() {
     *spotify*)           printf '󰓇'; return ;;
     *telegram*)          printf '󰔁'; return ;;
     *vlc*|*mpv*)         printf '󰕼'; return ;;
+    *libreoffice*|*soffice*|*office*) printf '󰈙'; return ;;
+    *zathura*|*evince*|*okular*|*pdf*) printf '󰈦'; return ;;
+    *whatsapp*)          printf '󰖣'; return ;;
+    *term*|*konsole*)    printf '󰆍'; return ;;
+    *file*|*nemo*|*pcmanfm*) printf '󰉋'; return ;;
   esac
   printf '%s' "$DEFAULT_ICON"
 }
@@ -73,6 +92,13 @@ compute() {
   title=$(printf '%s' "$top" | jq -r --arg w "Workspace $workspace_id" \
     '.title // .initialTitle // (.class // "") | if . == "" then $w else . end')
   icon=$(icon_for "$app_class")
+
+  # Last line of defence. Waybar removes a custom module from the bar whenever
+  # its text is empty, so an unlisted app -- or a table entry whose glyph got
+  # stripped by an editor, which is how the chrome icons were silently lost --
+  # made the whole workspace vanish. Nothing below may emit an empty string.
+  [ -z "$icon" ] && icon=$DEFAULT_ICON
+  [ -z "$icon" ] && icon=$workspace_id
 
   jq -nc --arg t "$icon" --arg c "$cls" --arg tt "$title" \
     '{text:$t, class:$c, tooltip:$tt}'
