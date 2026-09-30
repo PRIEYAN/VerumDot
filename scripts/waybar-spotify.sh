@@ -9,9 +9,15 @@ json_escape() {
 }
 
 if [ "$1" = "menu" ]; then
-  # Run inline (blocking) so rofi attaches to the Wayland session.
-  "${HYPR_SCRIPTS}/spotify-center.sh"
-  exit 0
+  # The card is a quickshell daemon (apps/quickshell/spotify/shell.qml), so a
+  # click is just an IPC toggle against the already-running surface. There is
+  # no rofi fallback any more — the old popup could not redraw without exiting
+  # and relaunching, which is what made it flicker and close on its own.
+  "${HYPR_SCRIPTS}/qs-toggle.sh" spotify spotify && exit 0
+
+  command -v notify-send >/dev/null 2>&1 \
+    && notify-send -a "Spotify" "Media card unavailable" "quickshell is not running."
+  exit 1
 fi
 
 if [ "$1" = "toggle" ]; then

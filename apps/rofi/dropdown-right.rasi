@@ -3,17 +3,17 @@
 // from under their icons in the top-right corner.
 
 * {
-    bg:                 #000000;   // pure black panel
-    fg:                 #ffffff;   // pure white text
+    bg:                 rgba(30, 30, 30, 0.35);   // frosted glass, same as waybar
+    fg:                 rgba(255, 255, 255, 0.95);
     fg-muted:           rgba(255, 255, 255, 0.55);
-    line:               rgba(255, 255, 255, 0.15);
-    accent:             #ffffff;   // selection: pure white
-    accent-fg:          #000000;   // selection text: pure black
-    hover:              rgba(255, 255, 255, 0.10);
+    line:               rgba(255, 255, 255, 0.18);
+    accent:             #0A84FF;   // selection: macOS system blue
+    accent-fg:          #ffffff;   // selection text
+    hover:              rgba(255, 255, 255, 0.08);
 
     background-color:   transparent;
     text-color:         @fg;
-    font:               "Iosevka Term 10";
+    font:               "Inter 10";
 }
 
 window {
@@ -24,7 +24,7 @@ window {
     y-offset:           0px;
     width:              340px;
     border:             0px;
-    border-radius:      0px;
+    border-radius:      18px;
     background-color:   @bg;
 }
 
@@ -46,7 +46,7 @@ inputbar {
 
 prompt {
     text-color:         @fg;
-    font:               "Iosevka Term 11";
+    font:               "Inter 11";
 }
 
 entry {
@@ -87,7 +87,7 @@ element alternate.normal {
 element selected.normal,
 element selected.active,
 element selected.urgent {
-    background-color:   @accent;
+    background-color:   rgba(10, 132, 255, 0.85);
     text-color:         @accent-fg;
 }
 

@@ -10,14 +10,14 @@ configuration {
 }
 
 * {
-    bg:                 #000000;
-    fg:                 #ffffff;
+    bg:                 rgba(30, 30, 30, 0.35);
+    fg:                 rgba(255, 255, 255, 0.95);
     muted:              rgba(255, 255, 255, 0.40);
     line:               rgba(255, 255, 255, 0.18);
 
     background-color:   transparent;
     text-color:         @fg;
-    font:               "Iosevka Term 10";
+    font:               "Inter 10";
 }
 
 window {
@@ -29,7 +29,7 @@ window {
     width:              400px;
     border:             1px solid;
     border-color:       @line;
-    border-radius:      0px;
+    border-radius:      18px;
     background-color:   @bg;
     children:           [ mainbox ];
 }
@@ -55,7 +55,7 @@ prompt {
     expand:             true;
     horizontal-align:   0.0;
     text-color:         @fg;
-    font:               "Iosevka Term Medium 11";
+    font:               "Inter Medium 11";
     background-color:   transparent;
 }
 
@@ -120,6 +120,6 @@ textbox-footer {
     horizontal-align:   0.5;
     text-color:         @muted;
     background-color:   transparent;
-    font:               "Iosevka Term 9";
+    font:               "Inter 9";
     str:                "↵ refresh   Esc close";
 }

@@ -73,17 +73,26 @@ icon_for() {
 }
 
 compute() {
-  local active_id clients top app_class title icon cls
-  active_id=$(hyprctl -j activeworkspace 2>/dev/null | jq -r '.id // empty')
+  local top app_class title icon
+
+  # Overflow tabs (10 and up) are hidden until the workspace actually exists.
+  # This is the one deliberate exception to the "never emit empty text" rule
+  # below: here waybar's hide-on-empty behaviour is exactly what makes the row
+  # grow when you swipe past 9 and shrink again when the workspace is emptied
+  # and Hyprland reaps it. Workspaces 1-9 are persistent and skip this check.
+  if [ "$workspace_id" -gt 9 ] \
+     && ! hyprctl -j workspaces 2>/dev/null \
+          | jq -e --argjson w "$workspace_id" 'any(.[]; .id == $w)' >/dev/null; then
+    printf '{"text":"","class":"inactive","tooltip":""}\n'
+    return
+  fi
 
   # Pick the lowest address on this workspace, matching the old sort.
   top=$(hyprctl -j clients 2>/dev/null | jq -c --argjson w "$workspace_id" \
     '[.[] | select((.workspace.id // -1) == $w)] | sort_by(.address) | .[0] // empty')
 
-  if [ "$workspace_id" = "$active_id" ]; then cls=active; else cls=inactive; fi
-
   if [ -z "$top" ]; then
-    jq -nc --arg t "$workspace_id" --arg c "$cls" \
+    jq -nc --arg t "$workspace_id" --arg c inactive \
       --arg tt "Workspace $workspace_id" '{text:$t, class:$c, tooltip:$tt}'
     return
   fi
@@ -100,15 +109,35 @@ compute() {
   [ -z "$icon" ] && icon=$DEFAULT_ICON
   [ -z "$icon" ] && icon=$workspace_id
 
-  jq -nc --arg t "$icon" --arg c "$cls" --arg tt "$title" \
+  jq -nc --arg t "$icon" --arg c inactive --arg tt "$title" \
     '{text:$t, class:$c, tooltip:$tt}'
 }
 
-# Emit only on change, so waybar is not redrawn needlessly.
+# Workspace changes only select a cached JSON line. No hyprctl, jq, or
+# subshells on this path: every tab receives the same event immediately.
 last=''
 emit() {
-  local cur; cur=$(compute)
+  local cur="$inactive_tab"
+  if [ "$workspace_id" = "$active_id" ]; then cur=$active_tab; fi
   if [ "$cur" != "$last" ]; then printf '%s\n' "$cur"; last="$cur"; fi
+}
+
+refresh() {
+  inactive_tab=$(compute)
+  active_tab=${inactive_tab/\"class\":\"inactive\"/\"class\":\"active\"}
+  emit
+}
+
+refresh_active() {
+  active_id=$(hyprctl -j activeworkspace 2>/dev/null | jq -r '.id // empty')
+}
+
+select_workspace() {
+  case "$1" in
+    ''|*[!0-9]*) refresh_active ;;
+    *) active_id=$1 ;;
+  esac
+  emit
 }
 
 socket2() {
@@ -124,21 +153,33 @@ socket2() {
 
 trap 'exit 0' TERM INT
 
-emit
 while :; do
   sock=$(socket2)
   if [ -z "$sock" ] || ! command -v socat >/dev/null 2>&1; then
     # No event stream available: fall back to polling.
-    emit; sleep 1; continue
+    refresh_active; refresh; sleep 1; continue
   fi
-  # Recompute on any event that can change what this tab shows.
-  # Process substitution, not a pipe: a piped `while` runs in a subshell, so
-  # the `last` used for change-detection would never persist between events.
+  # Subscribe before the initial snapshot so changes during it are queued.
+  exec 3< <(socat -u UNIX-CONNECT:"$sock" - 2>/dev/null)
+  refresh_active
+  refresh
   while IFS= read -r line; do
-    case "${line,,}" in
-      *workspace*|*activewindow*|*openwindow*|*closewindow*|*movewindow*|\
-      *windowtitle*|*changefloatingmode*|*fullscreen*|*focusedmon*) emit ;;
+    event=${line%%>>*}
+    data=${line#*>>}
+    case "$event" in
+      workspacev2) select_workspace "${data%%,*}" ;;
+      workspace) select_workspace "$data" ;;
+      focusedmon|focusedmonv2) select_workspace "${data#*,}" ;;
+      createworkspacev2|destroyworkspacev2)
+        # Only the matching overflow slot needs to check its visibility.
+        if [ "$workspace_id" -gt 9 ] && [ "${data%%,*}" = "$workspace_id" ]; then
+          refresh
+        fi ;;
+      openwindow|closewindow|movewindowv2|windowtitlev2) refresh ;;
+      # Focus, floating, fullscreen and special-workspace events do not
+      # change the lowest-address window used for the tab's icon/title.
     esac
-  done < <(socat -u UNIX-CONNECT:"$sock" - 2>/dev/null)
+  done <&3
+  exec 3<&-
   sleep 0.5   # socket died; back off before reconnecting
 done

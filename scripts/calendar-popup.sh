@@ -41,49 +41,47 @@ shift_month() {
 }
 
 emit_days() {
-  python3 - "$year" "$month" "$DAYS_FILE" "$SEL_FILE" <<'PY'
-import calendar, sys
-from datetime import date
+  # Pure shell: `date` does the calendar arithmetic, so this has no python
+  # dependency. Output is byte-identical to the previous python version.
+  local muted='#666666'
+  local today_y today_m today_d first_dow lead days_in_month prev_days
+  local idx d n selected first_in_month
 
-year, month = int(sys.argv[1]), int(sys.argv[2])
-days_path, sel_path = sys.argv[3], sys.argv[4]
-today = date.today()
-cal = calendar.Calendar(firstweekday=calendar.MONDAY)
-weeks = cal.monthdatescalendar(year, month)
+  today_y=$(date +%Y); today_m=$(date +%-m); today_d=$(date +%-d)
 
-while len(weeks) < 6:
-    last = weeks[-1][-1]
-    weeks.append([date.fromordinal(last.toordinal() + i) for i in range(1, 8)])
+  first_dow=$(date -d "$year-$month-01" +%u)                 # 1=Mon .. 7=Sun
+  lead=$(( first_dow - 1 ))                                  # cells before the 1st
+  days_in_month=$(date -d "$year-$month-01 +1 month -1 day" +%-d)
+  prev_days=$(date -d "$year-$month-01 -1 day" +%-d)         # length of prev month
 
-selected = 0
-first_in_month = 0
-i = 0
-muted = "#666666"
-lines = []
-for week in weeks:
-    for d in week:
-        label = f"{d.day}"
-        if d.month != month:
-            lines.append(f'<span foreground="{muted}">{label}</span>')
-        else:
-            lines.append(label)
-            if first_in_month == 0 and d.day == 1:
-                first_in_month = i
-            if d == today:
-                selected = i
-        i += 1
+  # Weekday names live in the grid itself so they sit exactly above their
+  # column. They are the first row and are marked urgent by rofi (-u 0..6),
+  # which styles them muted and keeps them out of the selection.
+  printf 'Mo\nTu\nWe\nTh\nFr\nSa\nSu\n' > "$DAYS_FILE"
 
-if not (year == today.year and month == today.month):
-    selected = first_in_month
+  first_in_month=$(( 7 + lead ))
+  selected=$first_in_month
 
-with open(days_path, "w", encoding="utf-8") as f:
-    f.write("\n".join(lines) + "\n")
-with open(sel_path, "w", encoding="utf-8") as f:
-    f.write(str(selected))
-PY
+  for (( d = lead; d > 0; d-- )); do          # tail of the previous month
+    printf '<span foreground="%s">%s</span>\n' "$muted" "$(( prev_days - d + 1 ))"
+  done >> "$DAYS_FILE"
+
+  for (( d = 1; d <= days_in_month; d++ )); do
+    printf '%s\n' "$d"
+    if [[ $year -eq $today_y && $month -eq $today_m && $d -eq $today_d ]]; then
+      selected=$(( 7 + lead + d - 1 ))
+    fi
+  done >> "$DAYS_FILE"
+
+  idx=$(( 7 + lead + days_in_month ))
+  n=1                                          # head of the next month
+  while (( idx < 49 )); do                     # pad to a full 6-week grid
+    printf '<span foreground="%s">%s</span>\n' "$muted" "$n"
+    n=$(( n + 1 )); idx=$(( idx + 1 ))
+  done >> "$DAYS_FILE"
+
+  printf '%s' "$selected" > "$SEL_FILE"
 }
-
-weekdays=$'Mo  Tu  We  Th  Fr  Sa  Su'
 
 while true; do
   header=$(date -d "$year-$month-01" +"%B %Y")
@@ -97,7 +95,7 @@ while true; do
     -markup-rows \
     -theme "$THEME" \
     -p "$header" \
-    -mesg "$weekdays" \
+    -u "0,1,2,3,4,5,6" \
     -selected-row "$selected" \
     -no-custom \
     -kb-move-char-back "Control+b" \

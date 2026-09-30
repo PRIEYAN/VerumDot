@@ -3,18 +3,18 @@ configuration {
     show-icons:                 true;
     display-drun:               "";
     drun-display-format:        "{name}";
-    font:                       "Iosevka Term 10";
+    font:                       "Inter 10";
     matching:                   "fuzzy";
     sorting-method:             "fzf";
 }
 
 * {
-    bg:                 rgba(0, 0, 0, 0.78);
-    fg:                 #ffffff;
+    bg:                 rgba(30, 30, 30, 0.35);
+    fg:                 rgba(255, 255, 255, 0.95);
     fg-muted:           rgba(255, 255, 255, 0.55);
-    line:               rgba(255, 255, 255, 0.12);
+    line:               rgba(255, 255, 255, 0.18);
     line-strong:        rgba(255, 255, 255, 0.22);
-    hover:              rgba(255, 255, 255, 0.06);
+    hover:              rgba(255, 255, 255, 0.08);
 
     background-color:   transparent;
     text-color:         @fg;
@@ -27,7 +27,7 @@ window {
     width:              520px;
     height:             360px;
     border:             0px;
-    border-radius:      0px;
+    border-radius:      18px;
     background-color:   @bg;
 }
 
@@ -49,7 +49,7 @@ inputbar {
 
 prompt {
     str:                "/";
-    font:               "Iosevka Term 11";
+    font:               "Inter 11";
     text-color:         @fg-muted;
     padding:            0 6px 0 0;
 }
@@ -113,5 +113,5 @@ element-text {
     vertical-align:     0.5;
     text-color:         inherit;
     background-color:   transparent;
-    font:               "Iosevka Term 9";
+    font:               "Inter 9";
 }

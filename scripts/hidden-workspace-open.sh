@@ -3,15 +3,14 @@
 # Open the hidden special workspace, but only when swiping up from
 # workspace 1. Bound to the 4-finger swipe-up gesture.
 
-state=$(hyprctl -j monitors | python3 -c "
-import json, sys
-for m in json.load(sys.stdin):
-    if m.get('focused'):
-        active = m.get('activeWorkspace', {}).get('name', '')
-        special = m.get('specialWorkspace', {}).get('name', '')
-        print('already-open' if special == 'special:hidden' else active)
-        break
-")
+# jq rather than python: jq is already a dependency and starts in ~5ms, which
+# matters on a gesture binding.
+state=$(hyprctl -j monitors | jq -r '
+  map(select(.focused))[0]
+  | if (.specialWorkspace.name // "") == "special:hidden"
+    then "already-open"
+    else (.activeWorkspace.name // "")
+    end')
 
 if [[ "$state" == "1" ]]; then
   hyprctl dispatch togglespecialworkspace hidden

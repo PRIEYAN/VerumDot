@@ -1,391 +1,192 @@
-/* Pure-black glass theme for GTK3 apps and the portal file chooser
-   (VS Code "Open Folder", download destination dialogs, etc.).
+/* macOS Sonoma glass for GTK3 apps (nm-connection-editor, blueman, file
+   dialogs). Mirrors gtk-4.0/gtk.css; symlinked to ~/.config/gtk-3.0/gtk.css.
 
-   Lives in ~/.config/hypr/apps/theme/ and is symlinked to
-   ~/.config/gtk-3.0/gtk.css, since GTK only reads that XDG path.
+   As in the GTK4 sheet, header controls are pinned to a single height so a
+   button-heavy header cannot grow taller than a sparse one beside it. */
 
-   Colors are forced here rather than relying on the theme, because the GTK
-   portal's file chooser ignores gtk-application-prefer-dark-theme for parts
-   of its chrome and otherwise renders washed-out/light.
-   Transparency pairs with Hyprland's compositor-side blur
-   (decoration.blur in hypr.conf) for the glass effect. */
-
-@define-color bg        rgba(0, 0, 0, 0.72);
-@define-color fg        #ffffff;
-@define-color sel       rgba(255, 255, 255, 0.16);
-@define-color hover     rgba(255, 255, 255, 0.10);
-@define-color line      rgba(255, 255, 255, 0.12);
+@define-color surface   rgba(30, 30, 30, 0.72);
+@define-color raised    rgba(255, 255, 255, 0.12);
+@define-color line      rgba(255, 255, 255, 0.18);
+@define-color hoverbg   rgba(255, 255, 255, 0.08);
+@define-color activebg  rgba(255, 255, 255, 0.15);
+@define-color fg        rgba(255, 255, 255, 0.95);
+@define-color fg2       rgba(255, 255, 255, 0.70);
+@define-color accent    #0A84FF;
 
 window,
 window.background,
 window.background.csd,
 dialog,
 dialog.background {
-  border-radius: 14px;
-  background-color: @bg;
+  border-radius: 18px;
+  background-color: @surface;
   background-image: none;
-  background-clip: border-box;
   color: @fg;
 }
 
-decoration {
-  border-radius: 14px;
-  box-shadow: none;
-  background-color: @bg;
-}
+decoration { border-radius: 18px; box-shadow: none; background-color: transparent; }
 
-*,
-label,
-image {
-  color: @fg;
-}
+*, label, image { color: @fg; }
+
+/* ── header bars ───────────────────────────────────────────────────────── */
 
 headerbar,
 .titlebar {
-  background-color: rgba(0, 0, 0, 0.60);
+  min-height: 46px;
+  padding: 0 6px;
+  background-color: transparent;
   background-image: none;
-  border-top-left-radius: 14px;
-  border-top-right-radius: 14px;
   box-shadow: none;
+  border-radius: 0;
   border-bottom: 1px solid @line;
   color: @fg;
 }
 
-headerbar entry,
-headerbar button {
+headerbar .title { font-weight: 600; color: @fg; }
+headerbar .subtitle { color: @fg2; }
+
+headerbar button,
+headerbar entry {
+  min-height: 30px;
+  margin: 0 2px;
   background-image: none;
 }
 
-/* Containers: let the window's black show through. */
-toolbar,
-.toolbar,
-menubar,
-.menubar,
-popover,
-popover.background,
-popover contents,
-treeview,
-treeview header,
-treeview header button,
-list,
-list row,
-notebook,
-notebook header,
-notebook stack,
-scrolledwindow,
-viewport,
-stack,
-paned,
-grid,
-box {
-  background-color: transparent;
-  background-image: none;
-}
+/* ── buttons ───────────────────────────────────────────────────────────── */
 
-/* ── File chooser (the portal dialog that renders light by default) ──── */
-filechooser,
-filechooser .view,
-filechooser stack,
-filechooser paned,
-filechooser box,
-placessidebar,
-placessidebar list,
-placessidebar viewport,
-placessidebar scrolledwindow,
-.sidebar,
-.sidebar list {
-  background-color: transparent;
-  background-image: none;
-  color: @fg;
-}
-
-/* The file list itself: darker so text stays legible over the blur. */
-filechooser .view,
-filechooser treeview.view,
-treeview.view {
-  background-color: rgba(0, 0, 0, 0.192);
-  background-image: none;
-  color: @fg;
-}
-
-filechooser .view:selected,
-treeview.view:selected,
-placessidebar row:selected,
-.sidebar row:selected {
-  background-color: @sel;
-  color: @fg;
-}
-
-placessidebar row:hover,
-.sidebar row:hover,
-treeview.view:hover {
-  background-color: @hover;
-}
-
-entry,
-entry.search,
-searchbar entry {
-  background-color: rgba(255, 255, 255, 0.08);
-  background-image: none;
-  border: 1px solid @line;
-  border-radius: 8px;
-  color: @fg;
-}
-
-entry:focus {
-  border-color: rgba(255, 255, 255, 0.35);
-}
-
-pathbar button,
-.path-bar button {
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  box-shadow: none;
-  color: @fg;
-}
-
-pathbar button:checked,
-.path-bar button:checked,
-pathbar button:hover,
-.path-bar button:hover {
-  background-color: @hover;
-  border-radius: 8px;
-}
-
-treeview:selected,
-list row:selected,
-row:selected {
-  background-color: @sel;
-}
-
-/* Bottom toolbar (+ / - / gear on blueman, nm-connection-editor) */
-toolbar,
-.toolbar {
-  border-bottom-left-radius: 14px;
-  border-bottom-right-radius: 14px;
-  padding: 4px;
-}
-
-toolbar button,
-.toolbar button,
-toolbutton,
-toolbutton button,
-button.flat {
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  box-shadow: none;
-  color: @fg;
-}
-
-toolbar button:hover,
-.toolbar button:hover,
-toolbutton button:hover,
-button.flat:hover {
-  background-color: @hover;
-  border-radius: 8px;
-}
-
-/* Regular buttons (Cancel / Select / Open). */
 button {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: @raised;
   background-image: none;
-  border: 1px solid @line;
-  border-radius: 8px;
+  border: none;
+  border-radius: 9px;
   color: @fg;
   text-shadow: none;
-}
-
-button:hover  { background-color: @hover; }
-button:active,
-button:checked { background-color: rgba(255, 255, 255, 0.20); }
-
-/* Primary action button (Select / Open / Save): pure white with black text.
-   The label/image children are targeted explicitly because the global
-   `*, label, image { color: @fg }` rule above would otherwise repaint the
-   text white and win over an inherited color. */
-button.suggested-action,
-button.default,
-dialog button.suggested-action,
-filechooser button.suggested-action,
-headerbar button.suggested-action {
-  background-color: #ffffff;
-  background-image: none;
-  border: none;
   box-shadow: none;
-  color: #000000;
+  min-height: 30px;
+  padding: 0 10px;
+  transition: background-color 150ms ease;
 }
 
-button.suggested-action label,
-button.suggested-action image,
-button.default label,
-button.default image,
-dialog button.suggested-action label,
-filechooser button.suggested-action label,
-headerbar button.suggested-action label {
-  color: #000000;
-}
+button:hover   { background-color: @activebg; }
+button:active,
+button:checked { background-color: rgba(255, 255, 255, 0.22); }
+button:disabled { background-color: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.35); }
 
-button.suggested-action:hover,
-button.default:hover {
-  background-color: #e6e6e6;
-  color: #000000;
-}
-
-button.suggested-action:active,
-button.suggested-action:checked,
-button.default:active {
-  background-color: #cccccc;
-  color: #000000;
-}
-
-/* Insensitive (greyed) Select before a file is picked. The theme paints its
-   own flat grey here, so these need the same specificity as the rules above
-   plus :disabled to take effect. */
-button.suggested-action:disabled,
-button.default:disabled,
-dialog button.suggested-action:disabled,
-filechooser button.suggested-action:disabled,
-headerbar button.suggested-action:disabled {
-  background-color: rgba(255, 255, 255, 0.40);
-  background-image: none;
-  color: rgba(0, 0, 0, 0.60);
-}
-
-button.suggested-action:disabled label,
-button.default:disabled label,
-dialog button.suggested-action:disabled label,
-filechooser button.suggested-action:disabled label,
-headerbar button.suggested-action:disabled label {
-  color: rgba(0, 0, 0, 0.60);
-}
-
-/* Belt-and-braces: GTK's file chooser marks the accept button as the default
-   widget, and some builds label it .text-button rather than
-   .suggested-action. Cover the headerbar's last button either way. */
-.titlebar button.text-button.suggested-action,
-.titlebar button.suggested-action,
-headerbar button.text-button.suggested-action {
-  background-color: #ffffff;
-  background-image: none;
-  color: #000000;
-  border: none;
-}
-
-.titlebar button.text-button.suggested-action label,
-.titlebar button.suggested-action label,
-headerbar button.text-button.suggested-action label {
-  color: #000000;
-}
-
-toolbar image,
-.toolbar image,
-toolbutton image,
-toolbar button image,
-button image {
-  color: @fg;
-  -gtk-icon-shadow: none;
-}
-
-scrollbar,
-scrollbar trough {
+button.flat, toolbar button, .toolbar button, toolbutton button {
   background-color: transparent;
   border: none;
+  box-shadow: none;
+}
+button.flat:hover, toolbar button:hover, .toolbar button:hover { background-color: @hoverbg; }
+
+button.suggested-action { background-color: @accent; color: #ffffff; border: none; }
+button.suggested-action:hover { background-color: shade(@accent, 1.15); }
+button.suggested-action label { color: #ffffff; }
+button.destructive-action { background-color: rgba(255, 105, 97, 0.85); color: #ffffff; }
+
+/* ── entries ───────────────────────────────────────────────────────────── */
+
+entry, entry.search, searchbar entry {
+  background-color: @raised;
+  background-image: none;
+  border: none;
+  border-radius: 9px;
+  min-height: 30px;
+  padding: 0 10px;
+  color: @fg;
+  box-shadow: none;
+}
+entry:focus { box-shadow: inset 0 0 0 1px @accent; }
+
+/* ── surfaces ──────────────────────────────────────────────────────────── */
+
+toolbar, .toolbar, menubar, .menubar,
+treeview, treeview header, treeview header button,
+list, scrolledwindow, stack, box, grid, paned, viewport,
+notebook, notebook header, .view {
+  background-color: transparent;
+  background-image: none;
+  color: @fg;
 }
 
+.sidebar, placessidebar { background-color: rgba(255, 255, 255, 0.04); color: @fg; }
+
+list row, .sidebar row {
+  border-radius: 9px;
+  margin: 1px 6px;
+  min-height: 32px;
+  color: @fg;
+}
+row:hover    { background-color: @hoverbg; }
+row:selected { background-color: rgba(10, 132, 255, 0.28); color: @fg; }
+
+treeview:selected, treeview.view:selected { background-color: rgba(10, 132, 255, 0.28); color: @fg; }
+
+separator { background-color: @line; min-width: 1px; min-height: 1px; }
+
+/* ── popovers / menus ──────────────────────────────────────────────────── */
+
+popover, popover.background, menu, .menu, .context-menu {
+  background-color: @surface;
+  border: 1px solid @line;
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 6px;
+  color: @fg;
+}
+
+menuitem, modelbutton {
+  background-color: transparent;
+  border-radius: 8px;
+  min-height: 30px;
+  padding: 0 8px;
+  color: @fg;
+}
+menuitem:hover, modelbutton:hover { background-color: @hoverbg; }
+
+/* ── controls ──────────────────────────────────────────────────────────── */
+
+switch {
+  background-color: rgba(255, 255, 255, 0.18);
+  border: none;
+  border-radius: 999px;
+  min-width: 40px;
+  min-height: 22px;
+}
+switch:checked { background-color: @accent; }
+switch slider {
+  background-color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  min-width: 18px;
+  min-height: 18px;
+}
+
+check, radio {
+  background-color: @raised;
+  border: 1px solid @line;
+  border-radius: 6px;
+  color: @fg;
+}
+check:checked, radio:checked { background-color: @accent; border-color: @accent; color: #ffffff; }
+
+scale trough { background-color: rgba(255, 255, 255, 0.18); border-radius: 999px; min-height: 5px; }
+scale highlight { background-color: @fg; border-radius: 999px; }
+scale slider { background-color: #ffffff; border: none; border-radius: 999px; min-width: 16px; min-height: 16px; }
+
+scrollbar { background-color: transparent; border: none; }
 scrollbar slider {
   background-color: rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
   border: none;
-  min-width: 6px;
-  min-height: 6px;
+  border-radius: 999px;
+  min-width: 7px;
+  min-height: 7px;
 }
+scrollbar slider:hover { background-color: rgba(255, 255, 255, 0.40); }
 
-scrollbar slider:hover {
-  background-color: rgba(255, 255, 255, 0.40);
-}
-
-menu,
-.menu,
-popover.background {
-  background-color: rgba(0, 0, 0, 0.92);
+tooltip, tooltip.background {
+  background-color: @surface;
   border: 1px solid @line;
   border-radius: 10px;
   color: @fg;
-}
-
-menuitem:hover,
-popover button:hover {
-  background-color: @hover;
-}
-
-/* ── AnyDesk ──────────────────────────────────────────────────────────────
-   AnyDesk is a GTK3 app, but it custom-draws its tab strip and the address /
-   "Set password" / "What's new" tiles, so the generic container rules above
-   don't reach them and they stay white. These opaque overrides catch the
-   parts that are real GTK widgets. The custom-drawn tiles only go dark via
-   AnyDesk's own Settings -> Appearance -> Theme -> Dark Mode. */
-window.anydesk,
-window.anydesk box,
-window.anydesk grid,
-window.anydesk stack,
-window.anydesk scrolledwindow,
-window.anydesk viewport,
-window.anydesk notebook,
-window.anydesk notebook stack,
-window.anydesk frame,
-window.anydesk .view {
-  background-color: #000000;
-  background-image: none;
-  color: @fg;
-}
-
-window.anydesk notebook header,
-window.anydesk notebook tab {
-  background-color: #000000;
-  background-image: none;
-  border-color: @line;
-  color: @fg;
-}
-
-window.anydesk notebook tab:checked {
-  background-color: rgba(255, 255, 255, 0.10);
-  color: @fg;
-}
-
-/* Text: labels don't reliably inherit the container `color`, so the label and
-   image children are targeted explicitly (same reason the .suggested-action
-   rules above spell out their children). White so it reads on the black. */
-window.anydesk,
-window.anydesk *,
-window.anydesk label,
-window.anydesk image,
-window.anydesk button label,
-window.anydesk notebook tab label,
-window.anydesk list row label,
-window.anydesk entry {
-  color: #ffffff;
-  text-shadow: none;
-}
-
-/* Entries need a visible field behind the white text. */
-window.anydesk entry,
-window.anydesk entry.search {
-  background-color: rgba(255, 255, 255, 0.08);
-  background-image: none;
-  border: 1px solid @line;
-  color: #ffffff;
-}
-
-window.anydesk entry placeholder,
-window.anydesk entry:disabled {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* Links (Invite via email, Learn more) stay distinguishable but light. */
-window.anydesk link,
-window.anydesk button.link,
-window.anydesk button.link label {
-  color: rgba(255, 255, 255, 0.85);
 }

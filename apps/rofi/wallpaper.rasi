@@ -9,11 +9,11 @@ configuration {
 }
 
 * {
-  bg:       #000000;
-  fg:       #ffffff;
-  accent:   #ffffff;
-  selected: rgba(255, 255, 255, 0.16);
-  border:   rgba(255, 255, 255, 0.14);
+  bg:       rgba(30, 30, 30, 0.35);
+  fg:       rgba(255, 255, 255, 0.95);
+  accent:   #0A84FF;
+  selected: rgba(255, 255, 255, 0.18);
+  border:   rgba(255, 255, 255, 0.18);
 }
 
 window {
@@ -36,18 +36,18 @@ inputbar {
   border: 1px;
   border-color: @border;
   border-radius: 8px;
-  background-color: #0a0a0a;
+  background-color: rgba(255, 255, 255, 0.12);
   children: [ prompt, entry ];
 }
 
 prompt {
-  font: "Iosevka Term 12";
+  font: "Inter 12";
   text-color: @accent;
   background-color: transparent;
 }
 
 entry {
-  font: "Iosevka Term 12";
+  font: "Inter 12";
   margin: 0 0 0 8px;
   text-color: @fg;
   background-color: transparent;

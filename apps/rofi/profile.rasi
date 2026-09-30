@@ -1,5 +1,5 @@
 /**
- * Profile dropdown — pure black / pure white, sharp edges.
+ * Profile dropdown — macOS Sonoma glass / pure white, sharp edges.
  * Opened from the waybar star icon (custom/profile), left-anchored
  * so it drops down under the icon in the top-left corner.
  */
@@ -9,13 +9,13 @@ configuration {
 }
 
 * {
-    bg-color:            #000000;
-    fg-color:            #ffffff;
+    bg-color:            rgba(30, 30, 30, 0.35);
+    fg-color:            rgba(255, 255, 255, 0.95);
     fg-muted:            rgba(255, 255, 255, 0.55);
-    line:                rgba(255, 255, 255, 0.15);
+    line:                rgba(255, 255, 255, 0.18);
     alert-color:         #ff0000;
-    accent:              #ffffff;
-    accent-fg:           #000000;
+    accent:              #0A84FF;
+    accent-fg:           #ffffff;
 }
 
 window {
@@ -25,9 +25,9 @@ window {
     x-offset:            6px;
     y-offset:            0px;
     width:               320px;
-    border:              1px;
+    border:              1px solid;
     border-color:        @fg-color;
-    border-radius:       0px;
+    border-radius:       18px;
     background-color:    @bg-color;
 }
 
@@ -46,7 +46,7 @@ message {
 
 textbox {
     text-color:          @fg-muted;
-    font:                "Iosevka Term 10";
+    font:                "Inter 10";
 }
 
 listview {
@@ -70,12 +70,12 @@ element {
 }
 
 element selected {
-    background-color:    @accent;
+    background-color:    rgba(10, 132, 255, 0.85);
     text-color:          @accent-fg;
 }
 
 element-text {
-    font:                "Iosevka Term 11";
+    font:                "Inter 11";
     text-color:          inherit;
     background-color:    transparent;
 }

@@ -14,10 +14,10 @@ xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
 waybar
 rofi
+quickshell          # spotify dropdown card (apps/quickshell/spotify)
 mako
 jq
 inotify-tools
-python
 curl
 rsync
 
@@ -65,6 +65,8 @@ noto-fonts-emoji
 # browser:      firefox | chromium | brave-bin (AUR) | zen-browser-bin (AUR)
 # file manager: nautilus | thunar | dolphin | nemo
 # editor:       visual-studio-code-bin (AUR) | neovim | zed
+#               picking neovim also pulls ripgrep + fd, which the editor
+#               overlay in apps/nvim leans on for its pickers
 kitty
 firefox
 nautilus

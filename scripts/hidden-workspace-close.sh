@@ -9,13 +9,7 @@
 # the hidden overlay stays on screen. Force workspace 1 on close so you
 # always land back where you started, regardless of what happened below.
 
-open=$(hyprctl -j monitors | python3 -c "
-import json, sys
-for m in json.load(sys.stdin):
-    if m.get('focused'):
-        print(m.get('specialWorkspace', {}).get('name', ''))
-        break
-")
+open=$(hyprctl -j monitors | jq -r 'map(select(.focused))[0] | .specialWorkspace.name // ""')
 
 if [[ "$open" == "special:hidden" ]]; then
   hyprctl dispatch togglespecialworkspace hidden

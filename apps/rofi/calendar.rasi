@@ -1,4 +1,6 @@
-/* Calendar dropdown — pure black / white, under waybar clock */
+/* Calendar — macOS Sonoma floating glass sheet, under the waybar clock.
+   Blur comes from the `rofi` layerrule in hypr.conf; this file only supplies
+   the translucent material on top of it. */
 
 configuration {
     show-icons:          false;
@@ -9,52 +11,57 @@ configuration {
 }
 
 * {
-    bg:                 #000000;
-    fg:                 #ffffff;
-    muted:              rgba(255, 255, 255, 0.40);
-    accent:             #ffffff;
-    accent-fg:          #000000;
+    surface:            rgba(30, 30, 30, 0.35);
+    raised:             rgba(255, 255, 255, 0.12);
     line:               rgba(255, 255, 255, 0.18);
+    hover:              rgba(255, 255, 255, 0.08);
+    fg:                 rgba(255, 255, 255, 0.95);
+    muted:              rgba(255, 255, 255, 0.70);
+    faint:              rgba(255, 255, 255, 0.45);
+    accent:             #0A84FF;
 
     background-color:   transparent;
     text-color:         @fg;
-    font:               "Iosevka Term 10";
+    font:               "Inter 10";
 }
 
 window {
     transparency:       "real";
     location:           north west;
     anchor:             north west;
-    x-offset:           0px;
+    /* Clears the floating waybar island (8px margin + 40px tall). */
+    x-offset:           12px;
     y-offset:           0px;
-    width:              280px;
+    width:              304px;
     border:             1px solid;
     border-color:       @line;
-    border-radius:      0px;
-    background-color:   @bg;
+    /* Square where it meets the bar, rounded below. */
+    border-radius:      0px 0px 20px 20px;
+    background-color:   @surface;
     children:           [ mainbox ];
 }
 
 mainbox {
-    padding:            14px 16px 12px 16px;
-    spacing:            8px;
+    padding:            16px 18px 14px 18px;
+    spacing:            10px;
     background-color:   transparent;
-    children:           [ inputbar, message, listview, footer ];
+    children:           [ inputbar, listview, footer ];
 }
 
 inputbar {
     spacing:            0px;
-    padding:            0px 0px 4px 0px;
+    padding:            0px 0px 6px 0px;
     background-color:   transparent;
     children:           [ prompt ];
 }
 
+/* Month / year header */
 prompt {
     enabled:            true;
     expand:             true;
     horizontal-align:   0.5;
     text-color:         @fg;
-    font:               "Iosevka Term Medium 11";
+    font:               "Inter Medium 12";
     background-color:   transparent;
 }
 
@@ -62,38 +69,32 @@ entry {
     enabled:            false;
 }
 
-message {
-    padding:            0px 0px 2px 0px;
-    background-color:   transparent;
-    border:             0px;
-}
-
 textbox {
     horizontal-align:   0.5;
     text-color:         @fg;
     background-color:   transparent;
-    font:               "Iosevka Term Medium 10";
+    font:               "Inter Medium 10";
     markup:             true;
 }
 
 listview {
     columns:            7;
-    lines:              6;
+    lines:              7;
     cycle:              false;
     dynamic:            false;
     fixed-height:       true;
     fixed-columns:      true;
     flow:               horizontal;
     scrollbar:          false;
-    spacing:            2px;
-    padding:            2px 0px;
+    spacing:            3px;
+    padding:            4px 0px;
     background-color:   transparent;
 }
 
 element {
     orientation:        horizontal;
-    padding:            6px 0px;
-    border-radius:      2px;
+    padding:            7px 0px;
+    border-radius:      9px;
     background-color:   transparent;
     text-color:         @fg;
     cursor:             pointer;
@@ -105,20 +106,22 @@ element alternate.normal {
     text-color:         @fg;
 }
 
+/* Weekday header row (marked urgent by the script) — muted, never highlights. */
 element normal.urgent,
 element alternate.urgent {
     background-color:   transparent;
-    text-color:         @muted;
+    text-color:         @faint;
 }
 
+/* Hovered / selected day: macOS picks it out with a filled accent pill. */
 element selected.normal {
-    background-color:   @accent;
-    text-color:         @accent-fg;
+    background-color:   rgba(10, 132, 255, 0.85);
+    text-color:         #ffffff;
 }
 
 element selected.urgent {
     background-color:   transparent;
-    text-color:         @muted;
+    text-color:         @faint;
 }
 
 element-text {
@@ -126,7 +129,7 @@ element-text {
     vertical-align:     0.5;
     text-color:         inherit;
     background-color:   transparent;
-    font:               "Iosevka Term 10";
+    font:               "Inter 10";
     markup:             true;
 }
 
@@ -134,8 +137,8 @@ footer {
     orientation:        horizontal;
     expand:             false;
     spacing:            0px;
-    margin:             6px 0px 0px 0px;
-    padding:            8px 0px 0px 0px;
+    margin:             8px 0px 0px 0px;
+    padding:            10px 0px 0px 0px;
     border:             1px 0px 0px 0px;
     border-color:       @line;
     background-color:   transparent;
@@ -145,8 +148,8 @@ footer {
 textbox-footer {
     expand:             true;
     horizontal-align:   0.5;
-    text-color:         @muted;
+    text-color:         @faint;
     background-color:   transparent;
-    font:               "Iosevka Term 9";
+    font:               "Inter 9";
     str:                "↔ mo   ↕ yr   ↵ today";
 }

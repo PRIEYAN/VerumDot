@@ -22,7 +22,7 @@ HYPRLOCK_CONF="${HYPR_DIR}/apps/hyprlock/hyprlock.conf"
 SHUTDOWN_SPLASH="${HYPR_DIR}/scripts/mogger_shutdown.sh"
 
 if [ "$1" != "menu" ]; then
-  printf '{"text":"%s","tooltip":"Power"}\n' $'\uF011'
+  printf '{"text":"%s","tooltip":"Control Centre"}\n' $'\uF011'
   exit 0
 fi
 

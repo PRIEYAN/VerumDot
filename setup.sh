@@ -26,6 +26,7 @@ RICE_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 XDG_CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
 TARGET="$XDG_CFG/hypr"
 WAYBAR_CFG="$XDG_CFG/waybar"
+NVIM_CFG="$XDG_CFG/nvim"
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/verumdot-install-$STAMP.log"
@@ -51,6 +52,7 @@ PICK_SCALE="1.0"
 DO_LID=1
 DO_THEME=1
 DO_SERVICES=1
+DO_NVIM=1
 DO_AUR_HELPER=1
 DO_SHELL=0
 EXTRA_PKGS=()
@@ -481,7 +483,7 @@ pkgs_for() { # -> newline separated pacman packages
   case "$1" in
     core)  printf '%s\n' hyprland hyprpaper hypridle hyprlock hyprcursor \
              xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-             waybar rofi mako jq inotify-tools python curl rsync ;;
+             waybar rofi quickshell mako jq inotify-tools curl rsync ;;
     audio) printf '%s\n' pipewire pipewire-pulse pipewire-alsa wireplumber pamixer playerctl ;;
     shot)  printf '%s\n' grim slurp swappy wl-clipboard ;;
     net)   printf '%s\n' networkmanager network-manager-applet bluez bluez-utils blueman ;;
@@ -509,7 +511,7 @@ pkg_of_browser() { case "$1" in firefox) echo firefox;; chromium) echo chromium;
                                 brave) echo "aur:brave-bin";; zen-browser) echo "aur:zen-browser-bin";; *) echo "";; esac; }
 pkg_of_files()   { case "$1" in nautilus) echo nautilus;; thunar) echo "thunar tumbler";;
                                 dolphin) echo dolphin;; nemo) echo nemo;; *) echo "";; esac; }
-pkg_of_editor()  { case "$1" in code) echo "aur:visual-studio-code-bin";; nvim) echo neovim;;
+pkg_of_editor()  { case "$1" in code) echo "aur:visual-studio-code-bin";; nvim) echo "neovim ripgrep fd";;
                                 zed) echo zed;; *) echo "";; esac; }
 
 has_group() { local g; for g in ${SEL_GROUPS[@]+"${SEL_GROUPS[@]}"}; do [[ "$g" == "$1" ]] && return 0; done; return 1; }
@@ -704,9 +706,11 @@ show_plan() {
     kv "deploy to" "$TARGET"
     (( FACT_EXISTING && ! FACT_INPLACE )) && kv "backup" "$TARGET.bak.$STAMP"
     kv "waybar links" "$WAYBAR_CFG/{config,style.css,scripts}"
+    kv "kitty link" "$XDG_CFG/kitty/kitty.conf"
     kv "wallpapers" "$WALLPAPER_DIR"
     [[ -n "$PICK_MONITOR" ]] && kv "monitor line" "$PICK_MONITOR,preferred,auto,$PICK_SCALE"
     has_group apps && kv "binds" "term=$PICK_TERM  web=$PICK_BROWSER  files=$PICK_FILES  edit=$PICK_EDITOR"
+    (( DO_NVIM ))     && kv "nvim overlay" "$NVIM_CFG/lua/{verum,plugins/verum.lua}"
     (( DO_THEME ))    && kv "theme" "PureBlackGlass → GTK / Qt / Kvantum / portal"
     (( DO_SERVICES )) && kv "services" "pipewire · pipewire-pulse · wireplumber"
     (( DO_LID ))      && kv "logind" "HandleLidSwitch=ignore (lock, no suspend)"
@@ -857,20 +861,27 @@ deploy_files() {
   if [[ -d "$WAYBAR_CFG/scripts" && ! -L "$WAYBAR_CFG/scripts" ]]; then backup_path "$WAYBAR_CFG/scripts"; fi
   link_force "$TARGET/apps/waybar/scripts" "$WAYBAR_CFG/scripts"
 
+  # kitty.conf carries the transparent_background_colors that turn the Neovim
+  # panes into glass — without this link a fresh machine renders them as opaque
+  # rectangles sitting on the wallpaper.
+  if [[ "$PICK_TERM" == "kitty" ]] || command -v kitty >/dev/null 2>&1; then
+    link_force "$TARGET/apps/kitty/kitty.conf" "$XDG_CFG/kitty/kitty.conf"
+  fi
+
   mkdir -p "$WALLPAPER_DIR"
   if ! compgen -G "$WALLPAPER_DIR/*.[jpJP][pnPN]*[gG]" >/dev/null; then
-    python3 - "$WALLPAPER_DIR/suf.png" <<'PY' 2>/dev/null && ok "placeholder wallpaper written (drop your own into $WALLPAPER_DIR)"
-import struct, sys, zlib
-def chunk(t, d):
-    return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
-w = h = 64
-raw = b''.join(b'\x00' + bytes((10, 10, 10)) * w for _ in range(h))
-png = (b'\x89PNG\r\n\x1a\n'
-       + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0))
-       + chunk(b'IDAT', zlib.compress(raw))
-       + chunk(b'IEND', b''))
-open(sys.argv[1], 'wb').write(png)
-PY
+    # A 64x64 near-black placeholder, stored as base64 rather than generated
+    # by python — the rice has no python dependency any more.
+    printf '%s' "\
+iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAIGNIUk0AAHomAACAhAAA+gAAAIDo\
+AAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAldEVYdGRhdGU6Y3JlYXRl\
+ADIwMjYtMDktMzBUMDU6MTE6NDErMDA6MDDi6viIAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA5\
+LTMwVDA1OjExOjQxKzAwOjAwk7dANAAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOS0zMFQw\
+NToxMTo0MSswMDowMMSiYesAAAB4SURBVGje7c9BDQAgEMAw4Hn+BSOCR0OyKej2zKyfOxrQgAY0\
+oAENaEADGtCABjSgAQ1oQAMa0IAGNKABDWhAAxrQgAY0oAENaEADGtCABjSgAQ1oQAMa0IAGNKAB\
+DWhAAxrQgAY0oAENaEADGtCABjSgAQ1owGsX6IMAnuKgjwgAAAAASUVORK5CYII=" \
+      | base64 -d > "$WALLPAPER_DIR/suf.png" 2>/dev/null \
+      && ok "placeholder wallpaper written (drop your own into $WALLPAPER_DIR)"
   fi
   local first
   first="$(ls -1 "$WALLPAPER_DIR"/*.png "$WALLPAPER_DIR"/*.jpg "$WALLPAPER_DIR"/*.jpeg 2>/dev/null | head -n1)"
@@ -919,6 +930,45 @@ personalise() {
     sed -i -E "s|^(exec-once = eww .*)|# \1  # eww not installed|" "$f"
     skip "eww autostart commented out (panels are rofi-based)"
   fi
+}
+
+# ── neovim overlay ─────────────────────────────────────────────────────
+#  Two symlinks into an existing lazy.nvim config, not a config of its own.
+#  The rice owns the look (apps/nvim); whatever else lives in ~/.config/nvim
+#  keeps working, and `git pull` here updates the editor along with the bar.
+deploy_nvim() {
+  (( DO_NVIM )) || return 0
+  headline "Neovim  ·  explorer left, tabs up top, glass all the way down"
+
+  if ! command -v nvim >/dev/null 2>&1; then
+    skip "neovim is not installed — overlay stays at $TARGET/apps/nvim"
+    return 0
+  fi
+
+  # The overlay ships as lazy.nvim plugin specs. Something has to import them,
+  # and that something is a lua/plugins directory — without one the files are
+  # never read, so bootstrap the LazyVim starter rather than dropping dead
+  # symlinks into a config that will ignore them.
+  if [[ ! -d "$NVIM_CFG/lua/plugins" ]]; then
+    if [[ -e "$NVIM_CFG" || -L "$NVIM_CFG" ]]; then
+      warn "$NVIM_CFG has no lua/plugins — not a lazy.nvim config, leaving it alone"
+      say  "wire it up by hand: $TARGET/apps/nvim/README.md"
+      return 0
+    fi
+    if ! git clone --depth 1 https://github.com/LazyVim/starter "$NVIM_CFG" >>"$LOG" 2>&1; then
+      warn "could not clone the LazyVim starter — skipping the overlay"
+      return 0
+    fi
+    rm -rf "$NVIM_CFG/.git"
+    ok "LazyVim starter cloned into ${NVIM_CFG/#$HOME/\~}"
+  fi
+
+  if [[ -d "$NVIM_CFG/lua/verum" && ! -L "$NVIM_CFG/lua/verum" ]]; then
+    backup_path "$NVIM_CFG/lua/verum"
+  fi
+  link_force "$TARGET/apps/nvim/lua/verum"             "$NVIM_CFG/lua/verum"
+  link_force "$TARGET/apps/nvim/lua/plugins/verum.lua" "$NVIM_CFG/lua/plugins/verum.lua"
+  ok "Ctrl+Shift+\` opens the terminal dock · Ctrl+B toggles the explorer"
 }
 
 apply_theme() {
@@ -1016,6 +1066,7 @@ usage() {
      ./setup.sh --packages      dependencies only
      ./setup.sh --config        deploy rice + theme only
      ./setup.sh --dry-run       print the plan, change nothing
+     ./setup.sh --no-nvim       leave ~/.config/nvim untouched
      ./setup.sh --no-anim       skip the intro animation
      ./setup.sh --no-color      plain text, for logs and pipes
 
@@ -1035,6 +1086,7 @@ parse_args() {
       --config|--config-only)     MODE="config";   DO_PACKAGES=0; DO_CONFIG=1 ;;
       --packages|--packages-only) MODE="packages"; DO_PACKAGES=1; DO_CONFIG=0 ;;
       --dry-run|-n)               DRYRUN=1 ;;
+      --no-nvim)                  DO_NVIM=0 ;;
       --no-anim)                  ANIM=0 ;;
       --no-color)                 COLOR=0; ANIM=0 ;;
       -h|--help)                  usage ;;
@@ -1079,13 +1131,14 @@ main() {
 
   STEP_TOTAL=0
   (( DO_PACKAGES )) && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
-  (( DO_CONFIG ))   && STEP_TOTAL=$(( STEP_TOTAL + 2 + DO_THEME + DO_SERVICES + DO_LID ))
+  (( DO_CONFIG ))   && STEP_TOTAL=$(( STEP_TOTAL + 2 + DO_NVIM + DO_THEME + DO_SERVICES + DO_LID ))
   STEP_N=0
 
   (( DO_PACKAGES )) && install_packages
   if (( DO_CONFIG )); then
     deploy_files
     personalise
+    deploy_nvim
     apply_theme
     apply_services
     apply_lid

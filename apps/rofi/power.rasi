@@ -1,5 +1,5 @@
 /**
- * Power Menu — pure black, one row of five glyph buttons.
+ * Power Menu — macOS Sonoma glass, one row of five glyph buttons.
  * Matches wallpaper.rasi.
  */
 
@@ -8,19 +8,19 @@ configuration {
 }
 
 * {
-    bg-color:            #000000;
-    bg-selected:         rgba(255, 255, 255, 0.16);
-    fg-color:            #ffffff;
-    accent-color:        #ffffff;
-    border-color:        rgba(255, 255, 255, 0.14);
+    bg-color:            rgba(30, 30, 30, 0.35);
+    bg-selected:         rgba(10, 132, 255, 0.28);
+    fg-color:            rgba(255, 255, 255, 0.95);
+    accent-color:        #0A84FF;
+    border-color:        rgba(255, 255, 255, 0.18);
 }
 
 window {
     width:               800px;
     height:              180px;
-    border:              1px;
+    border:              1px solid;
     border-color:        @border-color;
-    border-radius:       0px;
+    border-radius:       18px;
     background-color:    @bg-color;
 }
 
@@ -39,15 +39,15 @@ listview {
 
 element {
     padding:             20px;
-    border-radius:       0px;
-    background-color:    #0a0a0a;
-    text-color:          #ffffff;
+    border-radius:       14px;
+    background-color:    rgba(255, 255, 255, 0.12);
+    text-color:          rgba(255, 255, 255, 0.95);
 }
 
-/* Selected inverts: solid white cell, black glyph. */
+/* Selected fills with macOS system blue; the glyph stays white. */
 element selected {
-    background-color:    #ffffff;
-    text-color:          #000000;
+    background-color:    rgba(10, 132, 255, 0.85);
+    text-color:          #ffffff;
     border:              0px;
 }
 

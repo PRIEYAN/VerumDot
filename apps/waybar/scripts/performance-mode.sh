@@ -12,14 +12,21 @@ if [ "$1" = "toggle" ]; then
     battery) mode=normal;;
   esac
   printf '%s' "$mode" > "$mode_file"
-  if command -v cpupower >/dev/null 2>&1; then
-    if [ "$mode" = "performance" ]; then
-      sudo cpupower frequency-set -g performance
-    elif [ "$mode" = "battery" ]; then
-      sudo cpupower frequency-set -g powersave
-    else
-      sudo cpupower frequency-set -g ondemand
-    fi
+  # power-profiles-daemon over D-Bus: no sudo prompt, and it is the same knob
+  # the quickshell control centre drives, so the two cannot disagree. (The old
+  # `sudo cpupower` path fought PPD over the same intel_pstate driver.)
+  if command -v powerprofilesctl >/dev/null 2>&1; then
+    case "$mode" in
+      performance) powerprofilesctl set performance ;;
+      battery)     powerprofilesctl set power-saver ;;
+      *)           powerprofilesctl set balanced ;;
+    esac
+  elif command -v cpupower >/dev/null 2>&1; then
+    case "$mode" in
+      performance) sudo cpupower frequency-set -g performance ;;
+      battery)     sudo cpupower frequency-set -g powersave ;;
+      *)           sudo cpupower frequency-set -g ondemand ;;
+    esac
   fi
   # Repaint the battery module, which colours its glyph by mode
   # (red = performance, green = battery, white = normal).

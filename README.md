@@ -90,7 +90,8 @@ Most rices hand you a color scheme. VerumDot hands you a finished laptop.
 - 👆 **Gesture-driven** — 3-finger swipe for workspaces, 4-finger up for a hidden scratchpad workspace.
 - 🔋 **Laptop-literate** — battery alerts at 20/15%, lid-close locks instead of suspending, NVIDIA suspend fix included.
 - 🔕 **Do-not-disturb** — `SUPER + CTRL + N`, straight into mako.
-- 🎵 **Spotify, glassed** — a translucent now-playing card in the bar and a centered widget on click.
+- 🎵 **Spotify, glassed** — a translucent now-playing card in the bar and a live quickshell dropdown on click.
+- 🎛️ **Control centre** — throw the pointer at the top-right corner and a frosted panel slides in: brightness and volume sliders, power mode, mic, stay-awake. The Wi-Fi and Bluetooth tiles toggle from their icon and open network/device lists in place.
 - 🖼️ **Two wallpaper pickers** — one for the desktop, one for the lock screen, both Rofi.
 
 ---
@@ -102,10 +103,11 @@ VerumDot is a complete Arch + Hyprland environment: dark glass UI, white typogra
 | Layer | What you get |
 |-------|----------------|
 | **Compositor** | Hyprland — blur, rounding, opacity, gestures, lid/suspend tuned |
-| **Bar** | Waybar — clock, Spotify, workspaces, mic/vol/brightness, Wi-Fi, Bluetooth, battery, power |
-| **Menus** | Rofi — launcher, Wi-Fi, Bluetooth, power, volume, brightness, calendar, wallpapers, Spotify card |
+| **Bar** | Waybar — clock, Spotify, workspaces, mic/vol/brightness, battery, power |
+| **Menus** | Quickshell — app launcher, control centre (Wi-Fi, Bluetooth), Spotify card · Rofi — power, volume, brightness, calendar, wallpapers |
 | **Notifications** | mako — with do-not-disturb and low-battery alerts |
 | **Lock / idle** | hyprlock + hypridle |
+| **Editor** | Neovim — VS Code layout: explorer rail, tabs, docked terminal, glass panes |
 | **Theme** | PureBlackGlass (Kvantum) + matching GTK / Qt / portal |
 | **Apps** | Kitty, hyprpaper, Firefox, Nautilus |
 
@@ -239,6 +241,18 @@ Live config always lands at `~/.config/hypr`.
 | `SHIFT` + `Print` | Region screenshot |
 | Brightness / volume keys | Adjust (volume boosts to 150%) |
 
+### Editor (Neovim)
+
+Applies inside Neovim once the overlay is deployed — see [`apps/nvim/`](apps/nvim/).
+
+| Bind | Action |
+|------|--------|
+| `CTRL` + `SHIFT` + `` ` `` | Toggle the terminal dock (also `CTRL` + `` ` ``) |
+| `CTRL` + `B` | Toggle the explorer rail |
+| `SPACE` + `e` | Focus the explorer |
+| `SPACE` + `tt` | Toggle the terminal dock |
+| `Esc` `Esc` | Leave terminal mode |
+
 ### Gestures
 
 | Gesture | Action |
@@ -274,6 +288,7 @@ VerumDot/
     ├── hyprlock/
     ├── hypridle/
     ├── kitty/
+    ├── nvim/             # VS Code layout overlay (glass panes)
     ├── mako/
     ├── eww/              # legacy panels
     └── theme/            # PureBlackGlass
@@ -285,7 +300,8 @@ VerumDot/
 
 - **Wallpapers** — `~/Pictures/Wallpapers/`; active image is symlinked as `current-wallpaper` for hyprlock
 - **Theme refresh** — `~/.config/hypr/scripts/theme-install.sh`
-- **Glass Spotify** — window opacity rule in `hypr.conf`; center widget via Waybar click
+- **Neovim glass** — the panes are painted by `apps/nvim/lua/verum/palette.lua` and made see-through by `transparent_background_colors` in `apps/kitty/kitty.conf`; the two lists must match, or a pane goes opaque. `setup.sh --no-nvim` skips the overlay entirely
+- **Glass Spotify** — window opacity rule in `hypr.conf`; quickshell dropdown via Waybar click
 - **NVIDIA / lid** — comments in `hypr.conf` and `apps/hypridle/hypridle.conf`
 - **Eye comfort** — needs `hyprsunset`; the toggle manages the daemon directly (see the note in `apps/waybar/scripts/eye-comfort-toggle.sh` for why not redshift)
 - **Performance mode** — needs `cpupower` for governor switching; degrades quietly without it

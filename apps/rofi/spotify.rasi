@@ -9,16 +9,16 @@ configuration {
 }
 
 * {
-    bg:                 rgba(0, 0, 0, 0.55);
-    fg:                 #ffffff;
+    bg:                 rgba(30, 30, 30, 0.35);
+    fg:                 rgba(255, 255, 255, 0.95);
     muted:              rgba(255, 255, 255, 0.45);
-    line:               rgba(255, 255, 255, 0.14);
-    accent:             #ffffff;
-    accent-fg:          #000000;
+    line:               rgba(255, 255, 255, 0.18);
+    accent:             #0A84FF;
+    accent-fg:          #ffffff;
 
     background-color:   transparent;
     text-color:         @fg;
-    font:               "Iosevka Term 11";
+    font:               "Inter 11";
 }
 
 window {
@@ -30,7 +30,7 @@ window {
     width:              400px;
     border:             1px solid;
     border-color:       @line;
-    border-radius:      0px;
+    border-radius:      18px;
     background-color:   @bg;
     children:           [ mainbox ];
 }
@@ -52,7 +52,7 @@ icon {
     margin:             0px;
     border:             1px solid;
     border-color:       @line;
-    background-color:   #111111;
+    background-color:   rgba(255, 255, 255, 0.12);
     vertical-align:     0.5;
     horizontal-align:   0.5;
 }
@@ -79,7 +79,7 @@ message {
 textbox {
     text-color:         @fg;
     background-color:   transparent;
-    font:               "Iosevka Term 11";
+    font:               "Inter 11";
     markup:             true;
 }
 
@@ -114,7 +114,7 @@ element alternate.normal {
 }
 
 element selected.normal {
-    background-color:   @accent;
+    background-color:   rgba(10, 132, 255, 0.85);
     text-color:         @accent-fg;
 }
 
@@ -123,6 +123,6 @@ element-text {
     vertical-align:     0.5;
     text-color:         inherit;
     background-color:   transparent;
-    font:               "Iosevka Term 16";
+    font:               "Inter 16";
     markup:             true;
 }

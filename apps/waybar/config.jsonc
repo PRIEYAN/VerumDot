@@ -1,15 +1,15 @@
 {
   "layer": "top",
   "position": "top",
-  "margin": "0 0 0 0",
-  "height": 34,
-  "spacing": 0,
+  "margin": "4 6 0 6",
+  "height": 40,
+  "spacing": 2,
   "font": "Iosevka Term 10",
   "modules-left": ["custom/clock", "custom/app_launcher", "custom/app_info", "custom/spotify"],
-  "modules-center": ["custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5", "custom/ws6", "custom/ws7", "custom/ws8", "custom/ws9"],
+  "modules-center": ["custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5", "custom/ws6", "custom/ws7", "custom/ws8", "custom/ws9", "custom/ws10", "custom/ws11", "custom/ws12", "custom/ws13", "custom/ws14"],
   "modules-right": [
     "custom/screenshot",
-    "idle_inhibitor",
+    "custom/stay_awake",
     "custom/sep1",
     "custom/mic",
     "custom/volume",
@@ -33,7 +33,7 @@
     "interval": 1,
     "return-type": "json",
     "max-length": 32,
-    "on-click": "setsid -f rofi -show drun -theme ${HOME}/.config/hypr/apps/rofi/config.rasi"
+    "on-click": "${HOME}/.config/hypr/scripts/app-launcher.sh"
   },
 
   "custom/spotify": {
@@ -51,7 +51,7 @@
     "exec": "printf '{\"text\":\"⌖\",\"tooltip\":\"App launcher\"}'",
     "interval": "once",
     "return-type": "json",
-    "on-click": "setsid -f rofi -show drun -theme ${HOME}/.config/hypr/apps/rofi/config.rasi"
+    "on-click": "${HOME}/.config/hypr/scripts/app-launcher.sh"
   },
 
   "custom/ws1": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 1", "return-type": "json", "on-click": "hyprctl dispatch workspace 1" },
@@ -63,44 +63,54 @@
   "custom/ws7": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 7", "return-type": "json", "on-click": "hyprctl dispatch workspace 7" },
   "custom/ws8": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 8", "return-type": "json", "on-click": "hyprctl dispatch workspace 8" },
   "custom/ws9": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 9", "return-type": "json", "on-click": "hyprctl dispatch workspace 9" },
+  // Overflow slots. hypr-tabs.sh emits empty text for a workspace that
+  // does not exist yet and waybar hides a module with empty text, so these
+  // stay invisible until you actually swipe past 9. Fourteen is the ceiling:
+  // each slot is a live process, so the row is bounded rather than infinite.
+  "custom/ws10": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 10", "return-type": "json", "on-click": "hyprctl dispatch workspace 10" },
+  "custom/ws11": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 11", "return-type": "json", "on-click": "hyprctl dispatch workspace 11" },
+  "custom/ws12": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 12", "return-type": "json", "on-click": "hyprctl dispatch workspace 12" },
+  "custom/ws13": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 13", "return-type": "json", "on-click": "hyprctl dispatch workspace 13" },
+  "custom/ws14": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 14", "return-type": "json", "on-click": "hyprctl dispatch workspace 14" },
 
   "custom/sep1": { "exec": "echo '│'", "interval": "once", "tooltip": false },
   "custom/sep2": { "exec": "echo '│'", "interval": "once", "tooltip": false },
   "custom/sep3": { "exec": "echo '│'", "interval": "once", "tooltip": false },
 
+  // Glyph only; the connected network / device is in the hover tooltip and the
+  // full controls live in the quickshell control centre (top-right hot corner).
+  "custom/bluetooth": {
+    "exec": "${HOME}/.config/hypr/scripts/waybar-bluetooth.sh",
+    "interval": 10,
+    "signal": 9,
+    "return-type": "json",
+    "max-length": 3
+  },
+
+  "custom/wifi": {
+    "exec": "${HOME}/.config/hypr/scripts/waybar-wifi.sh",
+    "interval": 10,
+    "signal": 8,
+    "return-type": "json",
+    "max-length": 3
+  },
   "custom/power": {
     "exec": "${HOME}/.config/hypr/scripts/power-menu.sh",
     "interval": 5,
     "return-type": "json",
-    "on-click": "${HOME}/.config/hypr/scripts/power-menu.sh menu"
+    "on-click": "${HOME}/.config/hypr/scripts/qs-toggle.sh controlcenter controlcenter"
   },
   "custom/battery": {
     "exec": "${HOME}/.config/hypr/apps/waybar/scripts/battery-status.sh",
     "interval": 5,
     "signal": 10,
     "return-type": "json",
-    "max-length": 8,
-    "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/battery-status.sh menu"
-  },
-  "custom/wifi": {
-    "exec": "${HOME}/.config/hypr/scripts/waybar-wifi.sh",
-    "interval": 30,
-    "signal": 8,
-    "return-type": "json",
-    "max-length": 14,
-    "on-click": "${HOME}/.config/hypr/scripts/waybar-wifi.sh menu"
-  },
-  "custom/bluetooth": {
-    "exec": "${HOME}/.config/hypr/scripts/waybar-bluetooth.sh",
-    "interval": 30,
-    "signal": 9,
-    "return-type": "json",
-    "max-length": 14,
-    "on-click": "${HOME}/.config/hypr/scripts/waybar-bluetooth.sh menu"
+    "max-length": 8
   },
   "custom/volume": {
     "exec": "${HOME}/.config/hypr/scripts/waybar-volume.sh",
     "interval": 1,
+    "signal": 2,
     "return-type": "json",
     "max-length": 8,
     "on-click": "${HOME}/.config/hypr/scripts/waybar-volume.sh menu",
@@ -120,6 +130,7 @@
   "custom/mic": {
     "exec": "${HOME}/.config/hypr/apps/waybar/scripts/mic-status.sh",
     "interval": 2,
+    "signal": 3,
     "return-type": "json",
     "max-length": 4,
     "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/mic-toggle.sh"
@@ -131,13 +142,11 @@
     "max-length": 4,
     "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/screenshot.sh take"
   },
-  "idle_inhibitor": {
-    "format": "{icon}",
-    "format-icons": {
-      "activated": "󰅶",
-      "deactivated": "󰒲"
-    },
-    "tooltip-format-activated": "Staying awake — click to allow sleep",
-    "tooltip-format-deactivated": "Normal — click to keep the PC awake"
+  "custom/stay_awake": {
+    "exec": "${HOME}/.config/hypr/apps/waybar/scripts/stay-awake.sh",
+    "return-type": "json",
+    "interval": 2,
+    "signal": 11,
+    "on-click": "${HOME}/.config/hypr/apps/waybar/scripts/stay-awake.sh toggle"
   }
 }
