@@ -94,6 +94,30 @@ fpath=(/usr/share/zsh/site-functions $fpath)
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6272a4"
 
+# ─── Line editing ──────────────────────────────────────
+bindkey -e
+
+# Word-wise motion on ctrl+left / ctrl+right. kitty sends \e[1;5D / \e[1;5C;
+# the \eO.. forms are what a terminal in application-cursor mode sends, so
+# both are bound and the keys keep working under tmux and ssh.
+bindkey "^[[1;5D" backward-word
+bindkey "^[[1;5C" forward-word
+bindkey "^[OD"    backward-word
+bindkey "^[OC"    forward-word
+
+# Delete removes the character *before* the cursor, like backspace.
+bindkey "^[[3~" backward-delete-char
+
+# ctrl+backspace deletes a word. kitty sends C-w for it (see apps/kitty/
+# kitty.conf); ^H is what the key emits anywhere kitty's map does not apply.
+bindkey "^W" backward-kill-word
+bindkey "^H" backward-kill-word
+
+# Which characters count as part of a word. The zsh default folds / . - and _
+# into one word, so ctrl+backspace on a path swallows the whole thing; dropping
+# them makes word motion stop at each path and filename segment instead.
+WORDCHARS='*?[]~&;!#$%^(){}<>'
+
 # tab-completion menu
 autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select

@@ -2,21 +2,23 @@ configuration {
   show-icons: false;
 }
 
+/* Sonoma glass, same tokens as the other menus. */
 * {
-  bg: rgba(14, 13, 12, 0.97);
-  bg-alt: rgba(26, 25, 23, 0.82);
-  fg: #c8c0b0;
-  muted: #7a7268;
-  accent: #9a9488;
-  selected: rgba(180, 168, 140, 0.09);
-  border: rgba(180, 168, 140, 0.24);
+  bg: rgba(28, 28, 30, 0.60);
+  bg-alt: rgba(255, 255, 255, 0.12);
+  fg: rgba(255, 255, 255, 0.95);
+  muted: rgba(255, 255, 255, 0.45);
+  accent: #ffffff;
+  selected: rgba(255, 255, 255, 0.92);
+  accent-fg: #000000;
+  border: rgba(255, 255, 255, 0.18);
 }
 
 window {
   width: 380px;
   border: 1px;
   border-color: @border;
-  border-radius: 10px;
+  border-radius: 18px;
   background-color: @bg;
 }
 
@@ -66,7 +68,7 @@ element {
 
 element selected {
   background-color: @selected;
-  text-color: @accent;
+  text-color: @accent-fg;
 }
 
 element-text {

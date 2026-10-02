@@ -23,7 +23,7 @@ ShellRoot {
     id: root
 
     // ---- geometry: hangs off the waybar island ----
-    readonly property int barHeight: 48        // island: 8px margin + 40px tall
+    readonly property int barHeight: 44        // island: 4px margin + 40px tall
     // The bar's song title starts at x=468; the card's content is inset by
     // `pad`, so this lines the album art up with the title. (The module
     // shifts a little as the app-info title beside it changes width.)
@@ -33,14 +33,21 @@ ShellRoot {
     readonly property int pad: 16
 
     // ---- macOS Sonoma glass material ----
-    readonly property color glass: Qt.rgba(30 / 255, 30 / 255, 30 / 255, 0.35)
+    readonly property color glass: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.60)
     readonly property color edge: Qt.rgba(1, 1, 1, 0.18)
     readonly property color raised: Qt.rgba(1, 1, 1, 0.12)
     readonly property color hover: Qt.rgba(1, 1, 1, 0.08)
     readonly property color fg: Qt.rgba(1, 1, 1, 0.95)
     readonly property color muted: Qt.rgba(1, 1, 1, 0.70)
     readonly property color faint: Qt.rgba(1, 1, 1, 0.45)
-    readonly property color accent: "#0A84FF"
+    // Selection and "on" states are a solid white fill, so anything drawn on
+    // top of one has to invert to black to stay legible. (Named accentFg, not
+    // onAccent — QML reads a property starting with "on" as a signal handler.)
+    readonly property color accent: "#ffffff"
+    readonly property color accentFg: "#000000"
+    readonly property color accentFgMuted: Qt.rgba(0, 0, 0, 0.60)
+    // Hover on a white fill has to go darker — Qt.lighter("#ffffff") is a no-op.
+    readonly property color accentHover: Qt.rgba(0.87, 0.87, 0.87, 1)
     readonly property string uiFont: "Inter"
     readonly property string iconFont: "IosevkaTerm Nerd Font"
 
@@ -121,7 +128,7 @@ ShellRoot {
         radius: size / 2
         color: {
             if (!btn.enabled) return "transparent";
-            if (btn.accented) return area.containsMouse ? Qt.lighter(root.accent, 1.15) : root.accent;
+            if (btn.accented) return area.containsMouse ? root.accentHover : root.accent;
             return area.containsMouse ? root.raised : "transparent";
         }
         Behavior on color { ColorAnimation { duration: 150 } }
@@ -129,7 +136,7 @@ ShellRoot {
         Text {
             anchors.centerIn: parent
             text: btn.glyph
-            color: btn.enabled ? root.fg : root.faint
+            color: !btn.enabled ? root.faint : (btn.accented ? root.accentFg : root.fg)
             font.family: root.iconFont
             font.pixelSize: btn.glyphSize
         }

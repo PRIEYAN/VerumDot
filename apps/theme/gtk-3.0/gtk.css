@@ -11,7 +11,9 @@
 @define-color activebg  rgba(255, 255, 255, 0.15);
 @define-color fg        rgba(255, 255, 255, 0.95);
 @define-color fg2       rgba(255, 255, 255, 0.70);
-@define-color accent    #0A84FF;
+/* A white accent: anything filled with it inverts its text to black. */
+@define-color accent    #ffffff;
+@define-color on-accent #000000;
 
 window,
 window.background,
@@ -79,9 +81,9 @@ button.flat, toolbar button, .toolbar button, toolbutton button {
 }
 button.flat:hover, toolbar button:hover, .toolbar button:hover { background-color: @hoverbg; }
 
-button.suggested-action { background-color: @accent; color: #ffffff; border: none; }
-button.suggested-action:hover { background-color: shade(@accent, 1.15); }
-button.suggested-action label { color: #ffffff; }
+button.suggested-action { background-color: @accent; color: @on-accent; border: none; }
+button.suggested-action:hover { background-color: shade(@accent, 0.88); }
+button.suggested-action label { color: @on-accent; }
 button.destructive-action { background-color: rgba(255, 105, 97, 0.85); color: #ffffff; }
 
 /* ── entries ───────────────────────────────────────────────────────────── */
@@ -118,11 +120,51 @@ list row, .sidebar row {
   color: @fg;
 }
 row:hover    { background-color: @hoverbg; }
-row:selected { background-color: rgba(10, 132, 255, 0.28); color: @fg; }
+row:selected { background-color: rgba(255, 255, 255, 0.92); color: #000000; }
 
-treeview:selected, treeview.view:selected { background-color: rgba(10, 132, 255, 0.28); color: @fg; }
+treeview:selected, treeview.view:selected { background-color: rgba(255, 255, 255, 0.92); color: #000000; }
+
+/* A selected row is a solid white fill, so everything inside it has to invert
+   to black. The rules above set `color` on `*`, `label` and `image` directly,
+   which beats plain inheritance from the row — so the descendants have to be
+   named explicitly here rather than relying on `row:selected { color }`. */
+row:selected,
+row:selected label,
+row:selected image,
+row:selected box,
+row:selected > *,
+treeview:selected,
+treeview.view:selected,
+treeview:selected label,
+treeview.view:selected label { color: #000000; }
+
 
 separator { background-color: @line; min-width: 1px; min-height: 1px; }
+
+/* ── dialogs ───────────────────────────────────────────────────────────── */
+/* GtkMessageDialog carries a more specific selector than the plain `window`
+   rule above, so its background has to be named explicitly or it stays light
+   while the global label rule paints the text white. */
+messagedialog.background,
+window.dialog.message,
+window.messagedialog {
+  background-color: rgba(42, 42, 45, 0.98);
+  background-image: none;
+  color: @fg;
+}
+
+messagedialog label,
+window.dialog.message label { color: @fg; }
+
+.dialog-action-area > button,
+messagedialog .dialog-action-box > button {
+  background-color: transparent;
+  background-image: none;
+  color: @fg;
+}
+.dialog-action-area > button:hover { background-color: @hoverbg; }
+.dialog-action-area > button.destructive-action { color: #FF6961; }
+
 
 /* ── popovers / menus ──────────────────────────────────────────────────── */
 
@@ -168,7 +210,7 @@ check, radio {
   border-radius: 6px;
   color: @fg;
 }
-check:checked, radio:checked { background-color: @accent; border-color: @accent; color: #ffffff; }
+check:checked, radio:checked { background-color: @accent; border-color: @accent; color: @on-accent; }
 
 scale trough { background-color: rgba(255, 255, 255, 0.18); border-radius: 999px; min-height: 5px; }
 scale highlight { background-color: @fg; border-radius: 999px; }

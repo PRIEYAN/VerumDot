@@ -8,10 +8,10 @@ configuration {
 }
 
 * {
-    bg-color:            rgba(30, 30, 30, 0.35);
-    bg-selected:         rgba(10, 132, 255, 0.28);
+    bg-color:            rgba(28, 28, 30, 0.60);
+    bg-selected:         rgba(255, 255, 255, 0.28);
     fg-color:            rgba(255, 255, 255, 0.95);
-    accent-color:        #0A84FF;
+    accent-color:        #ffffff;
     border-color:        rgba(255, 255, 255, 0.18);
 }
 
@@ -44,10 +44,10 @@ element {
     text-color:          rgba(255, 255, 255, 0.95);
 }
 
-/* Selected fills with macOS system blue; the glyph stays white. */
+/* Selected fills solid white; the glyph inverts to black to stay legible. */
 element selected {
-    background-color:    rgba(10, 132, 255, 0.85);
-    text-color:          #ffffff;
+    background-color:    rgba(255, 255, 255, 0.92);
+    text-color:          #000000;
     border:              0px;
 }
 

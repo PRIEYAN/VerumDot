@@ -9,7 +9,7 @@ configuration {
 }
 
 * {
-    bg:                 rgba(30, 30, 30, 0.35);
+    bg:                 rgba(28, 28, 30, 0.60);
     fg:                 rgba(255, 255, 255, 0.95);
     fg-muted:           rgba(255, 255, 255, 0.55);
     line:               rgba(255, 255, 255, 0.18);

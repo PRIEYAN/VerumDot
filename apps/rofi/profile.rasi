@@ -9,13 +9,13 @@ configuration {
 }
 
 * {
-    bg-color:            rgba(30, 30, 30, 0.35);
+    bg-color:            rgba(28, 28, 30, 0.60);
     fg-color:            rgba(255, 255, 255, 0.95);
     fg-muted:            rgba(255, 255, 255, 0.55);
     line:                rgba(255, 255, 255, 0.18);
     alert-color:         #ff0000;
-    accent:              #0A84FF;
-    accent-fg:           #ffffff;
+    accent:              #ffffff;
+    accent-fg:           #000000;
 }
 
 window {
@@ -70,7 +70,7 @@ element {
 }
 
 element selected {
-    background-color:    rgba(10, 132, 255, 0.85);
+    background-color:    rgba(255, 255, 255, 0.92);
     text-color:          @accent-fg;
 }
 

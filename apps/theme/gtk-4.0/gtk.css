@@ -15,7 +15,9 @@
 @define-color activebg  rgba(255, 255, 255, 0.15);
 @define-color fg        rgba(255, 255, 255, 0.95);
 @define-color fg2       rgba(255, 255, 255, 0.70);
-@define-color accent    #0A84FF;
+/* A white accent: anything filled with it inverts its text to black. */
+@define-color accent    #ffffff;
+@define-color on-accent #000000;
 
 /* ── window shell ──────────────────────────────────────────────────────── */
 
@@ -106,10 +108,13 @@ button.flat:hover, headerbar button.flat:hover { background-color: @hoverbg; }
 
 button.suggested-action {
   background-color: @accent;
-  color: #ffffff;
+  color: @on-accent;
   border: none;
 }
-button.suggested-action:hover { background-color: shade(@accent, 1.15); }
+button.suggested-action:hover { background-color: shade(@accent, 0.88); }
+/* Same story as the selected row: the global `label` rule outranks the
+   button's own colour, so the label has to be named. */
+button.suggested-action label { color: @on-accent; }
 button.destructive-action { background-color: rgba(255, 105, 97, 0.85); color: #ffffff; }
 
 /* ── entries / path bar ────────────────────────────────────────────────── */
@@ -173,9 +178,92 @@ listview row {
 }
 
 row:hover    { background-color: @hoverbg; }
-row:selected { background-color: rgba(10, 132, 255, 0.28); color: @fg; }
+row:selected { background-color: rgba(255, 255, 255, 0.92); color: #000000; }
+
+/* A selected row is a solid white fill, so everything inside it has to invert
+   to black. The rules above set `color` on `*`, `label` and `image` directly,
+   which beats plain inheritance from the row — so the descendants have to be
+   named explicitly here rather than relying on `row:selected { color }`. */
+row:selected,
+row:selected label,
+row:selected image,
+row:selected box,
+row:selected > *,
+treeview:selected,
+treeview.view:selected,
+treeview:selected label,
+treeview.view:selected label { color: #000000; }
+
 
 separator { background-color: @line; min-width: 1px; min-height: 1px; }
+
+
+/* ── libadwaita dialogs (AdwAlertDialog / AdwMessageDialog) ─────────────── */
+/* A modern AdwDialog is NOT a `window` node — it renders inside its parent as
+   `dialog-host > dialog.alert > sheet`, so the window rules at the top of this
+   file never reach it. Left alone it keeps libadwaita's own light
+   --dialog-bg-color while `*, label, image { color: @fg }` paints its text
+   white: white on white, unreadable. The fix is the custom property below;
+   the explicit selectors after it cover the node names directly, in case an
+   app's own stylesheet got there first.
+
+   Opaque, unlike the rest of the theme: this sheet floats over the app's own
+   content, not the wallpaper, so translucency here just makes it hard to read
+   rather than frosted. */
+/* These have to be set as CSS custom properties on :root, not as named
+   colours: GTK4 resolves @define-color per provider, so redefining
+   @dialog_bg_color here would never reach libadwaita's own
+   `--dialog-bg-color: @dialog_bg_color` declaration. Custom properties
+   inherit across providers and this file loads at USER priority, so a :root
+   declaration here outranks libadwaita's. */
+:root {
+  --dialog-bg-color: rgba(42, 42, 45, 0.98);
+  --dialog-fg-color: rgba(255, 255, 255, 0.95);
+  /* Same class of bug waiting to happen on every other sheet-like surface:
+     a light default underneath text this theme forces white. */
+  --popover-bg-color: rgba(38, 38, 40, 0.98);
+  --popover-fg-color: rgba(255, 255, 255, 0.95);
+  --card-bg-color: rgba(255, 255, 255, 0.12);
+  --card-fg-color: rgba(255, 255, 255, 0.95);
+  --view-bg-color: rgba(30, 30, 30, 0.72);
+  --view-fg-color: rgba(255, 255, 255, 0.95);
+  --window-bg-color: rgba(30, 30, 30, 0.72);
+  --window-fg-color: rgba(255, 255, 255, 0.95);
+}
+
+window.dialog.message,
+window.messagedialog,
+window.dialog-window.alert,
+dialog-host > dialog sheet,
+dialog-host > dialog.alert sheet {
+  background-color: var(--dialog-bg-color);
+  background-image: none;
+  color: @fg;
+}
+
+/* Heading, body text and the buttons along the bottom. */
+dialog.alert sheet label,
+window.messagedialog label,
+window.dialog.message label { color: @fg; }
+
+dialog.alert sheet .body,
+window.messagedialog .body,
+window.dialog.message .body { color: @fg2; }
+
+.dialog-action-area,
+.dialog-action-area > button,
+.response-area > button {
+  background-color: transparent;
+  background-image: none;
+  color: @fg;
+}
+.dialog-action-area > button:hover,
+.response-area > button:hover { background-color: @hoverbg; }
+
+/* A destructive response (Replace, Delete) keeps its warning colour. */
+.response-area > button.destructive-action,
+.dialog-action-area > button.destructive-action,
+.response-area > button.destructive-action label { color: #FF6961; }
 
 /* ── popovers / menus: their own floating glass sheet ──────────────────── */
 
@@ -229,7 +317,7 @@ checkbutton check, radiobutton radio {
 checkbutton check:checked, radiobutton radio:checked {
   background-color: @accent;
   border-color: @accent;
-  color: #ffffff;
+  color: @on-accent;
 }
 
 scale trough { background-color: rgba(255, 255, 255, 0.18); border-radius: 999px; min-height: 5px; }

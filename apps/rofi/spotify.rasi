@@ -9,12 +9,12 @@ configuration {
 }
 
 * {
-    bg:                 rgba(30, 30, 30, 0.35);
+    bg:                 rgba(28, 28, 30, 0.60);
     fg:                 rgba(255, 255, 255, 0.95);
     muted:              rgba(255, 255, 255, 0.45);
     line:               rgba(255, 255, 255, 0.18);
-    accent:             #0A84FF;
-    accent-fg:          #ffffff;
+    accent:             #ffffff;
+    accent-fg:          #000000;
 
     background-color:   transparent;
     text-color:         @fg;
@@ -114,7 +114,7 @@ element alternate.normal {
 }
 
 element selected.normal {
-    background-color:   rgba(10, 132, 255, 0.85);
+    background-color:   rgba(255, 255, 255, 0.92);
     text-color:         @accent-fg;
 }
 

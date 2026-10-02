@@ -153,7 +153,7 @@ tooltip label {
 #custom-ws13.active, #custom-ws14.active {
   color: rgba(255, 255, 255, 0.95);
   background: transparent;
-  border-bottom: 2px solid #0A84FF;
+  border-bottom: 2px solid #ffffff;
 }
 
 #custom-ws1.active:hover, #custom-ws2.active:hover, #custom-ws3.active:hover,
@@ -162,7 +162,7 @@ tooltip label {
 #custom-ws10.active:hover, #custom-ws11.active:hover, #custom-ws12.active:hover,
 #custom-ws13.active:hover, #custom-ws14.active:hover {
   background: transparent;
-  border-bottom: 2px solid #0A84FF;
+  border-bottom: 2px solid #ffffff;
 }
 
 /* ── right: status colours, macOS system palette, used sparingly ────────── */

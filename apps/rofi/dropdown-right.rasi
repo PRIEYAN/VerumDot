@@ -3,12 +3,12 @@
 // from under their icons in the top-right corner.
 
 * {
-    bg:                 rgba(30, 30, 30, 0.35);   // frosted glass, same as waybar
+    bg:                 rgba(28, 28, 30, 0.60);   // frosted glass, same as waybar
     fg:                 rgba(255, 255, 255, 0.95);
     fg-muted:           rgba(255, 255, 255, 0.55);
     line:               rgba(255, 255, 255, 0.18);
-    accent:             #0A84FF;   // selection: macOS system blue
-    accent-fg:          #ffffff;   // selection text
+    accent:             #ffffff;   // selection: a solid white fill
+    accent-fg:          #000000;   // selection text, inverted on the white fill
     hover:              rgba(255, 255, 255, 0.08);
 
     background-color:   transparent;
@@ -87,7 +87,7 @@ element alternate.normal {
 element selected.normal,
 element selected.active,
 element selected.urgent {
-    background-color:   rgba(10, 132, 255, 0.85);
+    background-color:   rgba(255, 255, 255, 0.92);
     text-color:         @accent-fg;
 }
 

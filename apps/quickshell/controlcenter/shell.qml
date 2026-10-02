@@ -28,12 +28,12 @@ ShellRoot {
     id: root
 
     // ---- geometry ----
-    // waybar island: 8px top margin + 40px tall, so its underside is at 48.
-    readonly property int barHeight: 48
+    // waybar island: 4px top margin + 40px tall, so its underside is at 44.
+    readonly property int barHeight: 44
     readonly property int panelWidth: 380
     readonly property int edgeGap: 8
-    // waybar island side margin, from apps/waybar/config.jsonc.
-    readonly property int islandInset: 12
+    // waybar island side margin, from apps/waybar/config.jsonc ("4 6 0 6").
+    readonly property int islandInset: 6
     readonly property int pad: 16
     readonly property int tileHeight: 64
     readonly property int tileGap: 10
@@ -47,10 +47,10 @@ ShellRoot {
     readonly property int hotSize: 12
 
     // ---- macOS Sonoma glass material ----
-    // The panel sits at 72% so white text stays legible over a bright
+    // The panel sits at 60% so white text stays legible over a bright
     // wallpaper; the frost itself comes from the 4-pass blur in hypr.conf.
     // Cards layered on it use the 12% white "raised" material.
-    readonly property color glass: Qt.rgba(30 / 255, 30 / 255, 30 / 255, 0.35)
+    readonly property color glass: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.60)
     readonly property color edge: Qt.rgba(1, 1, 1, 0.18)
     readonly property color tileOff: Qt.rgba(1, 1, 1, 0.12)
     readonly property color trackOff: Qt.rgba(1, 1, 1, 0.18)
@@ -59,9 +59,14 @@ ShellRoot {
     readonly property color fg: Qt.rgba(1, 1, 1, 0.95)
     readonly property color muted: Qt.rgba(1, 1, 1, 0.70)
     readonly property color faint: Qt.rgba(1, 1, 1, 0.45)
-    // macOS system blue, used only on active toggles and the selected row —
-    // never as a large fill.
-    readonly property color accent: "#0A84FF"
+    // Selection and "on" states are a solid white fill, so anything drawn on
+    // top of one has to invert to black to stay legible. (Named accentFg, not
+    // onAccent — QML reads a property starting with "on" as a signal handler.)
+    readonly property color accent: "#ffffff"
+    readonly property color accentFg: "#000000"
+    readonly property color accentFgMuted: Qt.rgba(0, 0, 0, 0.60)
+    // Hover on a white fill has to go darker — Qt.lighter("#ffffff") is a no-op.
+    readonly property color accentHover: Qt.rgba(0.87, 0.87, 0.87, 1)
     readonly property color danger: "#FF6961"
     // Falls back to Noto Sans until inter-font is installed.
     readonly property string uiFont: "Inter"
@@ -742,7 +747,7 @@ ShellRoot {
             color: {
                 if (tile.active) {
                     return iconHover.containsMouse
-                        ? Qt.lighter(root.accent, 1.15)
+                        ? root.accentHover
                         : root.accent;
                 }
                 return iconHover.containsMouse ? Qt.rgba(1, 1, 1, 0.28) : Qt.rgba(1, 1, 1, 0.18);
@@ -753,7 +758,7 @@ ShellRoot {
             Text {
                 anchors.centerIn: parent
                 text: tile.glyph
-                color: root.fg
+                color: tile.active ? root.accentFg : root.fg
                 font.family: root.iconFont
                 font.pixelSize: 16
             }
@@ -816,7 +821,8 @@ ShellRoot {
             radius: width / 2
             y: 3
             x: toggle.on ? toggle.width - width - 3 : 3
-            color: "#ffffff"
+            // The knob inverts on the white "on" track, or it vanishes into it.
+            color: toggle.on ? root.accentFg : "#ffffff"
             Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
         }
 
@@ -904,7 +910,7 @@ ShellRoot {
         height: root.listRowHeight
         radius: 10
         color: listRow.active
-            ? Qt.rgba(10 / 255, 132 / 255, 255 / 255, 0.28)
+            ? root.accent
             : (rowHover.containsMouse ? root.hover : "transparent")
 
         Behavior on color { ColorAnimation { duration: 150 } }
@@ -916,7 +922,7 @@ ShellRoot {
             anchors.verticalCenter: parent.verticalCenter
             width: 22
             text: listRow.glyph
-            color: root.fg
+            color: listRow.active ? root.accentFg : root.fg
             font.family: root.iconFont
             font.pixelSize: 15
         }
@@ -932,7 +938,7 @@ ShellRoot {
             Text {
                 width: parent.width
                 text: listRow.title
-                color: root.fg
+                color: listRow.active ? root.accentFg : root.fg
                 font.family: root.uiFont
                 font.pixelSize: 12
                 elide: Text.ElideRight
@@ -942,7 +948,7 @@ ShellRoot {
                 width: parent.width
                 visible: listRow.note !== ""
                 text: listRow.note
-                color: root.muted
+                color: listRow.active ? root.accentFgMuted : root.muted
                 font.family: root.uiFont
                 font.pixelSize: 10
                 elide: Text.ElideRight
@@ -955,7 +961,7 @@ ShellRoot {
             anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
             text: listRow.trailing
-            color: listRow.active ? root.muted : root.faint
+            color: listRow.active ? root.accentFgMuted : root.faint
             font.family: root.iconFont
             font.pixelSize: 11
         }

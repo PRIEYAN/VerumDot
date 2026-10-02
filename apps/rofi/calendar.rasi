@@ -11,14 +11,14 @@ configuration {
 }
 
 * {
-    surface:            rgba(30, 30, 30, 0.35);
+    surface:            rgba(28, 28, 30, 0.60);
     raised:             rgba(255, 255, 255, 0.12);
     line:               rgba(255, 255, 255, 0.18);
     hover:              rgba(255, 255, 255, 0.08);
     fg:                 rgba(255, 255, 255, 0.95);
     muted:              rgba(255, 255, 255, 0.70);
     faint:              rgba(255, 255, 255, 0.45);
-    accent:             #0A84FF;
+    accent:             #ffffff;
 
     background-color:   transparent;
     text-color:         @fg;
@@ -29,8 +29,9 @@ window {
     transparency:       "real";
     location:           north west;
     anchor:             north west;
-    /* Clears the floating waybar island (8px margin + 40px tall). */
-    x-offset:           12px;
+    /* Left edge flush with the waybar island, whose side margin is 6px
+       (apps/waybar/config.jsonc, "margin": "4 6 0 6"). */
+    x-offset:           6px;
     y-offset:           0px;
     width:              304px;
     border:             1px solid;
@@ -113,10 +114,10 @@ element alternate.urgent {
     text-color:         @faint;
 }
 
-/* Hovered / selected day: macOS picks it out with a filled accent pill. */
+/* Hovered / selected day: a filled white pill, text inverted to black. */
 element selected.normal {
-    background-color:   rgba(10, 132, 255, 0.85);
-    text-color:         #ffffff;
+    background-color:   rgba(255, 255, 255, 0.92);
+    text-color:         #000000;
 }
 
 element selected.urgent {

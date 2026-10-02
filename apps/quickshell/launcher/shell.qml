@@ -29,13 +29,20 @@ ShellRoot {
     readonly property int topFraction: 20        // % of screen height above the card
 
     // ---- macOS Sonoma glass material ----
-    readonly property color glass: Qt.rgba(30 / 255, 30 / 255, 30 / 255, 0.35)
+    readonly property color glass: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.60)
     readonly property color edge: Qt.rgba(1, 1, 1, 0.18)
     readonly property color hover: Qt.rgba(1, 1, 1, 0.08)
     readonly property color fg: Qt.rgba(1, 1, 1, 0.95)
     readonly property color muted: Qt.rgba(1, 1, 1, 0.70)
     readonly property color faint: Qt.rgba(1, 1, 1, 0.45)
-    readonly property color accent: "#0A84FF"
+    // Selection and "on" states are a solid white fill, so anything drawn on
+    // top of one has to invert to black to stay legible. (Named accentFg, not
+    // onAccent — QML reads a property starting with "on" as a signal handler.)
+    readonly property color accent: "#ffffff"
+    readonly property color accentFg: "#000000"
+    readonly property color accentFgMuted: Qt.rgba(0, 0, 0, 0.60)
+    // Hover on a white fill has to go darker — Qt.lighter("#ffffff") is a no-op.
+    readonly property color accentHover: Qt.rgba(0.87, 0.87, 0.87, 1)
     // Falls back to Noto Sans until inter-font is installed.
     readonly property string uiFont: "Inter"
     readonly property string iconFont: "IosevkaTerm Nerd Font"
@@ -199,7 +206,7 @@ ShellRoot {
 
                     color: root.fg
                     selectionColor: root.accent
-                    selectedTextColor: "#ffffff"
+                    selectedTextColor: root.accentFg
                     font.family: root.uiFont
                     font.pixelSize: 20
                     clip: true
@@ -264,11 +271,9 @@ ShellRoot {
                         readonly property bool active: row.index === root.selected
 
                         radius: 12
-                        // Subtle hover highlight; the selected row gets a
-                        // restrained accent tint rather than a hard fill.
-                        color: row.active
-                            ? Qt.rgba(10 / 255, 132 / 255, 255 / 255, 0.28)
-                            : "transparent"
+                        // The selected row takes a hard white fill; its
+                        // text inverts to black just below.
+                        color: row.active ? root.accent : "transparent"
                         Behavior on color { ColorAnimation { duration: 150 } }
 
                         IconImage {
@@ -292,7 +297,7 @@ ShellRoot {
                             Text {
                                 width: parent.width
                                 text: row.modelData.name
-                                color: root.fg
+                                color: row.active ? root.accentFg : root.fg
                                 font.family: root.uiFont
                                 font.pixelSize: 15
                                 elide: Text.ElideRight
@@ -302,7 +307,7 @@ ShellRoot {
                                 width: parent.width
                                 visible: text !== ""
                                 text: row.modelData.comment || row.modelData.genericName || ""
-                                color: root.muted
+                                color: row.active ? root.accentFgMuted : root.muted
                                 font.family: root.uiFont
                                 font.pixelSize: 12
                                 elide: Text.ElideRight
@@ -316,7 +321,7 @@ ShellRoot {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: row.active
                             text: "↵"
-                            color: root.muted
+                            color: row.active ? root.accentFgMuted : root.muted
                             font.family: root.iconFont
                             font.pixelSize: 15
                         }
