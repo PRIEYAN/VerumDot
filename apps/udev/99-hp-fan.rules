@@ -1,0 +1,16 @@
+# hp-wmi fan control (HP Victus and friends) — let the control centre and
+# SUPER+P pin the fans without a root prompt.
+#
+# hp-wmi exposes exactly one writable fan knob, pwm1_enable, with two
+# meaningful values: 2 is the BIOS automatic curve, 0 pins both fans at
+# maximum. There is no duty-cycle register, so those are the only two states
+# the hardware offers. The node is root-only by default; hand it to wheel.
+#
+# Install:
+#   sudo cp 99-hp-fan.rules /etc/udev/rules.d/99-hp-fan.rules
+#   sudo udevadm control --reload
+#   sudo udevadm trigger --subsystem-match=hwmon
+
+ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{name}=="hp", \
+  RUN+="/usr/bin/chgrp wheel /sys%p/pwm1_enable", \
+  RUN+="/usr/bin/chmod 0664 /sys%p/pwm1_enable"

@@ -1001,6 +1001,29 @@ apply_services() {
   done
 }
 
+apply_fan() {
+  (( DO_LID )) || return 0
+  local src="$TARGET/apps/udev/99-hp-fan.rules"
+  [[ -f "$src" ]] || return 0
+  # Only hp-wmi machines have the node this rule hands over; skip silently
+  # everywhere else rather than littering /etc/udev with a dead rule.
+  local h found=0
+  for h in /sys/class/hwmon/hwmon*; do
+    [[ -r "$h/name" ]] || continue
+    [[ "$(<"$h/name")" == "hp" ]] && [[ -e "$h/pwm1_enable" ]] && { found=1; break; }
+  done
+  (( found )) || return 0
+  headline "Fan control  ·  let the panel pin the fans without root"
+  (( SUDO_OK )) || { warn "needs root — copy $src to /etc/udev/rules.d/ yourself"; return 0; }
+  if sudo cp "$src" /etc/udev/rules.d/99-hp-fan.rules; then
+    sudo udevadm control --reload >>"$LOG" 2>&1
+    sudo udevadm trigger --subsystem-match=hwmon >>"$LOG" 2>&1
+    ok "pwm1_enable handed to the wheel group"
+  else
+    warn "could not install the fan udev rule"
+  fi
+}
+
 apply_lid() {
   (( DO_LID )) || return 0
   local src="$TARGET/apps/systemd/10-lid-lock.conf"
@@ -1142,6 +1165,7 @@ main() {
     apply_theme
     apply_services
     apply_lid
+    apply_fan
   fi
   sudo_end
   finish

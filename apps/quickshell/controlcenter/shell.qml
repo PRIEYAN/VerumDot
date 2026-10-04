@@ -83,6 +83,9 @@ ShellRoot {
     property bool powerExpanded: false
     property bool audioExpanded: false
     property bool brightnessExpanded: false
+    property bool fanExpanded: false
+    // auto | normal | max — see scripts/fan-control.sh for what each resolves to.
+    property string fanMode: "auto"
 
     // .../hypr — this config lives at hypr/apps/quickshell/controlcenter.
     readonly property string riceDir: Quickshell.shellPath("../../..")
@@ -462,6 +465,60 @@ ShellRoot {
         }
     }
 
+    // ---- fan ----
+    // hp-wmi exposes one writable knob, pwm1_enable, with two meaningful
+    // values: the BIOS automatic curve, or both fans pinned at maximum. There
+    // is no duty-cycle register, so "fan speed" is a three-way *setting* rather
+    // than a slider:
+    //
+    //   auto    follow the power mode — performance pins the fans at max,
+    //           battery and balanced hand them back to the BIOS curve
+    //   normal  always the BIOS curve, even in performance mode
+    //   max     always pinned, even in battery mode
+    //
+    // scripts/fan-control.sh owns the sysfs write and the persisted choice;
+    // this only reads and drives it, so SUPER+P and the panel cannot disagree.
+    readonly property string fanScript: riceDir + "/scripts/fan-control.sh"
+
+    readonly property string fanLabel: {
+        switch (root.fanMode) {
+        case "max":    return "Max";
+        case "normal": return "Normal";
+        default:       return "Auto";
+        }
+    }
+
+    Process {
+        id: fanRead
+        command: [root.fanScript, "get"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const v = text.trim();
+                if (v === "auto" || v === "normal" || v === "max") root.fanMode = v;
+            }
+        }
+    }
+
+    Process { id: fanWrite }
+
+    function setFanMode(m) {
+        root.fanMode = m;                 // optimistic, so the row ticks at once
+        fanWrite.running = false;
+        fanWrite.command = [root.fanScript, "set", m];
+        fanWrite.running = true;
+    }
+
+    Process { id: fanApply }
+
+    // On "auto" the resolved pwm depends on the power mode, so a mode change
+    // has to re-run the resolution. Harmless on "normal"/"max" — fan-control.sh
+    // skips the write when the node already holds the value it wants.
+    function applyFan() {
+        fanApply.running = false;
+        fanApply.command = [root.fanScript, "apply"];
+        fanApply.running = true;
+    }
+
     // ---- keeping waybar in step ----
     // waybar custom modules only re-exec on their poll interval (up to 10s),
     // so a change made in here used to take that long to show up in the bar.
@@ -518,10 +575,19 @@ ShellRoot {
     // Fires for SUPER+P too, not just clicks in here.
     Connections {
         target: PowerProfiles
-        function onProfileChanged() { root.syncWaybarMode() }
+        function onProfileChanged() {
+            root.syncWaybarMode();
+            root.applyFan();
+        }
     }
 
-    Component.onCompleted: root.syncWaybarMode()
+    Component.onCompleted: {
+        root.syncWaybarMode();
+        fanRead.running = true;
+        // pwm1_enable resets to the BIOS default on every boot, so the saved
+        // choice has to be re-asserted once the shell comes up.
+        root.applyFan();
+    }
 
     // ---- power actions (mirrors scripts/power-menu.sh) ----
     Process { id: powerProc }
@@ -577,6 +643,7 @@ ShellRoot {
 
     function open() {
         brightnessRead.running = true;
+        fanRead.running = true;
         eyeComfortRead.running = true;
         privacyRead.running = true;
         shown = true;
@@ -588,6 +655,7 @@ ShellRoot {
         powerExpanded = false;
         audioExpanded = false;
         brightnessExpanded = false;
+        fanExpanded = false;
     }
 
     IpcHandler {
@@ -1297,14 +1365,55 @@ ShellRoot {
                         }
                     }
 
-                    // Power profile — one button, cycles the three modes.
+                    // Power profile — the body cycles the three modes (same
+                    // as SUPER+P), the icon opens the fan drawer underneath.
                     Tile {
                         width: parent.width
                         glyph: root.profileGlyph
                         label: "Power mode"
-                        sublabel: root.profileLabel
+                        sublabel: root.profileLabel + "  ·  Fan " + root.fanLabel.toLowerCase()
                         active: PowerProfiles.profile !== PowerProfile.Balanced
+                                || root.fanExpanded
+                        splitIcon: true
+                        onIconClicked: root.fanExpanded = !root.fanExpanded
                         onClicked: root.cycleProfile()
+                    }
+
+                    // Fan override. Deliberately independent of the power mode:
+                    // "normal" keeps the fans civil while the CPU runs flat out,
+                    // "max" pins them even on battery.
+                    Column {
+                        width: parent.width
+                        spacing: 2
+                        visible: root.fanExpanded
+
+                        ListRow {
+                            width: parent.width
+                            glyph: "󰑐"
+                            title: "Auto"
+                            note: "Follows the power mode"
+                            trailing: root.fanMode === "auto" ? "󰄬" : ""
+                            active: root.fanMode === "auto"
+                            onClicked: root.setFanMode("auto")
+                        }
+                        ListRow {
+                            width: parent.width
+                            glyph: "󰈐"
+                            title: "Normal"
+                            note: "BIOS curve, even in performance"
+                            trailing: root.fanMode === "normal" ? "󰄬" : ""
+                            active: root.fanMode === "normal"
+                            onClicked: root.setFanMode("normal")
+                        }
+                        ListRow {
+                            width: parent.width
+                            glyph: "󰓅"
+                            title: "Max"
+                            note: "Pinned at full speed, even on battery"
+                            trailing: root.fanMode === "max" ? "󰄬" : ""
+                            active: root.fanMode === "max"
+                            onClicked: root.setFanMode("max")
+                        }
                     }
 
                     // Mic | stay awake

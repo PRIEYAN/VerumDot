@@ -28,6 +28,11 @@ if [ "$1" = "toggle" ]; then
       *)           sudo cpupower frequency-set -g ondemand ;;
     esac
   fi
+  # Re-assert the fan setting against the new mode. On "auto" that is what
+  # makes performance pin the fans at max and the other two hand them back to
+  # the BIOS curve; on an explicit normal/max it just holds the pin in place.
+  "$HYPR_SCRIPTS/fan-control.sh" apply >/dev/null 2>&1 || true
+
   # Repaint the battery module, which colours its glyph by mode
   # (red = performance, green = battery, white = normal).
   pkill -RTMIN+10 waybar >/dev/null 2>&1 || true
