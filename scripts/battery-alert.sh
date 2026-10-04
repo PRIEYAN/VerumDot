@@ -1,64 +1,36 @@
 #!/usr/bin/env bash
+# Low-battery warnings, fired once per threshold while discharging and
+# re-armed once the charge climbs back or AC returns.
 #
-# Low-battery mako alerts at 20% and 15%.
-# Fires once per threshold while discharging; resets after charge climbs
-# back above that threshold (or while AC is plugged in).
+# The thresholds and their copy are data in lib/domain/battery.sh. The old
+# version hardcoded two branches here and called a four-parameter notify
+# helper with three arguments for the 15% case, so the critical warning ran
+# `notify-send -u ""` and was rejected by the daemon — the more urgent of
+# the two alerts was the one that did not appear.
 
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use domain/battery
 
-STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/hypr-battery"
-mkdir -p "$STATE_DIR"
+readonly POLL_SECONDS=30
 
-bat_path() {
-  local d
-  for d in /sys/class/power_supply/BAT*; do
-    [[ -r "$d/capacity" ]] && { printf '%s\n' "$d"; return 0; }
-  done
-  return 1
-}
+battery::present || log::die -c 0 "no battery on this machine; nothing to watch"
 
-notify_once() {
-  local level=$1 title=$2 body=$3 urgency=$4
-  local flag="$STATE_DIR/notified-${level}"
-  [[ -f "$flag" ]] && return 0
-  notify-send -u "$urgency" -a "VerumDot" -i battery-caution \
-    "$title" "$body" 2>/dev/null \
-    || notify-send -u "$urgency" -a "VerumDot" "$title" "$body"
-  : >"$flag"
-}
-
-clear_flag() {
-  rm -f "$STATE_DIR/notified-$1"
-}
-
-BAT="$(bat_path)" || exit 0
+trap 'exit 0' TERM INT
 
 while :; do
-  cap=$(cat "$BAT/capacity" 2>/dev/null || echo 100)
-  status=$(cat "$BAT/status" 2>/dev/null || echo Unknown)
-
-  # Charging / full → clear flags so the next discharge can alert again.
-  if [[ "$status" == "Charging" || "$status" == "Full" || "$status" == "Not charging" ]]; then
-    clear_flag 20
-    clear_flag 15
+  capacity=$(battery::capacity)
+  if battery::charging; then
+    battery::clear_warnings
   else
-    # Discharging (or Unknown): fire thresholds once each.
-    if (( cap <= 15 )); then
-      notify_once 15 "Battery critical — ${cap}%" \
-        "Yo am dieing please charge it son"
-      # Hitting 15 also covers 20 — mark both so we don't double-spam.
-      : >"$STATE_DIR/notified-20"
-    elif (( cap <= 20 )); then
-      notify_once 20 "Battery low — ${cap}%" \
-        "Battery is at ${cap}%. charge it dude" critical
-    else
-      # Climbed back above a threshold without AC (rare) → allow re-alert.
-      (( cap > 20 )) && clear_flag 20
-      (( cap > 15 )) && clear_flag 15
-    fi
+    battery::check_thresholds "$capacity"
+    battery::reset_above "$capacity"
   fi
-
-  sleep 30
+  sleep "$POLL_SECONDS"
 done

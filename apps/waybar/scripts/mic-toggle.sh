@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
+# Toggle the default microphone. Bound to the mic module's click handler.
 
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../scripts" && pwd)/_paths.sh"
-if command -v pamixer >/dev/null 2>&1; then
-  pamixer --default-source -t 2>/dev/null || pamixer -t
-else
-  rofi -e 'pamixer not installed'
-fi
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use domain/audio
+
+audio::toggle_mic

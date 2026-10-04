@@ -1,130 +1,98 @@
 #!/usr/bin/env bash
+# Profile dropdown: identity, live system stats, a todo list and a stopwatch.
 #
-# Profile dropdown — rofi only, no eww.
-# Shows identity, live system stats, a todo list, and a stopwatch.
+#   a todo row            toggle done/undone
+#   "+ add todo"          prompt for text and append
+#   the timer row         start / pause
+#   "reset timer"         back to 00:00:00
+#   Alt+Return on a todo  remove it instead of toggling
 #
-# Row selection behaviour:
-#   a todo row             -> toggle done/undone
-#   "+ add todo"           -> prompts for text, appends
-#   timer row               -> start/pause
-#   "reset timer"          -> resets to 00:00:00
-#   Alt+Return on a todo   -> remove it instead of toggling
-#
-# Second click on the star icon closes an already-open menu (same toggle
-# pattern as calendar-popup.sh).
+# Row indices are computed from the rendered sections rather than hardcoded,
+# because the stats block changes length with the hardware (no GPU row
+# without nvidia-smi, no SWAP row without swap).
 
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-set -uo pipefail
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli ui/rofi ui/markup ui/theme core/paths
 
-THEME="${HYPR_ROFI}/profile.rasi"
-STATS_SH="${HYPR_WAYBAR_SCRIPTS}/profile-stats.sh"
-TODOS_SH="${HYPR_WAYBAR_SCRIPTS}/profile-todos.sh"
-TIMER_SH="${HYPR_WAYBAR_SCRIPTS}/profile-timer.sh"
+readonly THEME=profile
+readonly ADD_TODO_LABEL='+ add todo'
+readonly RESET_TIMER_LABEL='reset timer'
+readonly SEPARATOR='---'
+readonly ALT_RETURN=10          # rofi's -kb-custom-1 exit code
 
-STATE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/hypr"
-mkdir -p "$STATE_DIR"
+readonly STATS="${HYPR_WAYBAR_SCRIPTS}/profile-stats.sh"
+readonly TODOS="${HYPR_WAYBAR_SCRIPTS}/profile-todos.sh"
+readonly TIMER="${HYPR_WAYBAR_SCRIPTS}/profile-timer.sh"
 
-# Toggle: second invocation while open closes it.
-if pgrep -f "rofi.*apps/rofi/profile.rasi" >/dev/null 2>&1; then
-  pkill -f "rofi.*apps/rofi/profile.rasi" >/dev/null 2>&1 || true
-  exit 0
-fi
+rofi::available || log::die 'rofi is not installed'
+rofi::toggle profile || exit 0
 
-# Flat two-tone meter: solid line throughout, filled portion full-bright,
-# remainder dimmed. Avoids stippled/checkerboard glyphs like ░ at small sizes.
-bar() {
-  local pct=$1 color=$2 width=10 filled empty filled_str empty_str
-  filled=$(( pct * width / 100 ))
-  (( filled > width )) && filled=$width
-  (( filled < 0 )) && filled=0
-  empty=$(( width - filled ))
-  filled_str=$(printf '%0.s━' $(seq 1 "$filled") 2>/dev/null)
-  empty_str=$(printf '%0.s━' $(seq 1 "$empty") 2>/dev/null)
-  printf '<span foreground="%s">%s</span><span foreground="%s" alpha="25%%">%s</span>' \
-    "$color" "$filled_str" "$color" "$empty_str"
-}
-
-# Alert thresholds: temp > 75C, any other meter > 90%.
+# A stats line is "key percent label unit"; temperature alerts earlier than
+# the others, which is why the unit is carried through.
 stat_rows() {
-  "$STATS_SH" | while read -r key pct label unit; do
-    local limit=90 color="#ffffff"
-    [ "$unit" = "temp" ] && limit=75
+  local key pct label unit limit color
+  while read -r key pct label unit; do
+    [[ $unit == temp ]] && limit=$THEME_TEMP_WARN || limit=$THEME_LOAD_DANGER
     if (( pct > limit )); then
-      color="#ff0000"
-      printf '<span foreground="%s">%-4s %s %s</span>\n' "$color" "$key" "$(bar "$pct" "$color")" "$label"
+      color=$THEME_ALERT
+      printf '%s\n' "$(markup::span "$(printf '%-4s %s %s' "$key" "$(markup::meter "$pct" "$color")" "$label")" "$color")"
     else
-      printf '%-4s %s %s\n' "$key" "$(bar "$pct" "$color")" "$label"
+      printf '%-4s %s %s\n' "$key" "$(markup::meter "$pct" "$THEME_FG")" "$label"
     fi
-  done
+  done < <("$STATS")
 }
 
-todo_rows() {
-  "$TODOS_SH" list
-}
-
-# Rows before the todo block: N stat rows, separator.
-rows_before_todos() {
-  local n_stats
-  n_stats=$(stat_rows | wc -l)
-  echo $(( n_stats + 1 ))
-}
+todo_rows() { "$TODOS" list; }
 
 build_menu() {
-  local timer_line
-  timer_line=$("$TIMER_SH" status)
-
-  {
-    stat_rows
-    echo "---"
-    todo_rows
-    echo "+ add todo"
-    echo "---"
-    printf '⏱  %s\n' "$timer_line"
-    echo "reset timer"
-  }
+  stat_rows
+  printf '%s\n' "$SEPARATOR"
+  todo_rows
+  printf '%s\n' "$ADD_TODO_LABEL"
+  printf '%s\n' "$SEPARATOR"
+  printf '⏱  %s\n' "$("$TIMER" status)"
+  printf '%s\n' "$RESET_TIMER_LABEL"
 }
 
-prompt_text() {
-  printf '' | rofi -dmenu -p "$1" -theme "$THEME" -lines 0
-}
+while :; do
+  # Recomputed each pass: adding or removing a todo shifts everything below.
+  stat_count=$(stat_rows | wc -l)
+  todo_count=$(todo_rows | wc -l)
+  todos_start=$(( stat_count + 1 ))               # stats, then one separator
+  add_todo_index=$(( todos_start + todo_count ))
+  timer_index=$(( add_todo_index + 2 ))           # + separator
+  reset_index=$(( timer_index + 1 ))
 
-while true; do
-  before=$(rows_before_todos)
-  n_todos=$(todo_rows | wc -l)
-  # 0-based indices within the full menu:
-  add_todo_idx=$(( before + n_todos ))
-  timer_idx=$(( add_todo_idx + 2 ))
-  reset_idx=$(( timer_idx + 1 ))
-
-  set +e
-  sel=$(build_menu | rofi -dmenu -markup-rows -p "Profile" -mesg "$(whoami)" \
-    -theme "$THEME" \
-    -no-custom \
-    -kb-custom-1 "Alt+Return" \
-    -format i)
+  selection=$(build_menu | rofi -dmenu -markup-rows \
+    -p 'Profile' -mesg "$(whoami)" \
+    -theme "$(rofi::theme_path "$THEME")" \
+    -no-custom -format i -kb-custom-1 'Alt+Return')
   code=$?
-  set -e
 
-  [ -z "$sel" ] && exit 0
+  [[ -z $selection ]] && exit 0
 
-  # Alt+Return only ever means "remove" and only applies to todo rows.
-  if [ "$code" = "10" ]; then
-    if (( sel >= before && sel < before + n_todos )); then
-      "$TODOS_SH" remove $(( sel - before )) >/dev/null
-    fi
+  # Alt+Return only ever means "remove", and only on a todo row.
+  if (( code == ALT_RETURN )); then
+    (( selection >= todos_start && selection < add_todo_index )) \
+      && "$TODOS" remove $(( selection - todos_start )) >/dev/null
     continue
   fi
 
-  if (( sel >= before && sel < before + n_todos )); then
-    "$TODOS_SH" toggle $(( sel - before )) >/dev/null
-  elif (( sel == add_todo_idx )); then
-    new_todo=$(prompt_text "New todo")
-    [ -n "$new_todo" ] && "$TODOS_SH" add "$new_todo" >/dev/null
-  elif (( sel == timer_idx )); then
-    "$TIMER_SH" toggle >/dev/null
-  elif (( sel == reset_idx )); then
-    "$TIMER_SH" reset >/dev/null
+  if (( selection >= todos_start && selection < add_todo_index )); then
+    "$TODOS" toggle $(( selection - todos_start )) >/dev/null
+  elif (( selection == add_todo_index )); then
+    new_todo=$(rofi::input "$THEME" 'New todo' -lines 0)
+    [[ -n $new_todo ]] && "$TODOS" add "$new_todo" >/dev/null
+  elif (( selection == timer_index )); then
+    "$TIMER" toggle >/dev/null
+  elif (( selection == reset_index )); then
+    "$TIMER" reset >/dev/null
   fi
 done

@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
+# Idle management: lock after 5 minutes, blank the screen after 10.
 
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-set -euo pipefail
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/guard
 
-# Lock after 5 minutes, turn screen off after 10 minutes
-exec hypridle --lock 5m --off 10m
+guard::require hypridle
+exec hypridle --lock "${HYPR_IDLE_LOCK:-5m}" --off "${HYPR_IDLE_OFF:-10m}"

@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
+# Microphone module for waybar.
 
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../scripts" && pwd)/_paths.sh"
-if command -v pamixer >/dev/null 2>&1; then
-  mute=$(pamixer --default-source --get-mute 2>/dev/null || pamixer --get-mute 2>/dev/null)
-  icon=''
-  [ "$mute" = "true" ] && icon=''
-  echo '{"text":"'$icon'","tooltip":"Click to toggle microphone"}'
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use ui/waybar domain/audio
+
+readonly ICON_LIVE=$''
+readonly ICON_MUTED=$''
+
+if ! audio::available; then
+  waybar::unavailable $'' "no audio backend (install pamixer or wireplumber)"
+  exit 0
+fi
+
+if audio::mic_muted; then
+  waybar::emit "$ICON_MUTED" 'Microphone muted — click to unmute' muted
 else
-  echo '{"text":"","tooltip":"pamixer missing"}'
+  waybar::emit "$ICON_LIVE" 'Microphone live — click to mute'
 fi

@@ -1,56 +1,63 @@
 #!/usr/bin/env bash
-# Tiny persisted stopwatch for the profile dropdown.
-# Usage: profile-timer.sh status|toggle|reset
+# Persisted stopwatch behind the profile dropdown.
 #
-# On-disk format matches the previous Python implementation:
-# {"running": bool, "elapsed": float, "started_at": float|null}
+# On-disk shape is unchanged:
+#   {"running": bool, "elapsed": float, "started_at": float|null}
+#
+# The elapsed total is only folded in when the timer stops; while it runs,
+# the in-flight segment is added at read time. That way a crash loses at
+# most the current segment rather than corrupting the total.
 
-STORE="$HOME/.local/share/hypr/profile-timer.json"
-DEFAULT='{"running":false,"elapsed":0.0,"started_at":null}'
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
+# shellcheck source=/dev/null
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli os/jsonstore
+
+readonly STORE=profile-timer
+readonly EMPTY='{"running":false,"elapsed":0.0,"started_at":null}'
 
 now() { date +%s.%N; }
 
-load() {
-  if [ -f "$STORE" ] && jq -e . "$STORE" >/dev/null 2>&1; then
-    # Merge over the default so a partial store still has every key.
-    jq -c --argjson d "$DEFAULT" '$d * .' "$STORE" 2>/dev/null || printf '%s' "$DEFAULT"
+# Merged over the default so a partial document still has every key.
+load() { jsonstore::load "$STORE" "$EMPTY" | jq -c --argjson d "$EMPTY" '$d * .'; }
+
+cmd_toggle() {
+  local state; state=$(load)
+  if [[ $(jq -r '.running' <<<"$state") == true ]]; then
+    state=$(jq -c --argjson n "$(now)" \
+      '.elapsed = (.elapsed + ($n - (.started_at // $n))) | .running = false | .started_at = null' \
+      <<<"$state")
   else
-    printf '%s' "$DEFAULT"
+    state=$(jq -c --argjson n "$(now)" '.running = true | .started_at = $n' <<<"$state")
   fi
+  jsonstore::save "$STORE" "$state"
+  cmd_status
 }
 
-save() {
-  mkdir -p "$(dirname "$STORE")"
-  tmp=$(mktemp "${STORE}.XXXXXX") || exit 1
-  printf '%s\n' "$1" > "$tmp" && mv -f "$tmp" "$STORE" || rm -f "$tmp"
+cmd_reset() {
+  jsonstore::save "$STORE" "$EMPTY"
+  cmd_status
 }
 
-state=$(load)
-cmd="${1:-status}"
+cmd_status() {
+  local elapsed running
+  read -r elapsed running < <(load | jq -r --argjson n "$(now)" \
+    '((if .running then .elapsed + ($n - (.started_at // $n)) else .elapsed end) | floor | tostring)
+     + " " + (.running | tostring)')
+  printf '%02d:%02d:%02d %s\n' \
+    $(( elapsed / 3600 )) $(( (elapsed % 3600) / 60 )) $(( elapsed % 60 )) \
+    "$([[ $running == true ]] && echo Pause || echo Start)"
+}
 
-case "$cmd" in
-  toggle)
-    if [ "$(printf '%s' "$state" | jq -r '.running')" = "true" ]; then
-      # Stopping: fold the running segment into elapsed.
-      state=$(printf '%s' "$state" | jq -c --argjson n "$(now)" \
-        '.elapsed = (.elapsed + ($n - (.started_at // $n))) | .running = false | .started_at = null')
-    else
-      state=$(printf '%s' "$state" | jq -c --argjson n "$(now)" \
-        '.running = true | .started_at = $n')
-    fi
-    save "$state"
-    ;;
-  reset)
-    state="$DEFAULT"
-    save "$state"
-    ;;
-esac
+declare -A COMMANDS=(
+  [status]="cmd_status|print elapsed time and the next action (the default)"
+  [toggle]="cmd_toggle|start or pause the stopwatch"
+  [reset]="cmd_reset|reset to 00:00:00"
+)
 
-# Elapsed includes the in-flight segment while running.
-read -r elapsed running <<< "$(printf '%s' "$state" | jq -r --argjson n "$(now)" \
-  '((if .running then .elapsed + ($n - (.started_at // $n)) else .elapsed end) | floor | tostring)
-   + " " + (.running | tostring)')"
-
-printf '%02d:%02d:%02d %s\n' \
-  $(( elapsed / 3600 )) $(( (elapsed % 3600) / 60 )) $(( elapsed % 60 )) \
-  "$([ "$running" = "true" ] && echo Pause || echo Start)"
+cli::dispatch "${1:-status}" "${@:2}"

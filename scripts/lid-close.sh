@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
+# Lid closed: lock the session and blank the panel.
 #
-# Lid closed: lock the session and turn the panel off.
-# Does NOT suspend/hibernate — logind HandleLidSwitch must be `ignore`
-# (see apps/systemd/10-lid-lock.conf).
+# Deliberately does not suspend or hibernate — logind's HandleLidSwitch must
+# be `ignore` for this to be the only handler (see
+# apps/systemd/10-lid-lock.conf).
 
-set -euo pipefail
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
+# shellcheck source=/dev/null
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use os/hypr domain/session
 
-# Lock first so hyprlock is ready before the panel blanks.
-loginctl lock-session 2>/dev/null || hyprlock &
-
-# Brief settle so the lock surface maps, then blank the display.
+# Lock first so the lock surface is up before the panel goes dark; a brief
+# settle lets it map before blanking.
+session::lock
 sleep 0.15
-hyprctl dispatch dpms off >/dev/null 2>&1 || true
+hypr::dispatch dpms off

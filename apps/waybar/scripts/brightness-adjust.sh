@@ -1,11 +1,23 @@
 #!/usr/bin/env bash
+# Scroll handler for the brightness module. Delegates to the unified
+# hardware + software brightness scale.
 
-# Redirect to our unified hardware + software super-brightness script
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../scripts" && pwd)/_paths.sh"
-case "$1" in
-  up) "${HYPR_SCRIPTS}/brightness_control.sh" up;;
-  down) "${HYPR_SCRIPTS}/brightness_control.sh" down;;
-esac
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli domain/brightness ui/waybar
+
+cmd_up()   { brightness::up;   waybar::refresh brightness; }
+cmd_down() { brightness::down; waybar::refresh brightness; }
+
+declare -A COMMANDS=(
+  [up]="cmd_up|raise brightness"
+  [down]="cmd_down|lower brightness"
+)
+
+cli::dispatch "${1:-}" "${@:2}"

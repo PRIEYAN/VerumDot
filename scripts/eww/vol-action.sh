@@ -1,35 +1,42 @@
 #!/usr/bin/env bash
+# Volume actions for the eww panel.
 #
-# Volume action backend for the eww panel. Pure shell.
 #   vol-action.sh set <0-150>
 #   vol-action.sh mute
+#
+# domain/audio repaints the correct waybar module itself. This script used
+# to poke RTMIN+1 by hand after a volume change — that is the *brightness*
+# module, so the bar's volume reading never actually refreshed.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/_paths.sh"
-EWW="eww -c "${HYPR_EWW}""
-DIR="${HYPR_SCRIPTS}/eww"
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli core/paths domain/audio ui/eww
 
-case "$1" in
-  set)
-    vol=$2
-    [ "$vol" -gt 150 ] 2>/dev/null && vol=150
-    [ "$vol" -lt 0 ] 2>/dev/null && vol=0
-    if command -v pamixer >/dev/null 2>&1; then
-      pamixer --allow-boost --set-limit 150 --set-volume "$vol" >/dev/null 2>&1
-    else
-      wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ "$vol%" >/dev/null 2>&1
-    fi
-    ;;
-  mute)
-    if command -v pamixer >/dev/null 2>&1; then
-      pamixer -t >/dev/null 2>&1
-    else
-      wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle >/dev/null 2>&1
-    fi
-    ;;
-esac
+readonly DATA="${HYPR_SCRIPTS}/eww/vol-data.sh"
 
-$EWW update vol_state="$($DIR/vol-data.sh)" >/dev/null 2>&1
-pkill -RTMIN+1 waybar >/dev/null 2>&1
+sync_panel() { eww::update "vol_state=$("$DATA")"; }
+
+cmd_set() {
+  cli::need 1 "set <0-150>" "$@"
+  [[ $1 =~ ^[0-9]+$ ]] || log::usage "set <0-150>"
+  audio::set_volume "$1"
+  sync_panel
+}
+
+cmd_mute() {
+  audio::toggle_mute
+  sync_panel
+}
+
+declare -A COMMANDS=(
+  [set]="cmd_set|<0-150>  set the output volume"
+  [mute]="cmd_mute|toggle mute"
+)
+
+cli::dispatch "${1:-}" "${@:2}"

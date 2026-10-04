@@ -39,6 +39,9 @@
   "custom/spotify": {
     "exec": "${HOME}/.config/hypr/scripts/waybar-spotify.sh",
     "interval": 2,
+    // Repainted on demand by domain/player after a transport action, so the
+    // 2s poll is only a backstop. See WAYBAR_SIGNAL in lib/ui/waybar.sh.
+    "signal": 12,
     "return-type": "json",
     "max-length": 40,
     "on-click": "${HOME}/.config/hypr/scripts/waybar-spotify.sh menu",

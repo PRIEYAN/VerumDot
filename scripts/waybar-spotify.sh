@@ -1,45 +1,59 @@
 #!/usr/bin/env bash
+# Now-playing module for waybar.
+#
+#   (no args)  emit the waybar module JSON
+#   menu       toggle the quickshell media card
+#   toggle     play/pause without opening anything
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-json_escape() {
-  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli ui/waybar ui/quickshell ui/notify domain/player
+
+readonly ICON_PLAYING=$''
+readonly ICON_PAUSED=$''
+
+cmd_status() {
+  local status title artist icon
+  if ! player::available; then
+    waybar::emit '' 'playerctl is not installed'
+    return 0
+  fi
+
+  if ! player::active; then
+    waybar::emit '' 'Spotify: not playing'
+    return 0
+  fi
+
+  status=$(player::status)
+  title=$(player::title)
+  artist=$(player::artist)
+  [[ $status == Paused ]] && icon=$ICON_PAUSED || icon=$ICON_PLAYING
+
+  waybar::emit "${icon}  ${title} — ${artist}" \
+    "${status}: ${title} — ${artist}" \
+    "${status,,}"
 }
 
-if [ "$1" = "menu" ]; then
-  # The card is a quickshell daemon (apps/quickshell/spotify/shell.qml), so a
-  # click is just an IPC toggle against the already-running surface. There is
-  # no rofi fallback any more — the old popup could not redraw without exiting
-  # and relaunching, which is what made it flicker and close on its own.
-  "${HYPR_SCRIPTS}/qs-toggle.sh" spotify spotify && exit 0
+cmd_menu() {
+  # The card is a quickshell daemon, so a click is an IPC toggle against the
+  # already-running surface.
+  quickshell::toggle spotify spotify && return 0
+  notify::warn 'Media card unavailable' 'quickshell is not running.'
+  return 1
+}
 
-  command -v notify-send >/dev/null 2>&1 \
-    && notify-send -a "Spotify" "Media card unavailable" "quickshell is not running."
-  exit 1
-fi
+cmd_toggle() { player::play_pause; }
 
-if [ "$1" = "toggle" ]; then
-  playerctl -p spotify play-pause >/dev/null 2>&1
-  exit 0
-fi
+declare -A COMMANDS=(
+  [status]="cmd_status|emit the waybar module JSON (the default)"
+  [menu]="cmd_menu|toggle the quickshell media card"
+  [toggle]="cmd_toggle|play/pause the current track"
+)
 
-status=$(playerctl -p spotify status 2>/dev/null)
-if [ -z "$status" ] || [ "$status" = "Stopped" ]; then
-  printf '{"text":"","tooltip":"Spotify: not playing"}\n'
-  exit 0
-fi
-
-title=$(playerctl -p spotify metadata xesam:title 2>/dev/null)
-artist=$(playerctl -p spotify metadata xesam:artist 2>/dev/null)
-[ -z "$title" ] && title="Unknown"
-[ -z "$artist" ] && artist="Unknown"
-
-icon=""
-[ "$status" = "Paused" ] && icon=""
-
-label="$title — $artist"
-label_json=$(json_escape "$label")
-tip_json=$(json_escape "$status: $title — $artist")
-printf '{"text":"%s  %s","tooltip":"%s","class":"%s"}\n' "$icon" "$label_json" "$tip_json" "$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')"
+cli::dispatch "${1:-status}" "${@:2}"

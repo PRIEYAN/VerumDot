@@ -1,65 +1,55 @@
 #!/usr/bin/env bash
+# Calendar data for the eww panel.
 #
-# Calendar data backend for the eww panel. Pure shell.
-#   cal-data.sh <offset>
-# Emits JSON: {"label":"November 2024","weeks":[[{d,today},...],...]}
-# offset = months relative to the current month (negative = past).
+#   cal-data.sh <offset>     offset = months from now, negative for the past
+#
+# Emits {"label": "November 2024", "weeks": [[{d, today}, ...], ...]}.
+#
+# Built with jq rather than by printf-ing JSON a character at a time. The
+# previous version tracked cell indices to decide where to place each comma
+# and each "],[" week break — correct, but the kind of correct that one
+# edit undoes silently. jq now owns the structure and the quoting.
+#
+# Sunday-first, matching the eww panel's own header row. (lib/ui/calendar.sh
+# is Monday-first for the rofi panel; the two are deliberately independent.)
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/_paths.sh"
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli
+
+readonly WEEK_LENGTH=7
+
 offset=${1:-0}
+[[ $offset =~ ^-?[0-9]+$ ]] || log::usage '<offset-in-months>'
 
-year=$(date +%Y)
-month=$(date +%-m)
-today_y=$year
-today_m=$month
-today_d=$(date +%-d)
+# Fold the offset into a concrete year/month by counting in absolute months.
+total=$(( ($(date +%Y) * 12 + ($(date +%-m) - 1)) + offset ))
+year=$(( total / 12 ))
+month=$(( total % 12 + 1 ))
 
-# Shift month by offset into a valid year/month.
-total=$(( (year * 12 + (month - 1)) + offset ))
-y=$(( total / 12 ))
-m=$(( total % 12 + 1 ))
+label=$(date -d "${year}-${month}-01" +'%B %Y')
+lead=$(date -d "${year}-${month}-01" +%w)                     # 0=Sun..6=Sat
+days=$(date -d "${year}-${month}-01 +1 month -1 day" +%-d)
 
-label=$(date -d "$y-$m-01" +"%B %Y")
-first_dow=$(date -d "$y-$m-01" +%w)                       # 0=Sun..6=Sat
-days_in_month=$(date -d "$y-$m-01 +1 month -1 day" +%-d)
+today_day=0
+[[ $year == $(date +%Y) && $month == $(date +%-m) ]] && today_day=$(date +%-d)
 
-# Emit one cell; prefixes a comma unless it is the first cell of its row.
-emit_cell() {
-  cell=$1; d=$2; today=$3
-  if [ "$(( cell % 7 ))" -ne 0 ]; then printf ','; fi
-  printf '{"d":"%s","today":%s}' "$d" "$today"
-}
+# Trailing blanks that round the grid out to whole weeks.
+trail=$(( (WEEK_LENGTH - (lead + days) % WEEK_LENGTH) % WEEK_LENGTH ))
 
-printf '{"label":"%s","weeks":[[' "$label"
-
-cell=0
-
-# Leading blanks before day 1.
-i=0
-while [ "$i" -lt "$first_dow" ]; do
-  emit_cell "$cell" "" false
-  i=$(( i + 1 )); cell=$(( cell + 1 ))
-done
-
-# Actual days.
-day=1
-while [ "$day" -le "$days_in_month" ]; do
-  if [ "$cell" -ne 0 ] && [ "$(( cell % 7 ))" -eq 0 ]; then printf '],['; fi
-  today=false
-  if [ "$y" -eq "$today_y" ] && [ "$m" -eq "$today_m" ] && [ "$day" -eq "$today_d" ]; then
-    today=true
-  fi
-  emit_cell "$cell" "$day" "$today"
-  day=$(( day + 1 )); cell=$(( cell + 1 ))
-done
-
-# Trailing blanks to fill the final week.
-while [ "$(( cell % 7 ))" -ne 0 ]; do
-  emit_cell "$cell" "" false
-  cell=$(( cell + 1 ))
-done
-
-printf ']]}\n'
+# One cell per line — empty for padding — and let jq group them into weeks,
+# tag today, and do the quoting.
+{
+  for (( i = 0; i < lead; i++ ));  do printf '\n'; done
+  for (( d = 1; d <= days; d++ )); do printf '%s\n' "$d"; done
+  for (( i = 0; i < trail; i++ )); do printf '\n'; done
+} | jq -cRn --arg label "$label" --argjson today "$today_day" --argjson week "$WEEK_LENGTH" '
+  [inputs]
+  | map({d: ., today: (. != "" and (. | tonumber) == $today)})
+  | {label: $label, weeks: [range(0; length; $week) as $i | .[$i : $i + $week]]}'

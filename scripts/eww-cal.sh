@@ -1,29 +1,40 @@
 #!/usr/bin/env bash
-#
-# Calendar nav helper for the eww calendar panel. Pure shell.
-# Bumps the month offset and re-renders. Called by the panel's
-# prev/next buttons and by the Left/Right arrow keybinds.
+# Month navigation for the eww calendar panel.
 #
 #   eww-cal.sh prev | next | reset
+#
+# Bound to the panel's arrow buttons and to the Left/Right keys of the
+# `calendar` submap in hypr.conf.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-EWW="eww -c "${HYPR_EWW}""
-SD="${HYPR_SCRIPTS}/eww"
-OFFSET_FILE=/tmp/eww-cal.offset
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli os/state ui/eww core/paths
 
-offset=0
-[ -f "$OFFSET_FILE" ] && offset=$(cat "$OFFSET_FILE" 2>/dev/null)
-case "$offset" in ''|*[!0-9-]*) offset=0 ;; esac
+readonly OFFSET_KEY=calendar-offset
+readonly DATA="${HYPR_SCRIPTS}/eww/cal-data.sh"
 
-case "$1" in
-  prev)  offset=$(( offset - 1 )) ;;
-  next)  offset=$(( offset + 1 )) ;;
-  reset) offset=0 ;;
-esac
+offset() { state::get "$OFFSET_KEY" 0 state::is_integer; }
 
-printf '%s' "$offset" > "$OFFSET_FILE"
-$EWW update cal_offset="$offset" >/dev/null 2>&1
-$EWW update cal_data="$($SD/cal-data.sh "$offset")" >/dev/null 2>&1
+apply() {
+  local value=$1
+  state::set "$OFFSET_KEY" "$value"
+  eww::update "cal_offset=${value}" "cal_data=$("$DATA" "$value")"
+}
+
+cmd_prev()  { apply $(( $(offset) - 1 )); }
+cmd_next()  { apply $(( $(offset) + 1 )); }
+cmd_reset() { apply 0; }
+
+declare -A COMMANDS=(
+  [prev]="cmd_prev|show the previous month"
+  [next]="cmd_next|show the next month"
+  [reset]="cmd_reset|return to the current month"
+)
+
+cli::dispatch "${1:-reset}" "${@:2}"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # AnyDesk links against system libgtk-3, so GTK theming is the only lever we
 # have on its chrome. The Qt vars are unset because AnyDesk's widgets render
 # blank (empty checkboxes/radios/buttons) when Kvantum styling is forced onto

@@ -1,20 +1,38 @@
 #!/usr/bin/env bash
-# Both controls use the control centre's single Wayland idle inhibitor.
-cfg="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../quickshell/controlcenter" && pwd)"
-if [ "${1:-status}" = toggle ]; then
-  if ! qs -p "$cfg" ipc call controlcenter toggleStayAwake >/dev/null 2>&1; then
-    setsid -f qs -p "$cfg" -n >/dev/null 2>&1
-    for ((attempt=0; attempt<20; attempt++)); do
-      sleep 0.1
-      qs -p "$cfg" ipc call controlcenter toggleStayAwake >/dev/null 2>&1 && exit 0
-    done
-    exit 1
-  fi
-  exit 0
-fi
-state=$(qs -p "$cfg" ipc call controlcenter isStayAwake 2>/dev/null)
-case "$state" in
-  true) printf '{"text":"󰅶","class":"activated","tooltip":"Staying awake — click to allow sleep"}\n' ;;
-  false) printf '{"text":"󰒲","class":"deactivated","tooltip":"Normal — click to keep the PC awake"}\n' ;;
-  *) printf '{"text":"󰒲","class":"unavailable","tooltip":"Stay Awake unavailable — click to start Control Centre"}\n' ;;
-esac
+# Idle-inhibitor module. Both the bar button and the control centre drive the
+# control centre's single Wayland idle inhibitor, so the two cannot disagree
+# about whether sleep is inhibited.
+
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
+# shellcheck source=/dev/null
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli ui/waybar ui/quickshell
+
+readonly SURFACE=controlcenter
+readonly TARGET=controlcenter
+
+cmd_toggle() {
+  quickshell::call "$SURFACE" "$TARGET" toggleStayAwake && return 0
+  # The daemon is not up yet — start it, then retry the toggle.
+  quickshell::start "$SURFACE" "$TARGET" toggleStayAwake
+}
+
+cmd_status() {
+  case "$(quickshell::read "$SURFACE" "$TARGET" isStayAwake)" in
+    true)  waybar::emit '󰅶' 'Staying awake — click to allow sleep' activated ;;
+    false) waybar::emit '󰒲' 'Normal — click to keep the PC awake' deactivated ;;
+    *)     waybar::emit '󰒲' 'Stay Awake unavailable — click to start Control Centre' unavailable ;;
+  esac
+}
+
+declare -A COMMANDS=(
+  [status]="cmd_status|emit the waybar module JSON (the default)"
+  [toggle]="cmd_toggle|toggle the idle inhibitor"
+)
+
+cli::dispatch "${1:-status}" "${@:2}"

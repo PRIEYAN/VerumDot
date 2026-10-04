@@ -1,47 +1,50 @@
 #!/usr/bin/env bash
-# Tiny JSON-backed todo store for the profile dropdown.
-# Usage: profile-todos.sh list|add TEXT|toggle INDEX|remove INDEX
+# Todo store behind the profile dropdown.
 #
-# The on-disk format is unchanged from the previous Python implementation:
-# [{"text": "...", "done": false}, ...]
+# The on-disk shape is unchanged: [{"text": "...", "done": false}, ...]
 
-STORE="$HOME/.local/share/hypr/profile-todos.json"
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
+# shellcheck source=/dev/null
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli os/jsonstore
 
-load() {
-  # An unreadable or corrupt store degrades to empty, as before.
-  if [ -f "$STORE" ] && jq -e . "$STORE" >/dev/null 2>&1; then
-    cat "$STORE"
-  else
-    echo '[]'
-  fi
+readonly STORE=profile-todos
+readonly EMPTY='[]'
+
+# Index guards live in the jq filters rather than in shell: an out-of-range
+# index leaves the document untouched instead of producing `null` entries.
+cmd_list() {
+  jsonstore::load "$STORE" "$EMPTY" \
+    | jq -r '.[] | "[" + (if .done then "x" else " " end) + "] " + .text'
 }
 
-save() {
-  mkdir -p "$(dirname "$STORE")"
-  # Write via temp file so a crash mid-write cannot truncate the store.
-  tmp=$(mktemp "${STORE}.XXXXXX") || exit 1
-  printf '%s\n' "$1" | jq --indent 2 . > "$tmp" && mv -f "$tmp" "$STORE" || rm -f "$tmp"
+cmd_add() {
+  [[ -n ${1:-} ]] || return 0
+  jsonstore::update "$STORE" "$EMPTY" '. + [{text: $t, done: false}]' --arg t "$1"
 }
 
-todos=$(load)
-cmd="${1:-list}"
+cmd_toggle() {
+  [[ -n ${1:-} ]] || return 0
+  jsonstore::update "$STORE" "$EMPTY" \
+    'if $i >= 0 and $i < length then .[$i].done |= (. | not) else . end' --argjson i "$1"
+}
 
-case "$cmd" in
-  list)
-    printf '%s' "$todos" | jq -r '.[] | "[" + (if .done then "x" else " " end) + "] " + .text'
-    ;;
-  add)
-    [ -n "$2" ] || exit 0
-    save "$(printf '%s' "$todos" | jq --arg t "$2" '. + [{text:$t, done:false}]')"
-    ;;
-  toggle)
-    [ -n "$2" ] || exit 0
-    save "$(printf '%s' "$todos" | jq --argjson i "$2" \
-      'if $i >= 0 and $i < length then .[$i].done |= (. | not) else . end')"
-    ;;
-  remove)
-    [ -n "$2" ] || exit 0
-    save "$(printf '%s' "$todos" | jq --argjson i "$2" \
-      'if $i >= 0 and $i < length then del(.[$i]) else . end')"
-    ;;
-esac
+cmd_remove() {
+  [[ -n ${1:-} ]] || return 0
+  jsonstore::update "$STORE" "$EMPTY" \
+    'if $i >= 0 and $i < length then del(.[$i]) else . end' --argjson i "$1"
+}
+
+declare -A COMMANDS=(
+  [list]="cmd_list|print the todo list (the default)"
+  [add]="cmd_add|<text>  append a todo"
+  [toggle]="cmd_toggle|<index>  mark done/undone"
+  [remove]="cmd_remove|<index>  delete a todo"
+)
+
+cli::dispatch "${1:-list}" "${@:2}"

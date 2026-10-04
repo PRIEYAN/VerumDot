@@ -1,93 +1,74 @@
 #!/usr/bin/env bash
-#
 # Installs the hypr-owned theme by symlinking it into the XDG paths that
-# GTK / Qt / KDE / xdg-desktop-portal insist on reading. All real content
-# lives in ~/.config/hypr/apps/theme so it stays in this repo; only links
-# are placed outside.
+# GTK, Qt, KDE and xdg-desktop-portal insist on reading.
 #
-#   theme-install.sh          install (backs up anything it replaces once)
-#   theme-install.sh uninstall  remove links and restore the .prehypr backups
+# All real content stays in apps/theme so it remains part of this repo; only
+# links are placed outside it.
 #
-# Pure shell.
+#   theme-install.sh            install (backing up anything it replaces, once)
+#   theme-install.sh uninstall  remove the links and restore the backups
+#
+# The set of links is declared once, in THEME_LINKS, and both install and
+# uninstall walk it. They used to carry separate hand-maintained lists, so
+# adding a link meant remembering to add its removal too.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-set -u
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli core/guard core/log core/paths os/proc os/ini os/symlink
 
-HYPR="$HYPR_DIR"
-T="$HYPR/apps/theme"
-CFG="$HOME/.config"
-SHARE="$HOME/.local/share"
-SUFFIX=".prehypr"
+HYPR_LOG_LEVEL=${HYPR_LOG_LEVEL:-info}   # this command narrates by design
 
-log() { printf '  %s\n' "$*"; }
+readonly CONFIG="${XDG_CONFIG_HOME}"
+readonly SHARE="${XDG_DATA_HOME}"
+readonly WHITE_ICONS="${HYPR_THEME}/icons/kora-white"
 
-# link <source> <target>: back up a real file/dir once, then symlink.
-link() {
-  src=$1; dst=$2
-  mkdir -p "$(dirname "$dst")"
-  if [ -L "$dst" ]; then
-    rm -f "$dst"
-  elif [ -e "$dst" ]; then
-    if [ ! -e "$dst$SUFFIX" ]; then
-      mv "$dst" "$dst$SUFFIX"
-      log "backed up $dst -> $dst$SUFFIX"
-    else
-      rm -rf "$dst"
-    fi
-  fi
-  ln -s "$src" "$dst"
-  log "linked $dst"
+# "source-under-apps/theme : absolute target"
+readonly -a THEME_LINKS=(
+  "gtk-3.0/gtk.css                 : ${CONFIG}/gtk-3.0/gtk.css"
+  "gtk-4.0/gtk.css                 : ${CONFIG}/gtk-4.0/gtk.css"
+  "portal/portals.conf             : ${CONFIG}/xdg-desktop-portal/portals.conf"
+  "qt/PureBlack.conf               : ${CONFIG}/qt5ct/colors/PureBlack.conf"
+  "qt/PureBlack.conf               : ${CONFIG}/qt6ct/colors/PureBlack.conf"
+  "kvantum/PureBlackGlass          : ${CONFIG}/Kvantum/PureBlackGlass"
+  "color-schemes/PureBlack.colors  : ${SHARE}/color-schemes/PureBlack.colors"
+  "icons/kora-white                : ${SHARE}/icons/kora-white"
+)
+
+# link_parts <entry> — split an entry into SOURCE and TARGET, trimmed.
+link_parts() {
+  local entry=$1
+  SOURCE="${HYPR_THEME}/$(printf '%s' "${entry%%:*}" | xargs)"
+  TARGET=$(printf '%s' "${entry#*:}" | xargs)
 }
 
-unlink_restore() {
-  dst=$1
-  [ -L "$dst" ] && rm -f "$dst" && log "unlinked $dst"
-  if [ -e "$dst$SUFFIX" ]; then
-    mv "$dst$SUFFIX" "$dst"
-    log "restored $dst"
-  fi
-}
-
-# ── set <file> <section> <key> <value>: idempotent INI edit ─────────────
-ini_set() {
-  file=$1; sec=$2; key=$3; val=$4
-  [ -f "$file" ] || { mkdir -p "$(dirname "$file")"; printf '[%s]\n' "$sec" > "$file"; }
-  if grep -q "^\[$sec\]" "$file"; then
-    if awk -v s="[$sec]" -v k="$key" '
-          $0==s{inS=1;next} /^\[/{inS=0} inS && $0 ~ "^"k"="{found=1}
-          END{exit !found}' "$file"; then
-      # key exists in section: replace it there
-      awk -v s="[$sec]" -v k="$key" -v v="$val" '
-        $0==s{print;inS=1;next}
-        /^\[/{inS=0}
-        inS && $0 ~ "^"k"=" {print k"="v; next}
-        {print}' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
-    else
-      awk -v s="[$sec]" -v k="$key" -v v="$val" '
-        {print}
-        $0==s{print k"="v}' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
-    fi
-  else
-    printf '\n[%s]\n%s=%s\n' "$sec" "$key" "$val" >> "$file"
-  fi
-}
-
-# ── Build a pure-white folder icon theme from an installed grey one ─────
+# ---------------------------------------------------------------------------
+# White folder icons, derived from an installed grey theme
+# ---------------------------------------------------------------------------
 build_white_icons() {
-  src="$SHARE/icons/kora-pgrey"
-  dst="$T/icons/kora-white"
-  [ -d "$src" ] || { log "kora-pgrey not installed; skipping white icons"; return; }
-  rm -rf "$dst"; mkdir -p "$dst/places/scalable"
-  cp "$src"/places/scalable/*.svg "$dst/places/scalable/" 2>/dev/null
-  for f in "$dst"/places/scalable/*.svg; do
+  local source="${SHARE}/icons/kora-pgrey" file count
+  if [[ ! -d $source ]]; then
+    log::warn 'kora-pgrey is not installed; skipping the white icon theme'
+    return 1
+  fi
+
+  rm -rf -- "$WHITE_ICONS"
+  mkdir -p -- "${WHITE_ICONS}/places/scalable"
+  cp "$source"/places/scalable/*.svg "${WHITE_ICONS}/places/scalable/" 2>/dev/null
+
+  # Every fill becomes white, in all three spellings these SVGs use.
+  for file in "${WHITE_ICONS}"/places/scalable/*.svg; do
     sed -i -E 's/fill:rgb\([0-9]+, ?[0-9]+, ?[0-9]+\)/fill:rgb(255,255,255)/g;
                s/fill:#[0-9a-fA-F]{3,8}/fill:#ffffff/g;
-               s/fill="#[0-9a-fA-F]{3,8}"/fill="#ffffff"/g' "$f"
+               s/fill="#[0-9a-fA-F]{3,8}"/fill="#ffffff"/g' "$file"
   done
-  cat > "$dst/index.theme" <<'ICON'
+
+  cat >"${WHITE_ICONS}/index.theme" <<'ICON'
 [Icon Theme]
 Name=kora-white
 Comment=kora-pgrey with pure white folder icons
@@ -101,72 +82,70 @@ MaxSize=512
 Context=Places
 Type=Scalable
 ICON
-  gtk-update-icon-cache -f -t "$dst" >/dev/null 2>&1
-  log "built white icon theme ($(ls "$dst"/places/scalable | wc -l) icons)"
+
+  guard::has gtk-update-icon-cache && proc::quiet gtk-update-icon-cache -f -t "$WHITE_ICONS"
+  count=$(find "${WHITE_ICONS}/places/scalable" -name '*.svg' | wc -l)
+  log::info "built the white icon theme (${count} icons)"
 }
 
-install_theme() {
-  echo "Installing hypr theme…"
+# ---------------------------------------------------------------------------
+cmd_install() {
+  log::info 'installing the hypr theme'
 
-  # GTK
-  link "$T/gtk-3.0/gtk.css" "$CFG/gtk-3.0/gtk.css"
-  link "$T/gtk-4.0/gtk.css" "$CFG/gtk-4.0/gtk.css"
+  build_white_icons || true
 
-  # Portal (fixes the light "Open Folder" dialog)
-  link "$T/portal/portals.conf" "$CFG/xdg-desktop-portal/portals.conf"
-
-  # Qt color scheme
-  link "$T/qt/PureBlack.conf" "$CFG/qt5ct/colors/PureBlack.conf"
-  link "$T/qt/PureBlack.conf" "$CFG/qt6ct/colors/PureBlack.conf"
-
-  # Kvantum theme + KDE color scheme
-  link "$T/kvantum/PureBlackGlass" "$CFG/Kvantum/PureBlackGlass"
-  link "$T/color-schemes/PureBlack.colors" "$SHARE/color-schemes/PureBlack.colors"
-
-  # White folder icons
-  build_white_icons
-  [ -d "$T/icons/kora-white" ] && link "$T/icons/kora-white" "$SHARE/icons/kora-white"
-
-  # Point the toolkits at it. These files hold other user settings, so we
-  # edit keys in place rather than replacing the files.
-  printf '[General]\ntheme=PureBlackGlass\n' > "$CFG/Kvantum/kvantum.kvconfig"
-  log "Kvantum theme = PureBlackGlass"
-
-  for q in qt5ct qt6ct; do
-    f="$CFG/$q/$q.conf"
-    [ -f "$f" ] || continue
-    ini_set "$f" Appearance color_scheme_path "$CFG/$q/colors/PureBlack.conf"
-    ini_set "$f" Appearance custom_palette true
-    ini_set "$f" Appearance style kvantum
-    [ -d "$T/icons/kora-white" ] && ini_set "$f" Appearance icon_theme kora-white
-    log "configured $q"
+  local entry SOURCE TARGET
+  for entry in "${THEME_LINKS[@]}"; do
+    link_parts "$entry"
+    # The icon theme is only linked when it was actually built.
+    [[ -e $SOURCE ]] || { log::warn "skipping absent source ${SOURCE}"; continue; }
+    symlink::install "$SOURCE" "$TARGET"
   done
 
-  ini_set "$CFG/kdeglobals" Icons Theme kora-white
-  ini_set "$CFG/kdeglobals" General ColorScheme PureBlack
-  ini_set "$CFG/dolphinrc" UiSettings ColorScheme PureBlack
-  log "configured kdeglobals + dolphinrc"
+  # These files hold the user's own settings, so individual keys are edited
+  # rather than the files being replaced.
+  mkdir -p -- "${CONFIG}/Kvantum"
+  printf '[General]\ntheme=PureBlackGlass\n' >"${CONFIG}/Kvantum/kvantum.kvconfig"
+  log::info 'Kvantum theme = PureBlackGlass'
 
-  echo
-  echo "Done. Restart the portal and any open apps:"
-  echo "  systemctl --user restart xdg-desktop-portal-gtk xdg-desktop-portal"
-  echo "Icon/font sizes are yours to set in ~/.config/dolphinrc ([IconsMode] IconSize)."
+  local toolkit file
+  for toolkit in qt5ct qt6ct; do
+    file="${CONFIG}/${toolkit}/${toolkit}.conf"
+    [[ -f $file ]] || continue
+    ini::set "$file" Appearance color_scheme_path "${CONFIG}/${toolkit}/colors/PureBlack.conf"
+    ini::set "$file" Appearance custom_palette true
+    ini::set "$file" Appearance style kvantum
+    [[ -d $WHITE_ICONS ]] && ini::set "$file" Appearance icon_theme kora-white
+    log::info "configured ${toolkit}"
+  done
+
+  ini::set "${CONFIG}/kdeglobals" Icons Theme kora-white
+  ini::set "${CONFIG}/kdeglobals" General ColorScheme PureBlack
+  ini::set "${CONFIG}/dolphinrc" UiSettings ColorScheme PureBlack
+  log::info 'configured kdeglobals and dolphinrc'
+
+  cat <<'NOTE'
+
+Done. Restart the portal and any open apps:
+  systemctl --user restart xdg-desktop-portal-gtk xdg-desktop-portal
+
+Icon and font sizes are yours to set in ~/.config/dolphinrc ([IconsMode] IconSize).
+NOTE
 }
 
-uninstall_theme() {
-  echo "Removing hypr theme links…"
-  unlink_restore "$CFG/gtk-3.0/gtk.css"
-  unlink_restore "$CFG/gtk-4.0/gtk.css"
-  unlink_restore "$CFG/xdg-desktop-portal/portals.conf"
-  unlink_restore "$CFG/qt5ct/colors/PureBlack.conf"
-  unlink_restore "$CFG/qt6ct/colors/PureBlack.conf"
-  unlink_restore "$CFG/Kvantum/PureBlackGlass"
-  unlink_restore "$SHARE/color-schemes/PureBlack.colors"
-  unlink_restore "$SHARE/icons/kora-white"
-  echo "Note: key edits in qt5ct/qt6ct/kdeglobals/dolphinrc were left as-is."
+cmd_uninstall() {
+  log::info 'removing the hypr theme links'
+  local entry SOURCE TARGET
+  for entry in "${THEME_LINKS[@]}"; do
+    link_parts "$entry"
+    symlink::remove "$TARGET"
+  done
+  log::info 'key edits in qt5ct/qt6ct/kdeglobals/dolphinrc were left as they are'
 }
 
-case "${1:-install}" in
-  uninstall) uninstall_theme ;;
-  *)         install_theme ;;
-esac
+declare -A COMMANDS=(
+  [install]="cmd_install|symlink the theme into the XDG paths (the default)"
+  [uninstall]="cmd_uninstall|remove the links and restore backups"
+)
+
+cli::dispatch "${1:-install}" "${@:2}"

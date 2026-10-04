@@ -1,215 +1,152 @@
 #!/usr/bin/env bash
+# Wi-Fi / Ethernet module for waybar, and its click-through dropdown.
 #
-# Waybar wifi/ethernet module. Shows an ethernet glyph when a wired
-# connection is up, otherwise the connected SSID. Click opens
-# nm-connection-editor. Pure shell.
+#   (no args)  emit the waybar module JSON
+#   menu       open the network dropdown
 #
-# The click menu is *streamed* into rofi rather than collected first. rofi
-# paints as soon as the first rows land on its stdin, so the dropdown is on
-# screen immediately and the scan results fill in underneath it.
+# The bar shows the glyph alone; what is connected lives in the tooltip and
+# the full detail lives in the quickshell control centre.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-json_escape() {
-  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
-}
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli ui/waybar ui/rofi ui/menu ui/notify domain/network
 
-ethernet_iface() {
-  nmcli -t -f device,type,state device status 2>/dev/null \
-    | awk -F: '$2=="ethernet" && $3=="connected"{print $1; exit}'
-}
+readonly THEME=dropdown-right
+readonly ICON_ETHERNET='󰈀'
+readonly ICON_CONNECTED='󰤨'
+readonly ICON_OFFLINE='󰤮'
+readonly ICON_SIGNAL='󰤥'
+readonly ICON_LOCK=''
 
-# Read the active *connection*, not the AP scan list. `dev wifi` reports from
-# the scan cache, which intermittently drops the connected AP while a scan is
-# in flight — that made the bar flip to "not connected" every few polls.
-current_ssid() {
-  timeout 2 nmcli -t -f NAME,TYPE connection show --active 2>/dev/null \
-    | awk -F: '$2 ~ /wireless/ {print $1; exit}'
-}
+readonly SCANNING='󰑓  Scanning for networks…'
+readonly NO_NETWORKS='─────  No networks found  ─────'
 
-THEME="${HYPR_ROFI}/dropdown-right.rasi"
+readonly ACTION_RESCAN='󰑓  Rescan networks'
+readonly ACTION_HOTSPOT='󰀂  Hotspot…'
+readonly ACTION_OFF='󰖪  Turn Wi-Fi off'
+readonly ACTION_ADVANCED='󰒓  Advanced settings'
 
-# rofi helpers, all anchored top-right via the dropdown theme.
-rmenu()  { rofi -dmenu -i -theme "$THEME" -p "$1"; }
-rinput() { rofi -dmenu -theme "$THEME" -p "$1" -theme-str 'listview { enabled: false; }'; }
-rpass()  { rofi -dmenu -password -theme "$THEME" -p "$1" -theme-str 'listview { enabled: false; }'; }
-rnotify(){ command -v notify-send >/dev/null 2>&1 && notify-send -a "Wi-Fi" "$1" "$2"; }
+# ---------------------------------------------------------------------------
+# Bar
+# ---------------------------------------------------------------------------
+cmd_status() {
+  local ethernet ssid
+  if ! network::available; then
+    waybar::emit "$ICON_OFFLINE" 'NetworkManager is not installed' disconnected
+    return 0
+  fi
 
-# Non-network rows. The case statement at the bottom ignores them, so a
-# stray Enter on one does nothing.
-HEADER="─────  Actions  ─────"
-SCANNING="󰑓  Scanning for networks…"
-FOUND="─────  Networks  ─────"
-EMPTY="─────  No networks found  ─────"
+  ethernet=$(network::ethernet_device)
+  if [[ -n $ethernet ]]; then
+    waybar::emit "$ICON_ETHERNET" "Ethernet · ${ethernet}" ethernet
+    return 0
+  fi
 
-# "unknown" when NetworkManager is too slow to answer; the caller treats that
-# as "probably on" instead of showing a wrong "Wi-Fi off" prompt.
-wifi_radio() {
-  out=$(timeout 2 nmcli -t -f WIFI radio wifi 2>/dev/null)
-  [ $? -eq 124 ] && { printf 'unknown'; return; }
-  printf '%s' "$out"
-}
-
-# Build the network list: active network first (marked), then the rest by
-# signal strength, de-duplicated by SSID.
-# --rescan no is what makes this instant: NetworkManager hands back the last
-# scan it has instead of blocking for a fresh one (several seconds when the
-# cached results have gone stale).
-list_networks() {
-  timeout 3 nmcli -t -f IN-USE,SIGNAL,SECURITY,SSID device wifi list --rescan no 2>/dev/null \
-    | awk -F: '
-        $4 == "" { next }                        # skip hidden/blank SSIDs
-        !seen[$4]++ {
-          inuse = ($1 == "*")
-          lock  = ($3 == "" || $3 == "--") ? "" : ""
-          mark  = inuse ? "󰤨 " : "󰤥 "
-          star  = inuse ? "  ✓" : ""
-          printf "%s%s%s  ·  %s%%%s\n", mark, $4, (lock=="" ? "" : " "lock), $2, star
-        }'
-}
-
-# Extract the SSID back out of a formatted list row.
-row_to_ssid() {
-  printf '%s' "$1" | sed -E 's/^[^ ]+ //; s/  ·.*$//; s/ $//'
-}
-
-# Map a block of formatted rows to their bare SSIDs, one per line.
-# row_to_ssid deliberately prints without a newline, so add one here.
-rows_to_ssids() {
-  printf '%s\n' "$1" | while IFS= read -r row; do
-    [ -z "$row" ] && continue
-    printf '%s\n' "$(row_to_ssid "$row")"
-  done
-}
-
-# Two passes over one pipe. Pass one prints whatever NetworkManager already
-# knows, so rofi has something to draw on straight away; pass two waits on the
-# background rescan and appends whatever it turned up. rofi is already open and
-# interactive the whole time, and grows as rows arrive.
-stream_menu() {
-  header=$1; actions=$2
-  seen=""
-
-  nets=$(list_networks)
-  if [ -n "$nets" ]; then
-    printf '%s\n' "$nets"
-    seen=$(rows_to_ssids "$nets")
+  ssid=$(network::ssid)
+  if [[ -n $ssid ]]; then
+    waybar::emit "$ICON_CONNECTED" "Wi-Fi · ${ssid}" wifi
   else
-    printf '%s\n' "$SCANNING"
-  fi
-  cold=${nets:+0}; cold=${cold:-1}
-  printf '%s\n%s\n' "$header" "$actions"
-
-  # Results trickle in as the rescan progresses, so poll a few times. A write
-  # to a closed pipe (user already picked something) kills this subshell.
-  divider=0
-  for _ in 1 2 3; do
-    sleep 2
-    fresh=$(list_networks)
-    [ -z "$fresh" ] && continue
-    new=$(printf '%s\n' "$fresh" | while IFS= read -r row; do
-            [ -z "$row" ] && continue
-            ssid=$(row_to_ssid "$row")
-            printf '%s\n' "$seen" | grep -Fxq "$ssid" || printf '%s\n' "$row"
-          done)
-    [ -z "$new" ] && continue
-    [ "$divider" -eq 0 ] && { printf '%s\n' "$FOUND"; divider=1; }
-    printf '%s\n' "$new"
-    seen=$(printf '%s\n%s\n' "$seen" "$(rows_to_ssids "$new")")
-  done
-
-  # Started cold and the rescan turned up nothing: retire the placeholder
-  # with a real answer rather than leaving "Scanning…" on screen.
-  [ "$cold" -eq 1 ] && [ "$divider" -eq 0 ] && printf '%s\n' "$EMPTY"
-  return 0
-}
-
-connect_ssid() {
-  ssid=$1
-  # Known/saved connection: just bring it up.
-  if nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq "$ssid"; then
-    if nmcli connection up id "$ssid" >/dev/null 2>&1; then
-      rnotify "Connected" "$ssid"; return
-    fi
-  fi
-  # Try open connect first; if it needs a secret, prompt for a password.
-  if nmcli device wifi connect "$ssid" >/dev/null 2>&1; then
-    rnotify "Connected" "$ssid"; return
-  fi
-  pass=$(rpass "Password for $ssid")
-  [ -z "$pass" ] && return
-  if nmcli device wifi connect "$ssid" password "$pass" >/dev/null 2>&1; then
-    rnotify "Connected" "$ssid"
-  else
-    rnotify "Connection failed" "$ssid"
+    waybar::emit "$ICON_OFFLINE" 'Wi-Fi · not connected' disconnected
   fi
 }
 
-if [ "$1" = "menu" ]; then
-  radio=$(wifi_radio)
-  if [ "$radio" != "enabled" ] && [ "$radio" != "unknown" ]; then
-    choice=$(printf '%s\n' "󰖩  Turn Wi-Fi on" "  Close" | rmenu "Wi-Fi off")
-    case "$choice" in
-      *"Turn Wi-Fi on"*) nmcli radio wifi on ;;
-    esac
-    exit 0
-  fi
+# ---------------------------------------------------------------------------
+# Menu
+# ---------------------------------------------------------------------------
+# Rows are "SSID<TAB>label", so the SSID is carried rather than re-derived
+# from the rendered label.
+network_rows() {
+  local ssid signal secured active mark star lock
+  while IFS=$'\t' read -r ssid signal secured active; do
+    [[ -z $ssid ]] && continue
+    [[ $active == active ]] && { mark=$ICON_CONNECTED; star='  ✓'; } \
+                            || { mark=$ICON_SIGNAL;    star=''; }
+    [[ $secured == secured ]] && lock=" ${ICON_LOCK}" || lock=''
+    menu::row "$ssid" "$(printf '%s  %s%s  ·  %s%%%s' "$mark" "$ssid" "$lock" "$signal" "$star")"
+  done < <(network::scan_results)
+}
 
-  nmcli device wifi rescan >/dev/null 2>&1 &
-  current=$(current_ssid)
-  header="$HEADER"
-  actions=$(printf '%s\n' \
-    "󰑓  Rescan networks" \
-    "󰀂  Hotspot…" \
-    "󰖪  Turn Wi-Fi off" \
-    "󰒓  Advanced settings")
-
-  choice=$(stream_menu "$header" "$actions" \
-             | rmenu "Wi-Fi${current:+ ($current)}")
-  [ -z "$choice" ] && exit 0
-
-  case "$choice" in
-    *"Rescan networks"*)
-      nmcli device wifi rescan >/dev/null 2>&1
-      exec "$0" menu ;;
-    *"Turn Wi-Fi off"*)
-      nmcli radio wifi off ;;
-    *"Advanced settings"*)
-      setsid -f nm-connection-editor >/dev/null 2>&1 ;;
-    *"Hotspot"*)
-      name=$(rinput "Hotspot name")
-      [ -z "$name" ] && exit 0
-      pass=$(rpass "Hotspot password (min 8 chars)")
-      [ -z "$pass" ] && exit 0
-      if nmcli device wifi hotspot ssid "$name" password "$pass" >/dev/null 2>&1; then
-        rnotify "Hotspot started" "$name"
-      else
-        rnotify "Hotspot failed" "Check the password length (min 8)."
-      fi ;;
-    "$header") : ;;                         # divider, ignore
-    "$SCANNING"|"$FOUND"|"$EMPTY") : ;;     # placeholder / divider, ignore
-    "")       : ;;
-    *)
-      ssid=$(row_to_ssid "$choice")
-      [ -n "$ssid" ] && connect_ssid "$ssid" ;;
+join_network() {
+  local ssid=$1 password status
+  network::connect "$ssid"; status=$?
+  case $status in
+    0) notify::info 'Connected' "$ssid"; return 0 ;;
+    2) ;;                                   # needs a secret, fall through
+    *) notify::warn 'Connection failed' "$ssid"; return 1 ;;
   esac
-  exit 0
-fi
 
-# Bar output is the glyph alone — what is actually connected lives in the
-# hover tooltip, and the details/menu live in the quickshell control centre.
-eth=$(ethernet_iface)
-if [ -n "$eth" ]; then
-  printf '{"text":"󰈀","tooltip":"Ethernet \u00b7 %s","class":"ethernet"}\n' "$(json_escape "$eth")"
-  exit 0
-fi
+  password=$(rofi::password "$THEME" "Password for ${ssid}")
+  [[ -z $password ]] && return 0
+  if network::connect "$ssid" "$password"; then
+    notify::info 'Connected' "$ssid"
+  else
+    notify::warn 'Connection failed' "$ssid"
+  fi
+}
 
-active=$(current_ssid)
-if [ -n "$active" ]; then
-  active_json=$(json_escape "$active")
-  printf '{"text":"󰤨","tooltip":"Wi-Fi \u00b7 %s","class":"wifi"}\n' "$active_json"
-else
-  printf '{"text":"󰤮","tooltip":"Wi-Fi \u00b7 not connected","class":"disconnected"}\n'
-fi
+start_hotspot() {
+  local name password
+  name=$(rofi::input "$THEME" 'Hotspot name')
+  [[ -z $name ]] && return 0
+  password=$(rofi::password "$THEME" 'Hotspot password (min 8 chars)')
+  [[ -z $password ]] && return 0
+  if network::start_hotspot "$name" "$password"; then
+    notify::info 'Hotspot started' "$name"
+  else
+    notify::warn 'Hotspot failed' 'Check the password length (min 8).'
+  fi
+}
+
+cmd_menu() {
+  network::available || log::die 'NetworkManager (nmcli) is not installed'
+  rofi::available    || log::die 'rofi is not installed'
+
+  local radio choice ssid rows
+  radio=$(network::radio_state)
+  # "unknown" means NetworkManager was too slow to answer — treat it as
+  # probably-on rather than showing a wrong "Wi-Fi is off" prompt.
+  if [[ $radio != enabled && $radio != unknown ]]; then
+    choice=$(printf '%s\n' '󰖩  Turn Wi-Fi on' '  Close' | rofi::menu "$THEME" 'Wi-Fi off')
+    [[ $choice == *'Turn Wi-Fi on'* ]] && network::radio_on
+    return 0
+  fi
+
+  network::rescan &            # results trickle in while the menu is already up
+
+  rows=$(network_rows)
+  choice=$(menu::stream network_rows 3 2 "$SCANNING" "$NO_NETWORKS" \
+             "$(rofi::divider Actions)" \
+             "$ACTION_RESCAN" "$ACTION_HOTSPOT" "$ACTION_OFF" "$ACTION_ADVANCED" \
+           | menu::labels \
+           | rofi::menu "$THEME" "Wi-Fi$( [[ -n $(network::ssid) ]] && printf ' (%s)' "$(network::ssid)" )")
+
+  [[ -z $choice ]] && return 0
+  rofi::is_divider "$choice" && return 0
+
+  case $choice in
+    "$ACTION_RESCAN")   network::rescan; exec "$0" menu ;;
+    "$ACTION_OFF")      network::radio_off ;;
+    "$ACTION_ADVANCED") network::open_editor ;;
+    "$ACTION_HOTSPOT")  start_hotspot ;;
+    "$SCANNING"|"$NO_NETWORKS") ;;
+    *)
+      # Re-read the rows so a network that appeared mid-stream resolves too.
+      mapfile -t rows < <(network_rows)
+      ssid=$(menu::key_for "$choice" "${rows[@]}") || return 0
+      [[ -n $ssid ]] && join_network "$ssid"
+      ;;
+  esac
+}
+
+declare -A COMMANDS=(
+  [status]="cmd_status|emit the waybar module JSON (the default)"
+  [menu]="cmd_menu|open the Wi-Fi dropdown"
+)
+
+cli::dispatch "${1:-status}" "${@:2}"

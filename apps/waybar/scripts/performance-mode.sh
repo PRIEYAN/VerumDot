@@ -1,54 +1,51 @@
 #!/usr/bin/env bash
+# CPU power-mode module and its toggle. Bound to SUPER+P.
+#
+# The glyph colour is carried by the battery module's class, not this one;
+# see lib/domain/power.sh for why ppd is the source of truth and the cached
+# value only exists so the bar can paint without a D-Bus round trip.
 
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../scripts" && pwd)/_paths.sh"
-mode_file=/tmp/waybar-performance-mode
-mode=$(cat "$mode_file" 2>/dev/null || echo normal)
-if [ "$1" = "toggle" ]; then
-  case "$mode" in
-    normal) mode=performance;;
-    performance) mode=battery;;
-    battery) mode=normal;;
-  esac
-  printf '%s' "$mode" > "$mode_file"
-  # power-profiles-daemon over D-Bus: no sudo prompt, and it is the same knob
-  # the quickshell control centre drives, so the two cannot disagree. (The old
-  # `sudo cpupower` path fought PPD over the same intel_pstate driver.)
-  if command -v powerprofilesctl >/dev/null 2>&1; then
-    case "$mode" in
-      performance) powerprofilesctl set performance ;;
-      battery)     powerprofilesctl set power-saver ;;
-      *)           powerprofilesctl set balanced ;;
-    esac
-  elif command -v cpupower >/dev/null 2>&1; then
-    case "$mode" in
-      performance) sudo cpupower frequency-set -g performance ;;
-      battery)     sudo cpupower frequency-set -g powersave ;;
-      *)           sudo cpupower frequency-set -g ondemand ;;
-    esac
-  fi
-  # Re-assert the fan setting against the new mode. On "auto" that is what
-  # makes performance pin the fans at max and the other two hand them back to
-  # the BIOS curve; on an explicit normal/max it just holds the pin in place.
-  "$HYPR_SCRIPTS/fan-control.sh" apply >/dev/null 2>&1 || true
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli core/guard core/migrate os/state ui/waybar domain/power
 
-  # Repaint the battery module, which colours its glyph by mode
-  # (red = performance, green = battery, white = normal).
-  pkill -RTMIN+10 waybar >/dev/null 2>&1 || true
-  if command -v notify-send >/dev/null 2>&1; then
-    case "$mode" in
-      performance) notify-send -t 1500 -h string:x-canonical-private-synchronous:perf-mode "(ᗒᗣᗕ)՞" ;;
-      battery)     notify-send -t 1500 -h string:x-canonical-private-synchronous:perf-mode "(˶ᵔ ᵕ ᵔ˶)" ;;
-      normal)      notify-send -t 1500 -h string:x-canonical-private-synchronous:perf-mode "ツ" ;;
-    esac
-  fi
-  exit 0
-fi
-icon=''
-case "$mode" in
-  performance) icon='' ;;
-  battery) icon='' ;;
-  normal) icon='' ;;
-esac
-printf '{"text":"%s %s","tooltip":"Click to toggle performance mode"}' "$icon" "$mode"
+migrate::run
+
+cmd_status() {
+  local mode; mode=$(power::mode)
+  waybar::emit "${POWER_GLYPH[$mode]} ${mode}" \
+    'Click to cycle the CPU power mode' "mode-${mode}"
+}
+
+cmd_toggle() { power::cycle; }
+
+cmd_set() {
+  cli::need 1 "set <normal|performance|battery>" "$@"
+  power::set_mode "$1" || log::usage "set <normal|performance|battery>"
+}
+
+# cache — record a mode that something else has *already* applied, and
+# repaint the bar. The control centre drives PowerProfiles directly, so
+# calling `set` from there would re-apply the profile and loop back through
+# its own onProfileChanged handler.
+cmd_cache() {
+  cli::need 1 "cache <normal|performance|battery>" "$@"
+  guard::one_of "$1" "${POWER_MODES[@]}" >/dev/null || log::usage "cache <normal|performance|battery>"
+  state::set "$POWER_STATE_KEY" "$1"
+  waybar::refresh battery
+}
+
+declare -A COMMANDS=(
+  [status]="cmd_status|emit the waybar module JSON (the default)"
+  [toggle]="cmd_toggle|cycle normal -> performance -> battery"
+  [set]="cmd_set|<normal|performance|battery>  set the mode directly"
+  [cache]="cmd_cache|<mode>  record an externally-applied mode and repaint"
+)
+
+cli::dispatch "${1:-status}" "${@:2}"

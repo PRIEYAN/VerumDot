@@ -13,6 +13,7 @@
 
 import QtQuick
 import Quickshell
+import "shared"
 import Quickshell.Wayland
 import Quickshell.Io
 import Quickshell.Widgets
@@ -29,23 +30,23 @@ ShellRoot {
     readonly property int topFraction: 20        // % of screen height above the card
 
     // ---- macOS Sonoma glass material ----
-    readonly property color glass: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.60)
-    readonly property color edge: Qt.rgba(1, 1, 1, 0.18)
-    readonly property color hover: Qt.rgba(1, 1, 1, 0.08)
-    readonly property color fg: Qt.rgba(1, 1, 1, 0.95)
-    readonly property color muted: Qt.rgba(1, 1, 1, 0.70)
-    readonly property color faint: Qt.rgba(1, 1, 1, 0.45)
+    readonly property color glass: Theme.glass
+    readonly property color edge: Theme.edge
+    readonly property color hover: Theme.hover
+    readonly property color fg: Theme.fg
+    readonly property color muted: Theme.muted
+    readonly property color faint: Theme.faint
     // Selection and "on" states are a solid white fill, so anything drawn on
     // top of one has to invert to black to stay legible. (Named accentFg, not
     // onAccent — QML reads a property starting with "on" as a signal handler.)
-    readonly property color accent: "#ffffff"
-    readonly property color accentFg: "#000000"
-    readonly property color accentFgMuted: Qt.rgba(0, 0, 0, 0.60)
+    readonly property color accent: Theme.accent
+    readonly property color accentFg: Theme.accentFg
+    readonly property color accentFgMuted: Theme.accentFgMuted
     // Hover on a white fill has to go darker — Qt.lighter("#ffffff") is a no-op.
-    readonly property color accentHover: Qt.rgba(0.87, 0.87, 0.87, 1)
+    readonly property color accentHover: Theme.accentHover
     // Falls back to Noto Sans until inter-font is installed.
-    readonly property string uiFont: "Inter"
-    readonly property string iconFont: "IosevkaTerm Nerd Font"
+    readonly property string uiFont: Theme.uiFont
+    readonly property string iconFont: Theme.iconFont
 
     property bool shown: false
     property string query: ""

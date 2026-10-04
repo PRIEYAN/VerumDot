@@ -15,6 +15,7 @@
 
 import QtQuick
 import Quickshell
+import "shared"
 import Quickshell.Wayland
 import Quickshell.Io
 import Quickshell.Services.Mpris
@@ -23,7 +24,7 @@ ShellRoot {
     id: root
 
     // ---- geometry: hangs off the waybar island ----
-    readonly property int barHeight: 44        // island: 4px margin + 40px tall
+    readonly property int barHeight: Theme.barHeight
     // The bar's song title starts at x=468; the card's content is inset by
     // `pad`, so this lines the album art up with the title. (The module
     // shifts a little as the app-info title beside it changes width.)
@@ -33,23 +34,23 @@ ShellRoot {
     readonly property int pad: 16
 
     // ---- macOS Sonoma glass material ----
-    readonly property color glass: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.60)
-    readonly property color edge: Qt.rgba(1, 1, 1, 0.18)
-    readonly property color raised: Qt.rgba(1, 1, 1, 0.12)
-    readonly property color hover: Qt.rgba(1, 1, 1, 0.08)
-    readonly property color fg: Qt.rgba(1, 1, 1, 0.95)
-    readonly property color muted: Qt.rgba(1, 1, 1, 0.70)
-    readonly property color faint: Qt.rgba(1, 1, 1, 0.45)
+    readonly property color glass: Theme.glass
+    readonly property color edge: Theme.edge
+    readonly property color raised: Theme.raised
+    readonly property color hover: Theme.hover
+    readonly property color fg: Theme.fg
+    readonly property color muted: Theme.muted
+    readonly property color faint: Theme.faint
     // Selection and "on" states are a solid white fill, so anything drawn on
     // top of one has to invert to black to stay legible. (Named accentFg, not
     // onAccent — QML reads a property starting with "on" as a signal handler.)
-    readonly property color accent: "#ffffff"
-    readonly property color accentFg: "#000000"
-    readonly property color accentFgMuted: Qt.rgba(0, 0, 0, 0.60)
+    readonly property color accent: Theme.accent
+    readonly property color accentFg: Theme.accentFg
+    readonly property color accentFgMuted: Theme.accentFgMuted
     // Hover on a white fill has to go darker — Qt.lighter("#ffffff") is a no-op.
-    readonly property color accentHover: Qt.rgba(0.87, 0.87, 0.87, 1)
-    readonly property string uiFont: "Inter"
-    readonly property string iconFont: "IosevkaTerm Nerd Font"
+    readonly property color accentHover: Theme.accentHover
+    readonly property string uiFont: Theme.uiFont
+    readonly property string iconFont: Theme.iconFont
 
     property bool shown: false
     property real displayPosition: 0

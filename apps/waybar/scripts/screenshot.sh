@@ -1,39 +1,24 @@
 #!/usr/bin/env bash
+# Screenshot module for waybar: a button that captures a selected region.
+# The capture itself is scripts/screenshot.sh, so the keybind and the bar
+# button cannot drift apart.
 
-# Screenshot directory
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../scripts" && pwd)/_paths.sh"
-SAVE_DIR="$HOME/Pictures/Screenshots"
-mkdir -p "$SAVE_DIR"
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli core/paths ui/waybar
 
-if [ "$1" = "take" ]; then
-    # Filename with timestamp
-    FILE="$SAVE_DIR/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png"
+cmd_status() { waybar::emit $'\U000F0381' 'Click to select an area and screenshot'; }
+cmd_take()   { exec "$(paths::script screenshot.sh)" selection; }
 
-    # Check for dependencies
-    if ! command -v grim >/dev/null 2>&1 || ! command -v slurp >/dev/null 2>&1; then
-        notify-send "Screenshot Error" "Please install 'grim' and 'slurp' first."
-        exit 1
-    fi
+declare -A COMMANDS=(
+  [status]="cmd_status|emit the waybar module JSON (the default)"
+  [take]="cmd_take|capture a selected region"
+)
 
-    # Take screenshot of selected area
-    # -g $(slurp): select area
-    # "": output file
-    if grim -g "$(slurp)" "$FILE"; then
-        # Copy to clipboard if wl-copy exists
-        if command -v wl-copy >/dev/null 2>&1; then
-            wl-copy < "$FILE"
-        fi
-        
-        # Notify success
-        notify-send "Screenshot Saved" "Saved to $FILE and copied to clipboard." -i "$FILE"
-    else
-        notify-send "Screenshot Cancelled" "No area selected."
-    fi
-    exit 0
-fi
-
-# Waybar module output (Icon and Tooltip)
-printf '{"text":"","tooltip":"Click to select area and take a screenshot"}\n'
+cli::dispatch "${1:-status}" "${@:2}"

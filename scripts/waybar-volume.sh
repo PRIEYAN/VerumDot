@@ -1,27 +1,33 @@
 #!/usr/bin/env bash
+# Volume module for waybar.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-if [ "$1" = "menu" ]; then
-  eww -c "${HYPR_EWW}" open --toggle volume
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use ui/waybar domain/audio
+
+readonly ICON_ON=$''
+readonly ICON_MUTED=$''
+
+if ! audio::available; then
+  waybar::unavailable $'' "no audio backend (install pamixer or wireplumber)"
   exit 0
 fi
 
-if volume=$(pamixer --get-volume 2>/dev/null); then
-  if pamixer --get-mute 2>/dev/null | grep -Eq 'true|1'; then
-    printf '{"text":"󰝟 %s%%","tooltip":"Muted - click for volume menu"}\n' "$volume"
-  else
-    printf '{"text":"󰕾 %s%%","tooltip":"Volume - click for menu, scroll to adjust"}\n' "$volume"
-  fi
-elif wpctl get-volume @DEFAULT_AUDIO_SINK@ >/dev/null 2>&1; then
-  volume=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{printf "%d", $2 * 100}')
-  if wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED; then
-    printf '{"text":"󰝟 %s%%","tooltip":"Muted - click for volume menu"}\n' "$volume"
-  else
-    printf '{"text":"󰕾 %s%%","tooltip":"Volume - click for menu, scroll to adjust"}\n' "$volume"
-  fi
+volume=$(audio::volume) || {
+  waybar::unavailable $'' "the audio sink is not reporting a volume"
+  exit 0
+}
+
+if audio::muted; then
+  waybar::emit_pct "${ICON_MUTED} ${volume}%" \
+    'Click to unmute · scroll to change volume' "$volume" muted
 else
-  printf '{"text":"󰕾","tooltip":"Audio status unavailable"}\n'
+  waybar::emit_pct "${ICON_ON} ${volume}%" \
+    'Click to toggle mute · scroll to change volume' "$volume"
 fi

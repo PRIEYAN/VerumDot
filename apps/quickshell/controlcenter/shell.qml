@@ -17,6 +17,8 @@
 
 import QtQuick
 import Quickshell
+import "shared"
+import "shared/services"
 import Quickshell.Wayland
 import Quickshell.Io
 import Quickshell.Bluetooth
@@ -29,7 +31,7 @@ ShellRoot {
 
     // ---- geometry ----
     // waybar island: 4px top margin + 40px tall, so its underside is at 44.
-    readonly property int barHeight: 44
+    readonly property int barHeight: Theme.barHeight
     readonly property int panelWidth: 380
     readonly property int edgeGap: 8
     // waybar island side margin, from apps/waybar/config.jsonc ("4 6 0 6").
@@ -50,27 +52,27 @@ ShellRoot {
     // The panel sits at 60% so white text stays legible over a bright
     // wallpaper; the frost itself comes from the 4-pass blur in hypr.conf.
     // Cards layered on it use the 12% white "raised" material.
-    readonly property color glass: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.60)
-    readonly property color edge: Qt.rgba(1, 1, 1, 0.18)
-    readonly property color tileOff: Qt.rgba(1, 1, 1, 0.12)
-    readonly property color trackOff: Qt.rgba(1, 1, 1, 0.18)
-    readonly property color hover: Qt.rgba(1, 1, 1, 0.08)
-    readonly property color pressed: Qt.rgba(1, 1, 1, 0.15)
-    readonly property color fg: Qt.rgba(1, 1, 1, 0.95)
-    readonly property color muted: Qt.rgba(1, 1, 1, 0.70)
-    readonly property color faint: Qt.rgba(1, 1, 1, 0.45)
+    readonly property color glass: Theme.glass
+    readonly property color edge: Theme.edge
+    readonly property color tileOff: Theme.tileOff
+    readonly property color trackOff: Theme.trackOff
+    readonly property color hover: Theme.hover
+    readonly property color pressed: Theme.pressed
+    readonly property color fg: Theme.fg
+    readonly property color muted: Theme.muted
+    readonly property color faint: Theme.faint
     // Selection and "on" states are a solid white fill, so anything drawn on
     // top of one has to invert to black to stay legible. (Named accentFg, not
     // onAccent — QML reads a property starting with "on" as a signal handler.)
-    readonly property color accent: "#ffffff"
-    readonly property color accentFg: "#000000"
-    readonly property color accentFgMuted: Qt.rgba(0, 0, 0, 0.60)
+    readonly property color accent: Theme.accent
+    readonly property color accentFg: Theme.accentFg
+    readonly property color accentFgMuted: Theme.accentFgMuted
     // Hover on a white fill has to go darker — Qt.lighter("#ffffff") is a no-op.
-    readonly property color accentHover: Qt.rgba(0.87, 0.87, 0.87, 1)
-    readonly property color danger: "#FF6961"
+    readonly property color accentHover: Theme.accentHover
+    readonly property color danger: Theme.danger
     // Falls back to Noto Sans until inter-font is installed.
-    readonly property string uiFont: "Inter"
-    readonly property string iconFont: "IosevkaTerm Nerd Font"
+    readonly property string uiFont: Theme.uiFont
+    readonly property string iconFont: Theme.iconFont
 
     property bool shown: false
     PersistentProperties {
@@ -85,7 +87,6 @@ ShellRoot {
     property bool brightnessExpanded: false
     property bool fanExpanded: false
     // auto | normal | max — see scripts/fan-control.sh for what each resolves to.
-    property string fanMode: "auto"
 
     // .../hypr — this config lives at hypr/apps/quickshell/controlcenter.
     readonly property string riceDir: Quickshell.shellPath("../../..")
@@ -147,157 +148,30 @@ ShellRoot {
     readonly property bool sinkMuted: sink?.audio?.muted ?? false
     readonly property bool micMuted: source?.audio?.muted ?? false
 
-    // ---- brightness (no native service; brightnessctl instead) ----
-    property int brightness: 0
-
-    Process {
-        id: brightnessRead
-        command: ["brightnessctl", "-m"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                // device,class,current,percent,max
-                const parts = text.trim().split(",");
-                if (parts.length >= 4) {
-                    const pct = parseInt(parts[3].replace("%", ""), 10);
-                    if (!isNaN(pct)) root.brightness = pct;
-                }
-            }
-        }
-    }
-
-    Process { id: brightnessWrite }
-
-    function setBrightness(pct) {
-        // Floored at 5 so the slider can never black the panel out entirely.
-        const v = Math.max(5, Math.min(100, Math.round(pct)));
-        root.brightness = v;
-        brightnessWrite.command = ["brightnessctl", "set", v + "%"];
-        brightnessWrite.running = true;
-        pokeWaybar(1);
+    // ---- brightness ----
+    // The one piece of hardware with no native quickshell service.
+    BrightnessService {
+        id: brightnessService
+        onChanged: waybar.repaint(waybar.brightness)
     }
 
     // ---- eye comfort ----
-    property bool eyeComfortEnabled: false
-    property bool eyeComfortAvailable: false
-    property int eyeComfortIntensity: 70
-    property bool eyeComfortPending: false
-    property string eyeComfortError: ""
-    readonly property string eyeComfortScript: riceDir + "/apps/waybar/scripts/eye-comfort-toggle.sh"
-
-    Process {
-        id: eyeComfortRead
-        command: [root.eyeComfortScript, "status"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (root.eyeComfortPending || eyeComfortWrite.running) return;
-                try {
-                    const state = JSON.parse(text);
-                    root.eyeComfortEnabled = state.enabled;
-                    root.eyeComfortIntensity = state.intensity;
-                    root.eyeComfortAvailable = state.available;
-                } catch (e) {
-                    root.eyeComfortError = "Could not read Eye Comfort status.";
-                }
-            }
-        }
+    EyeComfortService {
+        id: eyeComfort
+        script: root.riceDir + "/apps/waybar/scripts/eye-comfort-toggle.sh"
+        // Polling only while the section is open keeps a pgrep off the
+        // critical path the rest of the time.
+        active: root.shown && root.brightnessExpanded
     }
 
-    Process {
-        id: eyeComfortWrite
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0) root.eyeComfortError = "Could not apply Eye Comfort. Try again.";
-            if (root.eyeComfortPending) eyeComfortDelay.restart();
-            else eyeComfortRead.running = true;
-        }
-    }
-
-    // Coalesce dragging and serialize writes, preserving the final value.
-    Timer {
-        id: eyeComfortDelay
-        interval: 180
-        onTriggered: {
-            if (eyeComfortWrite.running) return;
-            root.eyeComfortPending = false;
-            eyeComfortWrite.command = [root.eyeComfortScript, "apply",
-                root.eyeComfortEnabled ? "on" : "off", String(root.eyeComfortIntensity)];
-            eyeComfortWrite.running = true;
-        }
-    }
-
-    function setEyeComfort(enabled, intensity) {
-        if (!eyeComfortAvailable) return;
-        eyeComfortEnabled = enabled;
-        eyeComfortIntensity = Math.max(0, Math.min(100, Math.round(intensity)));
-        eyeComfortError = "";
-        eyeComfortPending = true;
-        eyeComfortDelay.restart();
-    }
-
-    Timer {
-        interval: 2000
-        repeat: true
-        running: root.shown && root.brightnessExpanded
-        onTriggered: {
-            if (!root.eyeComfortPending && !eyeComfortWrite.running)
-                eyeComfortRead.running = true;
-        }
-    }
 
     // ---- privacy ----
-    property var privacyState: ({})
-    property var privacyCheck: ({})
-    property string privacyError: ""
-    property string privacyMessage: ""
-    readonly property string privacyScript: riceDir + "/scripts/privacy-control.py"
-
-    Process {
-        id: privacyRead
-        command: ["python3", root.privacyScript, "status"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try { root.privacyState = JSON.parse(text); }
-                catch (e) { root.privacyError = "Could not read privacy status."; }
-            }
-        }
+    PrivacyService {
+        id: privacy
+        script: root.riceDir + "/scripts/privacy-control.py"
+        active: root.shown && root.page === "privacy"
     }
 
-    Process {
-        id: privacyWrite
-        property string action: ""
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const result = JSON.parse(text);
-                    if (result.error) root.privacyError = result.error;
-                    else if (privacyWrite.action === "check") root.privacyCheck = result;
-                    else if (result.message) root.privacyMessage = result.message;
-                    else root.privacyState = result;
-                } catch (e) { root.privacyError = "The privacy action did not finish."; }
-            }
-        }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0 && !root.privacyError)
-                root.privacyError = "The privacy action failed or was cancelled.";
-            privacyRead.running = true;
-        }
-    }
-
-    function privacyAction(action) {
-        if (privacyWrite.running) return;
-        privacyError = "";
-        privacyMessage = "";
-        if (action !== "check") privacyCheck = ({});
-        privacyWrite.action = action;
-        privacyWrite.command = ["python3", privacyScript, action];
-        privacyWrite.running = true;
-    }
-
-    Timer {
-        interval: 3000
-        repeat: true
-        running: root.shown && root.page === "privacy" && !privacyWrite.running
-        onTriggered: privacyRead.running = true
-    }
 
     // ---- network ----
     readonly property var wifiDevice: {
@@ -466,98 +340,34 @@ ShellRoot {
     }
 
     // ---- fan ----
-    // hp-wmi exposes one writable knob, pwm1_enable, with two meaningful
-    // values: the BIOS automatic curve, or both fans pinned at maximum. There
-    // is no duty-cycle register, so "fan speed" is a three-way *setting* rather
-    // than a slider:
-    //
-    //   auto    follow the power mode — performance pins the fans at max,
-    //           battery and balanced hand them back to the BIOS curve
-    //   normal  always the BIOS curve, even in performance mode
-    //   max     always pinned, even in battery mode
-    //
-    // scripts/fan-control.sh owns the sysfs write and the persisted choice;
-    // this only reads and drives it, so SUPER+P and the panel cannot disagree.
-    readonly property string fanScript: riceDir + "/scripts/fan-control.sh"
-
-    readonly property string fanLabel: {
-        switch (root.fanMode) {
-        case "max":    return "Max";
-        case "normal": return "Normal";
-        default:       return "Auto";
-        }
+    // See shared/services/FanService.qml for why a two-state device is
+    // presented as a three-way setting.
+    FanService {
+        id: fan
+        script: root.riceDir + "/scripts/fan-control.sh"
     }
 
-    Process {
-        id: fanRead
-        command: [root.fanScript, "get"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const v = text.trim();
-                if (v === "auto" || v === "normal" || v === "max") root.fanMode = v;
-            }
-        }
-    }
-
-    Process { id: fanWrite }
-
-    function setFanMode(m) {
-        root.fanMode = m;                 // optimistic, so the row ticks at once
-        fanWrite.running = false;
-        fanWrite.command = [root.fanScript, "set", m];
-        fanWrite.running = true;
-    }
-
-    Process { id: fanApply }
-
-    // On "auto" the resolved pwm depends on the power mode, so a mode change
-    // has to re-run the resolution. Harmless on "normal"/"max" — fan-control.sh
-    // skips the write when the node already holds the value it wants.
-    function applyFan() {
-        fanApply.running = false;
-        fanApply.command = [root.fanScript, "apply"];
-        fanApply.running = true;
-    }
 
     // ---- keeping waybar in step ----
-    // waybar custom modules only re-exec on their poll interval (up to 10s),
-    // so a change made in here used to take that long to show up in the bar.
-    // Each module has a `signal` in config.jsonc; poking it repaints at once.
-    // Signals are coalesced over 150ms so dragging a slider does not spawn a
-    // pkill per frame.
-    Process { id: waybarPoke }
-    property var pendingPokes: ({})
+    WaybarBridge { id: waybar }
 
-    Timer {
-        id: pokeTimer
-        interval: 150
-        onTriggered: {
-            const sigs = Object.keys(root.pendingPokes);
-            if (sigs.length === 0) return;
-            root.pendingPokes = ({});
-            waybarPoke.running = false;
-            waybarPoke.command = ["sh", "-c",
-                sigs.map(n => "pkill -RTMIN+" + n + " waybar").join("; ")];
-            waybarPoke.running = true;
-        }
-    }
+    onVolumeChanged:    waybar.repaint(waybar.volume)
+    onSinkMutedChanged: waybar.repaint(waybar.volume)
+    onMicMutedChanged:  waybar.repaint(waybar.mic)
+    onWifiNameChanged:  waybar.repaint(waybar.wifi)
+    onBtNameChanged:    waybar.repaint(waybar.bluetooth)
+    onStayAwakeChanged: waybar.repaint(waybar.stayAwake)
 
-    function pokeWaybar(sig) {
-        root.pendingPokes[sig] = true;
-        pokeTimer.restart();
-    }
 
-    // Module signal numbers, from apps/waybar/config.jsonc.
-    onVolumeChanged: pokeWaybar(2)
-    onSinkMutedChanged: pokeWaybar(2)
-    onMicMutedChanged: pokeWaybar(3)
-    onWifiNameChanged: pokeWaybar(8)
-    onBtNameChanged: pokeWaybar(9)
-    onStayAwakeChanged: pokeWaybar(11)
-
-    // battery-status.sh colours the waybar battery glyph from this file, and
-    // waybar only repaints that module on RTMIN+10. Without this the bar kept
-    // showing the mode it was last told about by SUPER+P.
+    // The battery module colours its glyph from the cached power mode, and
+    // waybar only repaints it on RTMIN+10. Without this the bar kept showing
+    // whatever mode it was last told about by SUPER+P.
+    //
+    // The cache is written through performance-mode.sh rather than by echoing
+    // into a path from here. It used to be a fixed /tmp/waybar-performance-mode
+    // — a predictable name in a world-writable directory, and the wrong tree
+    // for something meant to survive a reboot. lib/os/state.sh owns it now,
+    // and having exactly one writer is what keeps the two in step.
     Process { id: waybarSync }
 
     function syncWaybarMode() {
@@ -566,9 +376,8 @@ ShellRoot {
         else if (PowerProfiles.profile === PowerProfile.PowerSaver) mode = "battery";
 
         waybarSync.running = false;
-        waybarSync.command = ["sh", "-c",
-            "printf '%s' " + mode + " > /tmp/waybar-performance-mode;"
-            + " pkill -RTMIN+10 waybar"];
+        waybarSync.command = [root.riceDir + "/apps/waybar/scripts/performance-mode.sh",
+                              "cache", mode];
         waybarSync.running = true;
     }
 
@@ -577,16 +386,16 @@ ShellRoot {
         target: PowerProfiles
         function onProfileChanged() {
             root.syncWaybarMode();
-            root.applyFan();
+            fan.apply();
         }
     }
 
     Component.onCompleted: {
         root.syncWaybarMode();
-        fanRead.running = true;
+        fan.refresh();
         // pwm1_enable resets to the BIOS default on every boot, so the saved
         // choice has to be re-asserted once the shell comes up.
-        root.applyFan();
+        fan.apply();
     }
 
     // ---- power actions (mirrors scripts/power-menu.sh) ----
@@ -595,7 +404,7 @@ ShellRoot {
     function powerAction(what) {
         let cmd;
         switch (what) {
-        case "shutdown": cmd = [root.riceDir + "/scripts/mogger_shutdown.sh"]; break;
+        case "shutdown": cmd = [root.riceDir + "/scripts/mogger-shutdown.sh"]; break;
         case "reboot":   cmd = ["systemctl", "reboot"]; break;
         case "logout":   cmd = ["hyprctl", "dispatch", "exit"]; break;
         case "lock":     cmd = ["hyprlock", "-c",
@@ -626,7 +435,7 @@ ShellRoot {
     // ---- navigation ----
     // Scanning is expensive, so it runs only while the matching page is open.
     onPageChanged: {
-        if (page === "privacy") privacyRead.running = true;
+        if (page === "privacy") privacy.refresh();
         if (wifiDevice) wifiDevice.scannerEnabled = (page === "wifi") && Networking.wifiEnabled;
         if (btAdapter) btAdapter.discovering = (page === "bluetooth") && btOn;
         if (page !== "wifi") cancelPsk();
@@ -642,10 +451,10 @@ ShellRoot {
     }
 
     function open() {
-        brightnessRead.running = true;
-        fanRead.running = true;
-        eyeComfortRead.running = true;
-        privacyRead.running = true;
+        brightnessService.refresh();
+        fan.refresh();
+        eyeComfort.refresh();
+        privacy.refresh();
         shown = true;
     }
 
@@ -669,6 +478,24 @@ ShellRoot {
         function isOpen(): bool { return root.shown }
         function toggleStayAwake(): void { root.stayAwake = !root.stayAwake }
         function isStayAwake(): bool { return root.stayAwake }
+
+        // Open straight to a detail page: "main", "wifi", "bluetooth" or
+        // "privacy". Lets a keybind jump to Wi-Fi without two clicks, and
+        // gives the panel's pages something that can drive them under test.
+        function showPage(name: string): void {
+            root.open();
+            root.page = name;
+        }
+        function currentPage(): string { return root.page }
+
+        // Expand a collapsible section by name: "power", "audio",
+        // "brightness" or "fan".
+        function expand(section: string): void {
+            root.powerExpanded = section === "power";
+            root.audioExpanded = section === "audio";
+            root.brightnessExpanded = section === "brightness";
+            root.fanExpanded = section === "fan";
+        }
     }
 
     // Held against the always-visible hot corner window — an inhibitor bound to
@@ -1170,13 +997,13 @@ ShellRoot {
                     Slider {
                         width: parent.width
                         glyph: "󰃟"
-                        value: root.brightness
-                        onMoved: v => root.setBrightness(v)
+                        value: brightnessService.value
+                        onMoved: v => brightnessService.set(v)
                         iconClickable: true
                         iconActive: root.brightnessExpanded
                         onIconClicked: {
                             root.brightnessExpanded = !root.brightnessExpanded;
-                            if (root.brightnessExpanded) eyeComfortRead.running = true;
+                            if (root.brightnessExpanded) eyeComfort.refresh();
                         }
                     }
 
@@ -1210,21 +1037,21 @@ ShellRoot {
                                 Toggle {
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    on: root.eyeComfortEnabled
-                                    enabled: root.eyeComfortAvailable
+                                    on: eyeComfort.enabled
+                                    enabled: eyeComfort.available
                                     opacity: enabled ? 1 : 0.4
-                                    onSwitched: root.setEyeComfort(!root.eyeComfortEnabled,
-                                        root.eyeComfortIntensity)
+                                    onSwitched: eyeComfort.apply(!eyeComfort.enabled,
+                                        eyeComfort.intensity)
                                 }
                             }
 
                             Text {
                                 width: parent.width
-                                text: root.eyeComfortError || (!root.eyeComfortAvailable
+                                text: eyeComfort.error || (!eyeComfort.available
                                     ? "Install hyprsunset to enable Eye Comfort."
                                     : "Reduce blue light with a warmer screen.")
                                 wrapMode: Text.WordWrap
-                                color: root.eyeComfortError ? root.danger : root.muted
+                                color: eyeComfort.error ? root.danger : root.muted
                                 font.family: root.uiFont
                                 font.pixelSize: 11
                             }
@@ -1232,10 +1059,10 @@ ShellRoot {
                             Slider {
                                 width: parent.width
                                 glyph: "󰖔"
-                                value: root.eyeComfortIntensity
-                                enabled: root.eyeComfortAvailable
+                                value: eyeComfort.intensity
+                                enabled: eyeComfort.available
                                 opacity: enabled ? 1 : 0.4
-                                onMoved: v => root.setEyeComfort(root.eyeComfortEnabled, v)
+                                onMoved: v => eyeComfort.apply(eyeComfort.enabled, v)
                             }
 
                             Item {
@@ -1371,7 +1198,7 @@ ShellRoot {
                         width: parent.width
                         glyph: root.profileGlyph
                         label: "Power mode"
-                        sublabel: root.profileLabel + "  ·  Fan " + root.fanLabel.toLowerCase()
+                        sublabel: root.profileLabel + "  ·  Fan " + fan.label.toLowerCase()
                         active: PowerProfiles.profile !== PowerProfile.Balanced
                                 || root.fanExpanded
                         splitIcon: true
@@ -1392,27 +1219,27 @@ ShellRoot {
                             glyph: "󰑐"
                             title: "Auto"
                             note: "Follows the power mode"
-                            trailing: root.fanMode === "auto" ? "󰄬" : ""
-                            active: root.fanMode === "auto"
-                            onClicked: root.setFanMode("auto")
+                            trailing: fan.mode === "auto" ? "󰄬" : ""
+                            active: fan.mode === "auto"
+                            onClicked: fan.setMode("auto")
                         }
                         ListRow {
                             width: parent.width
                             glyph: "󰈐"
                             title: "Normal"
                             note: "BIOS curve, even in performance"
-                            trailing: root.fanMode === "normal" ? "󰄬" : ""
-                            active: root.fanMode === "normal"
-                            onClicked: root.setFanMode("normal")
+                            trailing: fan.mode === "normal" ? "󰄬" : ""
+                            active: fan.mode === "normal"
+                            onClicked: fan.setMode("normal")
                         }
                         ListRow {
                             width: parent.width
                             glyph: "󰓅"
                             title: "Max"
                             note: "Pinned at full speed, even on battery"
-                            trailing: root.fanMode === "max" ? "󰄬" : ""
-                            active: root.fanMode === "max"
-                            onClicked: root.setFanMode("max")
+                            trailing: fan.mode === "max" ? "󰄬" : ""
+                            active: fan.mode === "max"
+                            onClicked: fan.setMode("max")
                         }
                     }
 
@@ -1531,13 +1358,13 @@ ShellRoot {
                     Tile {
                         width: parent.width
                         glyph: "󰒃"
-                        label: root.privacyState.restorable ? "Restore MAC setting" : "Randomize MAC"
-                        sublabel: root.privacyState.randomized ? "Random address on each connection"
+                        label: privacy.state.restorable ? "Restore MAC setting" : "Randomize MAC"
+                        sublabel: privacy.state.randomized ? "Random address on each connection"
                             : "Use a random address on this network"
-                        active: root.privacyState.randomized ?? false
-                        enabled: !privacyWrite.running && !!root.privacyState.device
+                        active: privacy.state.randomized ?? false
+                        enabled: !privacy.busy && !!privacy.state.device
                         opacity: enabled ? 1 : 0.5
-                        onClicked: root.privacyAction(root.privacyState.restorable ? "mac-off" : "mac-on")
+                        onClicked: privacy.run(privacy.state.restorable ? "mac-off" : "mac-on")
                     }
 
                     Text {
@@ -1551,9 +1378,9 @@ ShellRoot {
 
                     Text {
                         width: parent.width
-                        text: (root.privacyState.device || "No active network")
-                            + "\nCurrent MAC: " + (root.privacyState.mac || "Unavailable")
-                            + (root.privacyState.previous_mac ? "\nPrevious MAC: " + root.privacyState.previous_mac : "")
+                        text: (privacy.state.device || "No active network")
+                            + "\nCurrent MAC: " + (privacy.state.mac || "Unavailable")
+                            + (privacy.state.previous_mac ? "\nPrevious MAC: " + privacy.state.previous_mac : "")
                         color: root.muted
                         font.family: root.uiFont
                         font.pixelSize: 11
@@ -1565,11 +1392,11 @@ ShellRoot {
                     Tile {
                         width: parent.width
                         glyph: "󰇧"
-                        label: root.privacyState.browser_available ? "Open Tor Browser" : "Install Tor Browser"
-                        sublabel: root.privacyState.browser_available ? "Private browsing through Tor" : "Requires administrator authentication"
-                        enabled: !privacyWrite.running
+                        label: privacy.state.browser_available ? "Open Tor Browser" : "Install Tor Browser"
+                        sublabel: privacy.state.browser_available ? "Private browsing through Tor" : "Requires administrator authentication"
+                        enabled: !privacy.busy
                         opacity: enabled ? 1 : 0.5
-                        onClicked: root.privacyAction(root.privacyState.browser_available ? "browser" : "install")
+                        onClicked: privacy.run(privacy.state.browser_available ? "browser" : "install")
                     }
 
                     Text {
@@ -1586,17 +1413,17 @@ ShellRoot {
                         glyph: "󰄬"
                         title: "Check public IPs"
                         note: "Connect Tor Browser first · checks IPv4"
-                        enabled: !privacyWrite.running
+                        enabled: !privacy.busy
                         opacity: enabled ? 1 : 0.5
-                        onClicked: root.privacyAction("check")
+                        onClicked: privacy.run("check")
                     }
 
                     Text {
                         width: parent.width
-                        visible: !!root.privacyCheck.direct_ip
-                        text: "Ordinary connection: " + (root.privacyCheck.direct_ip || "")
-                            + "\nTor connection: " + (root.privacyCheck.tor_ip || "")
-                            + (root.privacyCheck.tor_verified ? "\nTor exit verified" : "\nTor not verified")
+                        visible: !!privacy.check.direct_ip
+                        text: "Ordinary connection: " + (privacy.check.direct_ip || "")
+                            + "\nTor connection: " + (privacy.check.tor_ip || "")
+                            + (privacy.check.tor_verified ? "\nTor exit verified" : "\nTor not verified")
                         color: root.muted
                         font.family: root.uiFont
                         font.pixelSize: 11
@@ -1605,9 +1432,9 @@ ShellRoot {
 
                     Text {
                         width: parent.width
-                        visible: privacyWrite.running
-                        text: privacyWrite.action === "check" ? "Checking connections…"
-                            : privacyWrite.action === "install" ? "Installing Tor Browser…"
+                        visible: privacy.busy
+                        text: privacy.action === "check" ? "Checking connections…"
+                            : privacy.action === "install" ? "Installing Tor Browser…"
                             : "Applying…"
                         color: root.muted
                         font.family: root.uiFont
@@ -1617,8 +1444,8 @@ ShellRoot {
                     Text {
                         width: parent.width
                         visible: text !== ""
-                        text: root.privacyError || root.privacyState.error || root.privacyMessage
-                        color: (root.privacyError || root.privacyState.error) ? root.danger : root.muted
+                        text: privacy.error || privacy.state.error || privacy.message
+                        color: (privacy.error || privacy.state.error) ? root.danger : root.muted
                         font.family: root.uiFont
                         font.pixelSize: 11
                         wrapMode: Text.WordWrap

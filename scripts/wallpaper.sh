@@ -1,151 +1,40 @@
 #!/usr/bin/env bash
+# Wallpaper setter. The desktop and the lock screen are separate choices;
+# see lib/domain/wallpaper.sh for the tracking rule between them.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_wallpaper"
-DEFAULT_WALLPAPER="$HOME/Pictures/Wallpapers/suf.png"
-CURRENT_LINK="${HYPR_DIR}/current-wallpaper"
-WATCHER_PID_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_wallpaper_watcher.pid"
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli core/migrate domain/wallpaper
 
-# Lock screen keeps its own choice, independent of the desktop wallpaper.
-# hyprlock.conf reads the symlink; until one is picked it tracks the desktop.
-# Neither symlink is git-tracked (see .gitignore) -- they are per-machine
-# runtime state, and tracking one made git operations revert the lock screen.
-LOCK_CACHE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/hypr_lock_wallpaper"
-LOCK_LINK="${HYPR_DIR}/lock-wallpaper"
+migrate::run
 
-# Ensure cache dir exists
-mkdir -p "$(dirname "$CACHE_FILE")"
+cmd_init() { wallpaper::init; }
 
-set_wallpaper() {
-    local img="$1"
-    
-    # Check if file exists, else use default
-    if [[ ! -f "$img" ]]; then
-        img="$DEFAULT_WALLPAPER"
-    fi
-
-    # Persist choice + stable symlink for hyprlock / other tools
-    echo "$img" > "$CACHE_FILE"
-    ln -sfn "$img" "$CURRENT_LINK"
-
-    # The lock screen follows the desktop ONLY until a lock-specific wallpaper
-    # is picked; LOCK_CACHE_FILE is that flag. Once it exists, changing the
-    # desktop wallpaper must never touch the lock screen again -- that is the
-    # whole point of SUPER CTRL SHIFT W. Without this the tracking promise in
-    # hyprlock.conf was only honoured at startup, so an untracked lock screen
-    # kept showing a stale desktop wallpaper until the next Hyprland restart.
-    if [[ ! -s "$LOCK_CACHE_FILE" ]]; then
-        ln -sfn "$img" "$LOCK_LINK"
-    fi
-
-    # hyprpaper v0.8+ unified IPC: the `wallpaper` command auto-loads the
-    # image, so a separate `preload` is unnecessary (and rejected as an
-    # "invalid hyprpaper request" on this version). Setting it directly is
-    # what actually sticks.
-    local monitors
-    monitors=$(hyprctl monitors | grep "Monitor" | awk '{print $2}')
-    for m in $monitors; do
-        hyprctl hyprpaper wallpaper "$m,$img" >/dev/null 2>&1
-    done
-
-    # Start watcher for this file
-    start_watcher "$img"
+cmd_set() {
+  cli::need 1 "set <path/to/image>" "$@"
+  wallpaper::set "$1"
 }
 
-set_lock_wallpaper() {
-    local img="$1"
-
-    if [[ ! -f "$img" ]]; then
-        img="$DEFAULT_WALLPAPER"
-    fi
-
-    # hyprlock reads the image at lock time, so there is no daemon to poke --
-    # persisting the choice and repointing the symlink is the whole job.
-    echo "$img" > "$LOCK_CACHE_FILE"
-    ln -sfn "$img" "$LOCK_LINK"
+cmd_set_lock() {
+  cli::need 1 "set-lock <path/to/image>" "$@"
+  wallpaper::set_lock "$1"
 }
 
-start_watcher() {
-    local img="$1"
-    
-    # Kill previous watcher
-    if [[ -f "$WATCHER_PID_FILE" ]]; then
-        local pid=$(cat "$WATCHER_PID_FILE")
-        if kill -0 "$pid" 2>/dev/null; then
-            kill "$pid"
-        fi
-        rm "$WATCHER_PID_FILE"
-    fi
+cmd_get()  { wallpaper::current; echo; }
+cmd_list() { wallpaper::list; }
 
-    # Don't watch the default wallpaper
-    if [[ "$img" == "$DEFAULT_WALLPAPER" ]]; then
-        return
-    fi
+declare -A COMMANDS=(
+  [init]="cmd_init|start hyprpaper and restore both wallpapers (session start)"
+  [set]="cmd_set|<image>  set the desktop wallpaper"
+  [set-lock]="cmd_set_lock|<image>  pin the lock screen wallpaper"
+  [get]="cmd_get|print the current desktop wallpaper"
+  [list]="cmd_list|list available wallpapers"
+)
 
-    # Background watcher
-    (
-        # Wait for deletion
-        inotifywait -e delete_self "$img" >/dev/null 2>&1
-        # Fallback to default
-        "$0" set "$DEFAULT_WALLPAPER"
-    ) &
-    echo $! > "$WATCHER_PID_FILE"
-}
-
-init() {
-    # Ensure hyprpaper is running
-    if ! pgrep -x "hyprpaper" > /dev/null; then
-        hyprpaper &
-    fi
-
-    # Wait for hyprpaper's IPC socket instead of a blind sleep, so the
-    # first `wallpaper` call doesn't race the daemon's startup.
-    local sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.hyprpaper.sock"
-    for _ in $(seq 1 50); do
-        [[ -S "$sock" ]] && break
-        sleep 0.1
-    done
-
-    local img="$DEFAULT_WALLPAPER"
-    if [[ -f "$CACHE_FILE" ]]; then
-        img="$(cat "$CACHE_FILE")"
-    fi
-
-    # Never restore Hyprland's stock wallpaper: if the cached choice is the
-    # old default or no longer exists, fall back to the user's default.
-    if [[ "$img" == /usr/share/hypr/* || ! -f "$img" ]]; then
-        img="$DEFAULT_WALLPAPER"
-    fi
-
-    set_wallpaper "$img"
-
-    # Lock screen: restore its own choice, or track the desktop wallpaper
-    # until one is picked, so hyprlock never falls back to the flat color.
-    local lock_img=""
-    if [[ -f "$LOCK_CACHE_FILE" ]]; then
-        lock_img="$(cat "$LOCK_CACHE_FILE")"
-    fi
-    if [[ -z "$lock_img" || ! -f "$lock_img" ]]; then
-        lock_img="$img"
-    fi
-    ln -sfn "$lock_img" "$LOCK_LINK"
-}
-
-case "$1" in
-    set)
-        set_wallpaper "$2"
-        ;;
-    set-lock)
-        set_lock_wallpaper "$2"
-        ;;
-    init)
-        init
-        ;;
-    *)
-        echo "Usage: $0 {set path/to/img|set-lock path/to/img|init}"
-        exit 1
-        ;;
-esac
+cli::dispatch "${1:-get}" "${@:2}"

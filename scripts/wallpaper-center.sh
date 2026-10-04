@@ -1,48 +1,53 @@
 #!/usr/bin/env bash
+# Wallpaper picker: a rofi grid of thumbnails.
 #
-# Wallpaper center. Lists wallpapers in a rofi menu with thumbnail icons
-# (rofi row metadata: "name\0icon\x1f/path"). Selecting one calls the
-# wallpaper.sh setter. Pure shell -- no python, no GTK.
-#
-# Usage: wallpaper-center.sh [lock]
-#   (no args)  set the desktop wallpaper   -> wallpaper.sh set
-#   lock       set the lock screen wallpaper -> wallpaper.sh set-lock
+#   (no args)  set the desktop wallpaper
+#   lock       set the lock screen wallpaper instead
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-THEME="${HYPR_ROFI}/wallpaper.rasi"
-WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
-SET_WALLPAPER="${HYPR_DIR}/scripts/wallpaper.sh"
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli ui/rofi domain/wallpaper
 
-# Desktop by default; "lock" targets the hyprlock background instead.
-if [ "$1" = "lock" ]; then
-  PROMPT="Lock Screen Wallpaper"
-  SET_ACTION="set-lock"
-else
-  PROMPT="Wallpaper"
-  SET_ACTION="set"
-fi
+readonly THEME=wallpaper
 
-[ -d "$WALLPAPER_DIR" ] || exit 0
+pick() {
+  local prompt=$1 path selection
+  [[ -d $HYPR_WALLPAPER_DIR ]] || log::die -c 0 "no wallpaper directory at ${HYPR_WALLPAPER_DIR}"
+  rofi::available || log::die 'rofi is not installed'
 
-# Build the rofi input: one line per image, "basename\0icon\x1f/full/path".
-# The \x1f (unit separator) tells rofi the icon path for that row.
-list_entries() {
-  find "$WALLPAPER_DIR" -maxdepth 1 -type f \
-    \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
-    | sort | while IFS= read -r path; do
-        name=$(basename "$path")
-        printf '%s\0icon\x1f%s\n' "$name" "$path"
-      done
+  # wallpaper.rasi renders a grid of large previews with the filenames
+  # hidden. The row still carries the basename as its value, which is what
+  # the selection resolves back to.
+  selection=$(
+    while IFS= read -r path; do
+      rofi::icon_row "$(basename -- "$path")" "$path"
+    done < <(wallpaper::list) \
+      | rofi::menu "$THEME" "$prompt" -show-icons
+  )
+  [[ -z $selection ]] && return 1
+  printf '%s/%s' "$HYPR_WALLPAPER_DIR" "$selection"
 }
 
-# wallpaper.rasi renders a pure-black grid of large image previews with
-# filenames hidden. The row still carries the basename as its value, so
-# the selection below resolves to the chosen file.
-selection=$(list_entries | rofi -dmenu -i -p "$PROMPT" \
-  -show-icons -theme "$THEME")
-[ -z "$selection" ] && exit 0
+cmd_desktop() {
+  local choice; choice=$(pick 'Wallpaper') || return 0
+  # Detached: setting a wallpaper starts a watcher that outlives the picker.
+  proc::detach "$(paths::script wallpaper.sh)" set "$choice"
+}
 
-setsid -f "$SET_WALLPAPER" "$SET_ACTION" "$WALLPAPER_DIR/$selection" >/dev/null 2>&1
+cmd_lock() {
+  local choice; choice=$(pick 'Lock Screen Wallpaper') || return 0
+  proc::detach "$(paths::script wallpaper.sh)" set-lock "$choice"
+}
+
+declare -A COMMANDS=(
+  [desktop]="cmd_desktop|pick the desktop wallpaper (the default)"
+  [lock]="cmd_lock|pick the lock screen wallpaper"
+)
+
+cli::dispatch "${1:-desktop}" "${@:2}"

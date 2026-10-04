@@ -1,22 +1,31 @@
 #!/usr/bin/env bash
-#
-# Power action backend for the eww panel. Pure shell.
-# Closes the panel first, then runs the session action.
+# Session actions for the eww power panel. Closes the panel first, so the
+# overlay is gone before the action takes effect.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/_paths.sh"
-EWW="eww -c "${HYPR_EWW}""
-HYPR_CONFIG="${HYPR_APPS}/hyprlock/hyprlock.conf"
-SHUTDOWN_SCRIPT="${HYPR_SCRIPTS}/mogger_shutdown.sh"
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use core/cli core/paths os/proc ui/eww domain/power
 
-$EWW close power >/dev/null 2>&1
+eww::close power
 
-case "$1" in
-  lock)     setsid -f hyprlock -c "$HYPR_CONFIG" >/dev/null 2>&1 ;;
-  suspend)  systemctl suspend ;;
-  logout)   hyprctl dispatch exit ;;
-  reboot)   systemctl reboot ;;
-  shutdown) setsid -f "$SHUTDOWN_SCRIPT" >/dev/null 2>&1 ;;
-esac
+cmd_lock()     { power::lock; }
+cmd_logout()   { power::logout; }
+cmd_reboot()   { power::reboot; }
+cmd_suspend()  { exec systemctl suspend; }
+cmd_shutdown() { proc::detach "$(paths::script mogger-shutdown.sh)"; }
+
+declare -A COMMANDS=(
+  [lock]="cmd_lock|lock the session"
+  [logout]="cmd_logout|exit the compositor"
+  [reboot]="cmd_reboot|restart the machine"
+  [suspend]="cmd_suspend|suspend to RAM"
+  [shutdown]="cmd_shutdown|power off, with the splash"
+)
+
+cli::dispatch "${1:-}" "${@:2}"

@@ -1,127 +1,73 @@
 #!/usr/bin/env bash
-#
 # Rofi calendar dropdown under the waybar clock.
-# Left/Right = month, Up/Down = year, Return = today, Esc = close.
-# Click the clock again while open to dismiss.
+#
+#   Left/Right  change month      Up/Down  change year
+#   Return      jump to today     Esc      close
+#
+# Clicking the clock again while it is open dismisses it.
+#
+# The grid itself is built by lib/ui/calendar.sh; this file is the rofi
+# key-binding layer over it.
 
-
-# Resolve rice root (portable)
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
 # shellcheck source=/dev/null
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_paths.sh"
-set -euo pipefail
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use ui/rofi ui/calendar
 
-THEME="${HYPR_ROFI}/calendar.rasi"
-TMPDIR=${XDG_RUNTIME_DIR:-/tmp}
-DAYS_FILE="$TMPDIR/rofi-cal-days.$$"
-SEL_FILE="$TMPDIR/rofi-cal-sel.$$"
+readonly THEME=calendar
 
-cleanup() { rm -f "$DAYS_FILE" "$SEL_FILE"; }
-trap cleanup EXIT
+# rofi's custom-key exit codes, named. The mapping between a -kb-custom-N
+# flag and the code it returns (10 + N - 1) is the kind of off-by-one that
+# is invisible as a bare integer in a case block.
+readonly KEY_PREV_MONTH=10
+readonly KEY_NEXT_MONTH=11
+readonly KEY_PREV_YEAR=12
+readonly KEY_NEXT_YEAR=13
+readonly KEY_TODAY=14
 
-# Toggle: second click closes an open calendar.
-if pgrep -f "rofi.*apps/rofi/calendar.rasi" >/dev/null 2>&1; then
-  pkill -f "rofi.*apps/rofi/calendar.rasi" >/dev/null 2>&1 || true
-  exit 0
-fi
+rofi::available || log::die 'rofi is not installed'
+rofi::toggle calendar || exit 0
 
 year=$(date +%Y)
 month=$(date +%-m)
 
-shift_month() {
-  local delta=$1
-  month=$((month + delta))
-  while (( month > 12 )); do
-    month=$((month - 12))
-    year=$((year + 1))
-  done
-  while (( month < 1 )); do
-    month=$((month + 12))
-    year=$((year - 1))
-  done
-}
+while :; do
+  grid=$(calendar::grid "$year" "$month")
+  selected=$(calendar::selected_row "$year" "$month")
 
-emit_days() {
-  # Pure shell: `date` does the calendar arithmetic, so this has no python
-  # dependency. Output is byte-identical to the previous python version.
-  local muted='#666666'
-  local today_y today_m today_d first_dow lead days_in_month prev_days
-  local idx d n selected first_in_month
-
-  today_y=$(date +%Y); today_m=$(date +%-m); today_d=$(date +%-d)
-
-  first_dow=$(date -d "$year-$month-01" +%u)                 # 1=Mon .. 7=Sun
-  lead=$(( first_dow - 1 ))                                  # cells before the 1st
-  days_in_month=$(date -d "$year-$month-01 +1 month -1 day" +%-d)
-  prev_days=$(date -d "$year-$month-01 -1 day" +%-d)         # length of prev month
-
-  # Weekday names live in the grid itself so they sit exactly above their
-  # column. They are the first row and are marked urgent by rofi (-u 0..6),
-  # which styles them muted and keeps them out of the selection.
-  printf 'Mo\nTu\nWe\nTh\nFr\nSa\nSu\n' > "$DAYS_FILE"
-
-  first_in_month=$(( 7 + lead ))
-  selected=$first_in_month
-
-  for (( d = lead; d > 0; d-- )); do          # tail of the previous month
-    printf '<span foreground="%s">%s</span>\n' "$muted" "$(( prev_days - d + 1 ))"
-  done >> "$DAYS_FILE"
-
-  for (( d = 1; d <= days_in_month; d++ )); do
-    printf '%s\n' "$d"
-    if [[ $year -eq $today_y && $month -eq $today_m && $d -eq $today_d ]]; then
-      selected=$(( 7 + lead + d - 1 ))
-    fi
-  done >> "$DAYS_FILE"
-
-  idx=$(( 7 + lead + days_in_month ))
-  n=1                                          # head of the next month
-  while (( idx < 49 )); do                     # pad to a full 6-week grid
-    printf '<span foreground="%s">%s</span>\n' "$muted" "$n"
-    n=$(( n + 1 )); idx=$(( idx + 1 ))
-  done >> "$DAYS_FILE"
-
-  printf '%s' "$selected" > "$SEL_FILE"
-}
-
-while true; do
-  header=$(date -d "$year-$month-01" +"%B %Y")
-  emit_days
-  selected=$(cat "$SEL_FILE")
-
-  set +e
-  # Clear defaults that own Left/Right/Up/Down/Return before rebinding them.
-  rofi \
-    -dmenu \
-    -markup-rows \
-    -theme "$THEME" \
-    -p "$header" \
-    -u "0,1,2,3,4,5,6" \
+  # The defaults that own Left/Right/Up/Down/Return are moved aside before
+  # those keys are rebound, or rofi's own cursor movement wins.
+  printf '%s\n' "$grid" | rofi \
+    -dmenu -markup-rows \
+    -theme "$(rofi::theme_path "$THEME")" \
+    -p "$(calendar::title "$year" "$month")" \
+    -u '0,1,2,3,4,5,6' \
     -selected-row "$selected" \
     -no-custom \
-    -kb-move-char-back "Control+b" \
-    -kb-move-char-forward "Control+f" \
-    -kb-row-up "Control+p" \
-    -kb-row-down "Control+n" \
-    -kb-accept-entry "" \
-    -kb-custom-1 "Left,h" \
-    -kb-custom-2 "Right,l" \
-    -kb-custom-3 "Up,k" \
-    -kb-custom-4 "Down,j" \
-    -kb-custom-5 "Return,KP_Enter" \
-    < "$DAYS_FILE" \
+    -kb-move-char-back 'Control+b' \
+    -kb-move-char-forward 'Control+f' \
+    -kb-row-up 'Control+p' \
+    -kb-row-down 'Control+n' \
+    -kb-accept-entry '' \
+    -kb-custom-1 'Left,h' \
+    -kb-custom-2 'Right,l' \
+    -kb-custom-3 'Up,k' \
+    -kb-custom-4 'Down,j' \
+    -kb-custom-5 'Return,KP_Enter' \
     >/dev/null
   code=$?
-  set -e
 
   case $code in
-    10) shift_month -1 ;;
-    11) shift_month  1 ;;
-    12) year=$((year - 1)) ;;
-    13) year=$((year + 1)) ;;
-    14)
-      year=$(date +%Y)
-      month=$(date +%-m)
-      ;;
-    *)  exit 0 ;;
+    "$KEY_PREV_MONTH") read -r year month < <(calendar::normalize "$year" $(( month - 1 ))) ;;
+    "$KEY_NEXT_MONTH") read -r year month < <(calendar::normalize "$year" $(( month + 1 ))) ;;
+    "$KEY_PREV_YEAR")  year=$(( year - 1 )) ;;
+    "$KEY_NEXT_YEAR")  year=$(( year + 1 )) ;;
+    "$KEY_TODAY")      year=$(date +%Y); month=$(date +%-m) ;;
+    *) exit 0 ;;
   esac
 done

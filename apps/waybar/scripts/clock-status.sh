@@ -1,73 +1,47 @@
 #!/usr/bin/env bash
-# Clock for waybar, with a red "hidden-ws" class while the focused monitor
-# is showing the special:hidden workspace.
+# Clock module for waybar, with a red "hidden-ws" class while the focused
+# monitor is showing the special:hidden workspace.
 #
-# Ticks once a second and also reacts to Hyprland events, emitting only when
-# the rendered output actually changes.
+# Ticks once a second and also reacts to compositor events, emitting only
+# when the rendered output actually changes — waybar re-lays-out the bar on
+# every line it receives, so an unchanged repaint is wasted work.
+#
+# The tooltip is deliberately minute-precision. It used to carry seconds,
+# which made every one-second render differ from the last and so defeated
+# the de-duplication entirely: the module emitted sixty times a minute and
+# the bar relaid out on each. Seconds in a hover tooltip are not worth that.
+#
+# The event-stream plumbing (one long-lived socat, a 1s read timeout that is
+# the tick rather than an error) lives in lib/os/hypr.sh.
 
-hidden_ws_open() {
-  hyprctl -j monitors 2>/dev/null \
-    | jq -e 'any(.[]; .focused and (.specialWorkspace.name == "special:hidden"))' \
-      >/dev/null 2>&1
-}
+# --- library bootstrap -----------------------------------------------------
+# Identical in every executable regardless of its depth: walk up until lib/
+# is found, then hand over. See lib/bootstrap.sh.
+_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname "$_dir"); done
+# shellcheck source=/dev/null
+source "$_dir/lib/bootstrap.sh"
+unset _dir
+hypr::use ui/waybar os/hypr
 
-render() {
-  local cls=''
-  hidden_ws_open && cls='hidden-ws'
-  jq -nc --arg t "$(date '+%a %d %b  %H:%M')" \
-         --arg tt "$(date '+%A, %d %B %Y  %H:%M:%S')" \
-         --arg c "$cls" \
-    '{text:$t, tooltip:$tt, class:(if $c == "" then [] else [$c] end)}'
-}
+readonly HIDDEN_WORKSPACE=hidden
 
 last=''
-emit() {
-  local cur; cur=$(render)
-  if [ "$cur" != "$last" ]; then printf '%s\n' "$cur"; last="$cur"; fi
+
+render() {
+  local class=''
+  hypr::special_workspace_open "$HIDDEN_WORKSPACE" && class='hidden-ws'
+  waybar::emit "$(date '+%a %d %b  %H:%M')" "$(date '+%A, %d %B %Y  ·  %H:%M')" "$class"
 }
 
-socket2() {
-  local dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr"
-  if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] \
-     && [ -S "$dir/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" ]; then
-    printf '%s' "$dir/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
-    return 0
-  fi
-  ls -1t "$dir"/*/.socket2.sock 2>/dev/null | head -1
+emit() {
+  local current; current=$(render)
+  [[ $current == "$last" ]] && return 0
+  printf '%s\n' "$current"
+  last=$current
 }
 
 trap 'exit 0' TERM INT
 
 emit
-
-sock=$(socket2)
-if [ -z "$sock" ] || ! command -v socat >/dev/null 2>&1; then
-  # No event stream: a plain 1s tick still keeps the clock correct.
-  while :; do sleep 1; emit; done
-fi
-
-# One long-lived socat feeds this loop on fd 3. A `read -t 1` timeout is not
-# an error here -- it is the 1s clock tick -- so the loop must NOT treat it as
-# the stream ending, or every idle second would leak a new socat process.
-# Process substitution keeps `last` in this shell (a pipe would subshell it).
-while :; do
-  exec 3< <(socat -u UNIX-CONNECT:"$sock" - 2>/dev/null)
-  socat_ok=1
-  while [ "$socat_ok" = 1 ]; do
-    IFS= read -r -t 1 -u 3 line; rc=$?
-    if [ "$rc" -eq 0 ]; then
-      case "${line,,}" in
-        *activespecial*|*focusedmon*|*monitoradded*) emit ;;
-      esac
-    else
-      # rc >128 means the read timed out -- that is our 1s tick, not an error.
-      # Anything else is EOF: the socket died, so reconnect.
-      [ "$rc" -gt 128 ] || socat_ok=0
-      emit
-    fi
-  done
-  exec 3<&-
-  sleep 0.5
-  sock=$(socket2)
-  [ -n "$sock" ] || { emit; sleep 1; }
-done
+hypr::on_event '*activespecial*|*focusedmon*|*monitoradded*' emit
