@@ -1,8 +1,8 @@
 # Runtime / local
 # Both wallpaper symlinks are per-machine choices, not repo content: tracking
 # lock-wallpaper made every git checkout/stash/pull revert the lock screen.
-current-wallpaper
-lock-wallpaper
+assets/current-wallpaper
+assets/lock-wallpaper
 *.bak.*
 **/__pycache__/
 *.pyc

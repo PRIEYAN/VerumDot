@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
-# domain/wallpaper.sh — desktop and lock-screen wallpapers.
-#
-# Two independent choices with one subtle rule between them: the lock screen
-# *tracks* the desktop wallpaper until a lock-specific one is chosen, and
-# never again afterwards. That rule is the reason the lock choice is stored
-# as a separate key rather than being derived — the presence of the key is
-# what "the user has made a choice" means.
+# domain/wallpaper.sh — desktop and lock-screen wallpapers (separate, independent choices).
 
 hypr::use core/guard core/log core/paths os/proc os/state os/hypr
 

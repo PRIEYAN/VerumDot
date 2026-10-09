@@ -59,6 +59,6 @@ readonly HYPR_WALLPAPER_DIR="${HYPR_WALLPAPER_DIR:-${HOME}/Pictures/Wallpapers}"
 readonly HYPR_WALLPAPER_DEFAULT="${HYPR_WALLPAPER_DEFAULT:-${HYPR_WALLPAPER_DIR}/suf.png}"
 
 # Stable symlinks other tools (hyprlock, hyprpaper) read. They are per-machine
-# runtime state and are deliberately not tracked by git.
-readonly HYPR_WALLPAPER_LINK="${HYPR_HOME}/current-wallpaper"
-readonly HYPR_LOCK_WALLPAPER_LINK="${HYPR_HOME}/lock-wallpaper"
+# runtime state and are deliberately not tracked by git. Stored in assets folder.
+readonly HYPR_WALLPAPER_LINK="${HYPR_HOME}/assets/current-wallpaper"
+readonly HYPR_LOCK_WALLPAPER_LINK="${HYPR_HOME}/assets/lock-wallpaper"
