@@ -56,6 +56,11 @@ proc::first_available() {
 # This replaces the `pgrep -f "rofi.*foo.rasi"` tests the popups used, which
 # matched on a command line and so could be defeated by an unrelated process
 # (or by the grep seeing itself).
+# The holder's fd is published so a caller that goes on to spawn long-lived
+# children can close it in them (see PROC_LOCK_FD below). A lock is released
+# when the *last* holder of the fd closes it, and children inherit it across
+# exec — so a supervisor whose child outlives it would leave the lock held by
+# that child and lock out every future instance.
 proc::lock() {
   local name=$1 fd
   paths::ensure_dirs
@@ -63,7 +68,19 @@ proc::lock() {
   flock -n "$fd" || return 1
   # Deliberately not closed: the kernel releases it when we exit, which is
   # exactly the lifetime we want and is robust to being killed.
+  PROC_LOCK_FD=$fd
   return 0
+}
+
+# proc::run_unlocked <command...> — run a command with the lock fd closed, so
+# it cannot keep the lock alive after this process is gone. Use it for any
+# child that outlives a single call.
+proc::run_unlocked() {
+  if [[ -z ${PROC_LOCK_FD:-} ]]; then
+    "$@"
+    return
+  fi
+  ( eval "exec ${PROC_LOCK_FD}>&-"; exec "$@" )
 }
 
 # proc::held <name> — true if someone currently holds the named lock.

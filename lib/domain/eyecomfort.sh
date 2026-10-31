@@ -108,9 +108,12 @@ eyecomfort::apply() {
 
   if [[ $desired == on ]]; then
     local kelvin; kelvin=$(eyecomfort::temperature_for "$intensity")
-    # 9>&- so the detached daemon does not inherit the operation lock and
-    # keep it held for its entire lifetime.
-    setsid -f hyprsunset -t "$kelvin" 9>&- >/dev/null 2>&1
+    # The daemon must not inherit the operation lock: it outlives this
+    # process, so a leaked fd keeps the lock held for the daemon's entire
+    # lifetime and every later toggle then fails to take it — leaving the
+    # tint stuck on with no way to turn it off. proc::lock allocates the fd
+    # dynamically (bash picks 10+), so closing a hardcoded 9 closed nothing.
+    proc::run_unlocked setsid -f -- hyprsunset -t "$kelvin" >/dev/null 2>&1
     sleep 0.1
     pgrep -x hyprsunset >/dev/null || { log::error 'could not start eye comfort'; return 1; }
   fi
