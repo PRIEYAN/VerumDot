@@ -88,7 +88,7 @@ Most rices hand you a color scheme. VerumDot hands you a finished laptop.
 - ⚡ **Three-way performance toggle** — `SUPER + P` cycles performance → battery → normal across the CPU governor.
 - 🔆 **Shader brightness boost** — push the panel past 100% with a GLSL shader when the sun wins.
 - 👆 **Gesture-driven** — 3-finger swipe for workspaces, 4-finger up for a hidden scratchpad workspace.
-- 🔋 **Laptop-literate** — battery alerts at 20/15%, lid-close locks instead of suspending, NVIDIA suspend fix included.
+- 🔋 **Laptop-literate** — battery alerts at 20/15%; lid-close pauses MPRIS media (including compatible browser playback), locks and blanks without suspending; NVIDIA suspend fix included.
 - 🔕 **Do-not-disturb** — `SUPER + CTRL + N`, straight into mako.
 - 🎵 **Spotify, glassed** — a translucent now-playing card in the bar and a live quickshell dropdown on click.
 - 🎛️ **Control centre** — throw the pointer at the top-right corner and a frosted panel slides in: brightness and volume sliders, power mode, mic, stay-awake. The Wi-Fi and Bluetooth tiles toggle from their icon and open network/device lists in place.

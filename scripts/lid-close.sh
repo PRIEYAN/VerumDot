@@ -15,6 +15,12 @@ source "$_dir/lib/bootstrap.sh"
 unset _dir
 hypr::use os/hypr domain/session
 
+# Pause every MPRIS player, including supported browsers, before the lid
+# blanks the screen. A missing or inactive player must not block locking.
+if command -v playerctl >/dev/null 2>&1; then
+  playerctl --all-players pause >/dev/null 2>&1 || true
+fi
+
 # Lock first so the lock surface is up before the panel goes dark; a brief
 # settle lets it map before blanking.
 session::lock
