@@ -63,31 +63,67 @@ log()  { printf '   %s→%s %s%s%s\n' "$RED_HOT" "$RST" "$GREY" "$*" "$RST"; }
 ok()   { printf '   %s✓%s %s%s%s\n' "$RED_HOT" "$RST" "$INK" "$*" "$RST"; }
 die()  { printf '\n   %s✗ %s%s\n\n' "$RED" "$*" "$RST" >&2; exit 1; }
 
-# curl | bash still deserves a keyboard
-if [[ ! -t 0 ]] && { : </dev/tty; } 2>/dev/null; then exec </dev/tty; fi
+# Parse before any package, filesystem or network mutation.
+DRYRUN=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|-n) DRYRUN=1 ;;
+    -h|--help)
+      cat <<'HELP'
+VerumDot bootstrap — fetch main and run setup.sh as your normal user.
+  --auto                 full install without the wizard
+  --config               deploy config only
+  --packages             install dependencies only
+  --dry-run              show bootstrap actions without writing or fetching
+  --no-aur               skip AUR packages (including Spotify and VS Code)
+  --no-nvim              skip the Neovim overlay
+  --no-services          leave services alone
+  --no-lid               leave the lid policy alone
+  --no-theme             skip GTK / Qt theme setup
+  --no-anim --no-color    plain output
+Run ./setup.sh --dry-run in a clone to see the complete package/config plan.
+HELP
+      exit 0 ;;
+    --auto|-y|--yes|--config|--config-only|--packages|--packages-only|--no-aur|--no-nvim|--no-services|--no-lid|--no-theme|--no-anim|--no-color) ;;
+    *) die "unknown flag: $arg (try --help)" ;;
+  esac
+done
 
-clear 2>/dev/null
+if (( DRYRUN )); then
+  log "would fetch main from $REPO into $SRC, then run setup.sh $*"
+  log "no packages, clone, update, or config writes performed"
+  exit 0
+fi
+
 banner
-
 [[ "$(id -u)" -eq 0 ]] && die "do not run as root — setup.sh asks for sudo only where it needs it"
-command -v pacman >/dev/null 2>&1 || die "VerumDot targets Arch and derivatives (pacman not found)"
 
 if ! command -v git >/dev/null 2>&1; then
-  log "git is missing — installing it first"
-  sudo pacman -Sy --needed --noconfirm git || die "could not install git"
+  command -v pacman >/dev/null 2>&1 || die "pacman is needed to install git"
+  command -v sudo >/dev/null 2>&1 || die "install sudo and grant your user sudo access first"
+  log "git is missing — upgrading the system and installing it first"
+  sudo pacman -Syu --needed --noconfirm git || die "could not install git"
 fi
 
 if [[ -d "$SRC/.git" ]]; then
-  log "updating existing clone at ${SRC/#$HOME/\~}"
-  git -C "$SRC" pull --ff-only || log "pull failed — using the checkout as it is"
+  [[ "$(git -C "$SRC" branch --show-current)" == main ]] || die "$SRC is not on main; move it aside or use its setup.sh directly"
+  [[ -z "$(git -C "$SRC" status --porcelain)" ]] || die "$SRC has local changes; save them before updating"
+  origin="$(git -C "$SRC" remote get-url origin)" || die "source clone has no origin"
+  case "${origin,,}" in
+    https://github.com/prieyan/verumdot|https://github.com/prieyan/verumdot.git|git@github.com:prieyan/verumdot.git) ;;
+    *) die "$SRC belongs to another repository; move it aside first" ;;
+  esac
+  log "updating main at ${SRC/#$HOME/\~}"
+  git -C "$SRC" fetch origin main || die "fetch failed; existing checkout left in place"
+  # Do not silently install local commits that have not reached main.
+  git -C "$SRC" merge-base --is-ancestor HEAD FETCH_HEAD || die "local main diverges from origin/main; resolve it before setup"
+  git -C "$SRC" merge --ff-only FETCH_HEAD || die "could not fast-forward main"
 else
-  log "cloning VerumDot → ${SRC/#$HOME/\~}"
-  rm -rf "$SRC"
-  mkdir -p "$(dirname "$SRC")"
-  git clone --depth 1 "$REPO" "$SRC" || die "clone failed — check your network"
+  [[ ! -e "$SRC" && ! -L "$SRC" ]] || die "$SRC already exists and is not a git clone; move it aside first"
+  log "cloning main → ${SRC/#$HOME/\~}"
+  mkdir -p "$(dirname "$SRC")" || die "cannot create source parent directory"
+  git clone --depth 1 --branch main --single-branch "$REPO" "$SRC" || die "clone failed — check your network"
 fi
+[[ -f "$SRC/setup.sh" ]] || die "setup.sh is missing from the checkout"
 ok "source ready"
-
-chmod +x "$SRC/setup.sh" 2>/dev/null
-printf '\n   %shanding over to setup.sh%s\n' "$VOID" "$RST"
-exec "$SRC/setup.sh" "$@"
+exec bash "$SRC/setup.sh" "$@"

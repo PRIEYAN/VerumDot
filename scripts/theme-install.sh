@@ -20,6 +20,7 @@ while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname
 # shellcheck source=/dev/null
 source "$_dir/lib/bootstrap.sh"
 unset _dir
+set -e
 hypr::use core/cli core/guard core/log core/paths os/proc os/ini os/symlink
 
 HYPR_LOG_LEVEL=${HYPR_LOG_LEVEL:-info}   # this command narrates by design
@@ -51,7 +52,11 @@ link_parts() {
 # White folder icons, derived from an installed grey theme
 # ---------------------------------------------------------------------------
 build_white_icons() {
+  # The bundled white icons already work on a fresh machine. Rebuilding them
+  # is optional and must not mutate the tracked theme during every setup.
+  [[ -f "$WHITE_ICONS/index.theme" ]] && return 0
   local source="${SHARE}/icons/kora-pgrey" file count
+  [[ -d "$source" ]] || source=/usr/share/icons/kora-pgrey
   if [[ ! -d $source ]]; then
     log::warn 'kora-pgrey is not installed; skipping the white icon theme'
     return 1
@@ -99,24 +104,43 @@ cmd_install() {
     link_parts "$entry"
     # The icon theme is only linked when it was actually built.
     [[ -e $SOURCE ]] || { log::warn "skipping absent source ${SOURCE}"; continue; }
+    if [[ -L "$TARGET" && "$(readlink -- "$TARGET")" == "$SOURCE" ]]; then
+      continue
+    fi
+    # Preserve every pre-existing entry, including links and later edits.
+    if [[ -e "$TARGET" || -L "$TARGET" ]]; then
+      local backup="${TARGET}.prehypr"
+      if [[ -e "$backup" || -L "$backup" ]]; then
+        backup="${TARGET}.bak.$(date +%Y%m%d-%H%M%S)-$$"
+        [[ ! -e "$backup" && ! -L "$backup" ]] || return 1
+      fi
+      mv -- "$TARGET" "$backup"
+    fi
     symlink::install "$SOURCE" "$TARGET"
   done
 
   # These files hold the user's own settings, so individual keys are edited
   # rather than the files being replaced.
   mkdir -p -- "${CONFIG}/Kvantum"
-  printf '[General]\ntheme=PureBlackGlass\n' >"${CONFIG}/Kvantum/kvantum.kvconfig"
+  ini::set "${CONFIG}/Kvantum/kvantum.kvconfig" General theme PureBlackGlass
   log::info 'Kvantum theme = PureBlackGlass'
 
   local toolkit file
   for toolkit in qt5ct qt6ct; do
     file="${CONFIG}/${toolkit}/${toolkit}.conf"
-    [[ -f $file ]] || continue
     ini::set "$file" Appearance color_scheme_path "${CONFIG}/${toolkit}/colors/PureBlack.conf"
     ini::set "$file" Appearance custom_palette true
     ini::set "$file" Appearance style kvantum
     [[ -d $WHITE_ICONS ]] && ini::set "$file" Appearance icon_theme kora-white
     log::info "configured ${toolkit}"
+  done
+
+  for toolkit in gtk-3.0 gtk-4.0; do
+    file="${CONFIG}/${toolkit}/settings.ini"
+    ini::set "$file" Settings gtk-application-prefer-dark-theme 1
+    ini::set "$file" Settings gtk-theme-name Adwaita-dark
+    ini::set "$file" Settings gtk-icon-theme-name kora-white
+    ini::set "$file" Settings gtk-font-name 'Iosevka Term 10'
   done
 
   ini::set "${CONFIG}/kdeglobals" Icons Theme kora-white

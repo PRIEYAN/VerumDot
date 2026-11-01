@@ -18,7 +18,7 @@
 #
 set -uo pipefail
 
-VD_VERSION="2.0"
+VD_VERSION="2.1"
 VD_REPO="https://github.com/PRIEYAN/VerumDot"
 
 # ══ paths ══════════════════════════════════════════════════════════════
@@ -28,7 +28,7 @@ TARGET="$XDG_CFG/hypr"
 WAYBAR_CFG="$XDG_CFG/waybar"
 NVIM_CFG="$XDG_CFG/nvim"
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
-STAMP="$(date +%Y%m%d-%H%M%S)"
+STAMP="$(date +%Y%m%d-%H%M%S)-$$"
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/verumdot-install-$STAMP.log"
 
 # ══ runtime flags ══════════════════════════════════════════════════════
@@ -36,6 +36,8 @@ MODE="wizard"          # wizard | auto | packages | config
 ANIM=1
 COLOR=1
 DRYRUN=0
+NO_AUR=0
+LIST_PACKAGES=0
 STEP_N=0
 STEP_TOTAL=0
 
@@ -475,7 +477,7 @@ GROUP_LABEL=(
   "Theming      kvantum · qt6ct  (PureBlackGlass targets)"
   "Fonts        JetBrains Mono + Iosevka Nerd · Noto · emoji"
   "Desktop apps your terminal / browser / files / editor picks"
-  "AUR extras   spotify · kora-icon-theme · qt5ct"
+  "AUR extras   spotify · kora-icon-theme"
   "Legacy eww   old volume/power/calendar panels (rofi replaced these)"
 )
 
@@ -483,14 +485,17 @@ pkgs_for() { # -> newline separated pacman packages
   case "$1" in
     core)  printf '%s\n' hyprland hyprpaper hypridle hyprlock hyprcursor \
              xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-             waybar rofi quickshell mako jq inotify-tools curl rsync ;;
+             waybar rofi quickshell mako jq inotify-tools curl rsync git python socat \
+             libnotify xdg-utils qt6-declarative qt6-svg qt6-wayland \
+             qt6-multimedia qt6-multimedia-ffmpeg qt6-imageformats hyprpolkitagent \
+             networkmanager bluez bluez-utils pipewire pipewire-pulse wireplumber upower brightnessctl ;;
     audio) printf '%s\n' pipewire pipewire-pulse pipewire-alsa wireplumber pamixer playerctl ;;
     shot)  printf '%s\n' grim slurp swappy wl-clipboard ;;
     net)   printf '%s\n' networkmanager network-manager-applet bluez bluez-utils blueman ;;
-    power) printf '%s\n' brightnessctl power-profiles-daemon upower hyprsunset cpupower ;;
-    theme) printf '%s\n' kvantum qt6ct ;;
+    power) printf '%s\n' brightnessctl power-profiles-daemon upower hyprsunset cpupower lm_sensors ;;
+    theme) printf '%s\n' kvantum kvantum-qt5 qt5ct qt6ct ;;
     fonts) printf '%s\n' ttf-jetbrains-mono-nerd ttf-iosevka-nerd ttf-nerd-fonts-symbols \
-             noto-fonts noto-fonts-emoji ;;
+             noto-fonts noto-fonts-emoji inter-font ;;
     apps)  : ;;   # filled from the user's picks
     aur)   : ;;   # AUR list, see aur_for
     legacy) : ;;
@@ -499,7 +504,7 @@ pkgs_for() { # -> newline separated pacman packages
 
 aur_for() {
   case "$1" in
-    aur)    printf '%s\n' spotify kora-icon-theme qt5ct ;;
+    aur)    printf '%s\n' spotify kora-icon-theme ;;
     legacy) printf '%s\n' eww ;;
   esac
 }
@@ -533,10 +538,19 @@ build_pkg_lists() { # fills PACMAN_LIST / AUR_LIST
       fi
     done
   fi
+  (( DO_NVIM )) && PACMAN_LIST+=(neovim ripgrep fd unzip)
   local e; for e in ${EXTRA_PKGS[@]+"${EXTRA_PKGS[@]}"}; do PACMAN_LIST+=("$e"); done
+  if (( NO_AUR )); then
+    AUR_LIST=()
+    DO_AUR_HELPER=0
+    [[ "$PICK_EDITOR" == code ]] && PICK_EDITOR=none
+    if [[ "$PICK_BROWSER" == brave || "$PICK_BROWSER" == zen-browser ]]; then
+      die "the selected browser requires AUR; choose Firefox/Chromium or omit --no-aur"
+    fi
+  fi
   # dedupe, keep order
-  mapfile -t PACMAN_LIST < <(printf '%s\n' ${PACMAN_LIST[@]+"${PACMAN_LIST[@]}"} | awk '!seen[$0]++')
-  mapfile -t AUR_LIST    < <(printf '%s\n' ${AUR_LIST[@]+"${AUR_LIST[@]}"}    | awk '!seen[$0]++')
+  mapfile -t PACMAN_LIST < <(printf '%s\n' ${PACMAN_LIST[@]+"${PACMAN_LIST[@]}"} | awk 'NF && !seen[$0]++')
+  mapfile -t AUR_LIST    < <(printf '%s\n' ${AUR_LIST[@]+"${AUR_LIST[@]}"}    | awk 'NF && !seen[$0]++')
 }
 
 # ══════════════════════════════════════════════════════════════════════
@@ -574,7 +588,9 @@ preflight() {
   fi
   compgen -G "/sys/class/power_supply/BAT*" >/dev/null && FACT_LAPTOP=1
 
-  if command -v curl >/dev/null 2>&1; then
+  if (( DRYRUN || ! DO_PACKAGES )); then
+    FACT_NET=1  # no network is needed for a plan or config deployment
+  elif command -v curl >/dev/null 2>&1; then
     curl -fsS --max-time 5 -o /dev/null https://archlinux.org && FACT_NET=1
   elif ping -c1 -W2 archlinux.org >/dev/null 2>&1; then FACT_NET=1
   fi
@@ -596,8 +612,7 @@ preflight() {
   (( FACT_PACMAN )) || {
     printf '\n'
     warn "No pacman. VerumDot targets Arch and derivatives."
-    warn "Package install will be skipped; --config still deploys the rice."
-    DO_PACKAGES=0
+    (( DO_PACKAGES )) && die "pacman is required for package installation; use --config for config only"
   }
   (( FACT_NET )) || warn "Could not reach archlinux.org — package install may fail."
 }
@@ -660,11 +675,11 @@ wizard() {
     local mons=() m
     while read -r m; do [[ -n "$m" ]] && mons+=("$m"); done < <(detect_monitors)
     if (( ${#mons[@]} > 0 )); then
-      mons+=("keep eDP-1 — I will fix hypr.conf myself")
+      mons+=("automatic output — use any connected display")
       i="$(ui_select "Primary output — written into hypr.conf" 0 "${mons[@]}")"
       (( i < ${#mons[@]} - 1 )) && PICK_MONITOR="${mons[i]}"
     else
-      PICK_MONITOR="$(ui_text "Primary output name (hyprctl monitors)" "eDP-1")"
+      PICK_MONITOR="$(ui_text "Primary output name (blank = automatic)" "")"
     fi
     if [[ -n "$PICK_MONITOR" ]]; then
       i="$(ui_select "Scale for $PICK_MONITOR" 0 "1.0   native" "1.25" "1.5   HiDPI" "auto")"
@@ -691,6 +706,7 @@ show_plan() {
 
   if (( DO_PACKAGES )); then
     kv "pacman packages" "${#PACMAN_LIST[@]}"
+    say "includes a full system upgrade (pacman -Syu) before AUR builds"
     wrap_list ${PACMAN_LIST[@]+"${PACMAN_LIST[@]}"}
     if (( ${#AUR_LIST[@]} )); then
       kv "AUR packages" "${#AUR_LIST[@]}"
@@ -706,6 +722,7 @@ show_plan() {
     kv "deploy to" "$TARGET"
     (( FACT_EXISTING && ! FACT_INPLACE )) && kv "backup" "$TARGET.bak.$STAMP"
     kv "waybar links" "$WAYBAR_CFG/{config,style.css,scripts}"
+    kv "shell configs" "$XDG_CFG/{hypridle,hyprlock,quickshell}"
     kv "kitty link" "$XDG_CFG/kitty/kitty.conf"
     kv "wallpapers" "$WALLPAPER_DIR"
     [[ -n "$PICK_MONITOR" ]] && kv "monitor line" "$PICK_MONITOR,preferred,auto,$PICK_SCALE"
@@ -738,7 +755,7 @@ SUDO_OK=0
 sudo_begin() {
   (( DRYRUN )) && return 0
   if ! command -v sudo >/dev/null 2>&1; then
-    warn "sudo not found — anything needing root is skipped"
+    die "sudo is required for the selected package/service/lid actions"
   elif sudo -n true 2>/dev/null; then
     SUDO_OK=1
   else
@@ -746,87 +763,101 @@ sudo_begin() {
     sudo -v && SUDO_OK=1
   fi
   if (( SUDO_OK )); then
-    ( while kill -0 "$$" 2>/dev/null; do sudo -n true 2>/dev/null; sleep 45; done ) &
+    ( while kill -0 "$$" 2>/dev/null; do sudo -n true 2>/dev/null; sleep 45; done ) >/dev/null 2>&1 &
     SUDO_KEEPALIVE_PID=$!
   else
-    warn "no root access — skipping package install and lid policy"
-    DO_PACKAGES=0
-    DO_LID=0
+    die "sudo authentication failed; no installation was performed"
   fi
 }
 sudo_end() { [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null; SUDO_KEEPALIVE_PID=""; }
 
 backup_path() {
-  local p=$1
+  local p=$1 backup="${1}.bak.${STAMP}" n=0
   if [[ -e "$p" || -L "$p" ]]; then
-    mv "$p" "${p}.bak.${STAMP}" && ok "backed up $(basename "$p") → $(basename "$p").bak.$STAMP"
+    while [[ -e "$backup" || -L "$backup" ]]; do
+      n=$((n + 1)); backup="${p}.bak.${STAMP}.${n}"
+    done
+    mv -- "$p" "$backup" || die "cannot back up $p"
+    ok "backed up $p → $backup"
   fi
 }
 
 link_force() {
   local src=$1 dst=$2
-  mkdir -p "$(dirname "$dst")"
-  if [[ -L "$dst" ]]; then rm -f "$dst"
-  elif [[ -e "$dst" ]]; then backup_path "$dst"; fi
-  ln -s "$src" "$dst" && ok "linked ${dst/#$HOME/\~}"
+  [[ -e "$src" ]] || die "missing config source: $src"
+  mkdir -p -- "$(dirname -- "$dst")" || die "cannot create parent of $dst"
+  [[ -L "$dst" && "$(readlink -- "$dst")" == "$src" ]] && return 0
+  backup_path "$dst"
+  ln -s -- "$src" "$dst" || die "cannot link $dst"
+  ok "linked ${dst/#$HOME/\~}"
 }
 
 bootstrap_aur_helper() {
   [[ -n "$FACT_AUR" ]] && return 0
-  (( DO_AUR_HELPER )) || { warn "no AUR helper — AUR packages will be skipped"; return 0; }
-  run_bg "build tools (base-devel, git)" sudo pacman -S --needed --noconfirm base-devel git || return 1
-  local tmp; tmp="$(mktemp -d)"
-  if run_bg "bootstrapping yay-bin" bash -c "
-        git clone --depth 1 https://aur.archlinux.org/yay-bin.git '$tmp/yay-bin' &&
-        cd '$tmp/yay-bin' && makepkg -si --noconfirm"; then
+  (( DO_AUR_HELPER )) || die "AUR packages selected but no helper is available; install yay/paru or use --no-aur"
+  run_bg "build tools (base-devel, git)" sudo pacman -S --needed --noconfirm base-devel git || die "build tools failed"
+  local tmp; tmp="$(mktemp -d)" || die "cannot create AUR build directory"
+  if run_bg "bootstrapping yay-bin" bash -c '
+      git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$1/yay-bin" &&
+      cd "$1/yay-bin" && makepkg -si --noconfirm' bash "$tmp"; then
     FACT_AUR="yay"
   else
-    warn "yay bootstrap failed — AUR packages will be skipped"
+    rm -rf -- "$tmp"
+    die "yay bootstrap failed; see $LOG"
   fi
-  rm -rf "$tmp"
+  rm -rf -- "$tmp"
 }
 
 install_packages() {
   headline "Packages  ·  ${#PACMAN_LIST[@]} from the repos, ${#AUR_LIST[@]} from the AUR"
-  (( FACT_PACMAN )) || { warn "pacman unavailable — skipping"; return 0; }
-  (( SUDO_OK ))     || { warn "no root — skipping"; return 0; }
+  # A full upgrade keeps Quickshell and Qt's private ABI in sync. Never -Sy
+  # followed by individual installs: Arch does not support partial upgrades.
+  run_bg "upgrading system and installing repo dependencies" \
+    sudo pacman -Syu --needed --noconfirm "${PACMAN_LIST[@]}" \
+    || die "repo package transaction failed; fix the error in $LOG and rerun setup"
 
-  run_bg "syncing databases" sudo pacman -Sy --noconfirm
-
-  # Install one shot first; on failure fall back to per-package so a single
-  # renamed/dropped package cannot sink the whole install.
-  if ! run_bg "installing ${#PACMAN_LIST[@]} repo packages" \
-        sudo pacman -S --needed --noconfirm ${PACMAN_LIST[@]+"${PACMAN_LIST[@]}"}; then
-    warn "batch install failed — retrying package by package"
-    local p done=0 total=${#PACMAN_LIST[@]}
-    for p in ${PACMAN_LIST[@]+"${PACMAN_LIST[@]}"}; do
-      done=$(( done + 1 ))
-      printf '\r\033[2K   %s  %s%s%s' "$(bar "$done" "$total" 20)" "$C_DIM" "$p" "$RST"
-      sudo pacman -S --needed --noconfirm "$p" >>"$LOG" 2>&1 || echo "$p" >>"$LOG.failed"
+  if (( ${#AUR_LIST[@]} )); then
+    bootstrap_aur_helper
+    local a
+    for a in "${AUR_LIST[@]}"; do
+      run_bg "aur/$a" "$FACT_AUR" -S --needed --noconfirm "$a" \
+        || die "AUR package $a failed; see $LOG (or rerun with --no-aur)"
     done
-    printf '\r\033[2K'
-    if [[ -f "$LOG.failed" ]]; then
-      warn "skipped: $(paste -sd' ' "$LOG.failed")"
-    else
-      ok "all repo packages installed"
-    fi
   fi
+}
 
-  (( ${#AUR_LIST[@]} )) || return 0
-  bootstrap_aur_helper
-  [[ -n "$FACT_AUR" ]] || return 0
-
-  local a done=0 total=${#AUR_LIST[@]}
-  for a in "${AUR_LIST[@]}"; do
-    done=$(( done + 1 ))
-    if (( DRYRUN )); then skip "AUR $a (dry-run)"; continue; fi
-    printf '   %s  %saur/%s%s\n' "$(bar "$done" "$total" 20)" "$C_DIM" "$a" "$RST"
-    if "$FACT_AUR" -S --needed --noconfirm "$a" >>"$LOG" 2>&1; then
-      printf '\033[1A\033[2K'; ok "aur/$a"
-    else
-      printf '\033[1A\033[2K'; warn "aur/$a skipped (see log)"
-    fi
+verify_quickshell() {
+  headline "Quickshell  ·  checking the runtime"
+  local cmd tmp
+  for cmd in qs python3; do
+    command -v "$cmd" >/dev/null 2>&1 || die "$cmd is missing; run setup.sh --packages first"
   done
+  qs --version >>"$LOG" 2>&1 || die "Quickshell cannot start; fully upgrade Qt and Quickshell together"
+  # Import the actual modules used by the panels without connecting to the
+  # compositor or starting any desktop services. This also detects older
+  # Quickshell builds without Networking/Bluetooth support.
+  tmp="$(mktemp -d)" || die "cannot create runtime check directory"
+  cat >"$tmp/shell.qml" <<'QML'
+import QtQuick
+import QtMultimedia
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Widgets
+import Quickshell.Bluetooth
+import Quickshell.Networking
+import Quickshell.Services.Pipewire
+import Quickshell.Services.UPower
+import Quickshell.Services.Mpris
+Timer { interval: 1; running: true; onTriggered: Qt.exit(0) }
+QML
+  if ! env QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+      timeout 15s qs -p "$tmp" --no-color >>"$LOG" 2>&1; then
+    rm -rf -- "$tmp"
+    die "Quickshell module check failed; use a current Arch Quickshell (0.3.2+) with matching Qt packages; see $LOG"
+  fi
+  rm -rf -- "$tmp"
+  ok "Quickshell modules and Python are available"
 }
 
 # ── config deploy ──────────────────────────────────────────────────────
@@ -836,30 +867,46 @@ deploy_files() {
   if (( FACT_INPLACE )); then
     ok "running from $TARGET — updating in place"
   else
+    case "$RICE_SRC/" in "$TARGET/"*) die "source is inside the deployment target; move the clone outside $TARGET first" ;; esac
     (( FACT_EXISTING )) && backup_path "$TARGET"
-    mkdir -p "$(dirname "$TARGET")"
+    mkdir -p "$(dirname "$TARGET")" || die "cannot create deployment directory"
     if command -v rsync >/dev/null 2>&1; then
-      rsync -a --exclude '.git' --exclude 'current-wallpaper' --exclude '*.bak.*' \
-        "$RICE_SRC/" "$TARGET/" >>"$LOG" 2>&1
-      [[ -d "$RICE_SRC/.git" ]] && rsync -a "$RICE_SRC/.git/" "$TARGET/.git/" >>"$LOG" 2>&1
+      rsync -a --exclude '.git' --exclude 'current-wallpaper' --exclude 'lock-wallpaper' --exclude '*.bak.*' \
+        "$RICE_SRC/" "$TARGET/" >>"$LOG" 2>&1 || die "config copy failed; see $LOG"
     else
-      mkdir -p "$TARGET"
-      cp -a "$RICE_SRC/." "$TARGET/" >>"$LOG" 2>&1
-      rm -f "$TARGET/current-wallpaper"
+      mkdir -p "$TARGET" || die "cannot create deployment target"
+      (cd "$RICE_SRC" && tar --exclude=.git --exclude=current-wallpaper --exclude=lock-wallpaper \
+        --exclude='*.bak.*' -cf - .) | tar -xf - -C "$TARGET" >>"$LOG" 2>&1 \
+        || die "config copy failed; see $LOG"
     fi
     ok "copied the rice to $TARGET"
   fi
 
-  chmod +x "$TARGET"/scripts/*.sh "$TARGET"/scripts/eww/*.sh 2>/dev/null
-  chmod +x "$TARGET"/apps/waybar/scripts/* 2>/dev/null
-  chmod +x "$TARGET/setup.sh" 2>/dev/null
+  find "$TARGET/scripts" "$TARGET/apps/waybar/scripts" -type f \
+    \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} + || die "cannot set script permissions"
+  chmod +x "$TARGET/setup.sh" || die "cannot make setup executable"
   ok "scripts made executable"
 
-  mkdir -p "$WAYBAR_CFG"
   link_force "$TARGET/apps/waybar/config.jsonc" "$WAYBAR_CFG/config"
-  link_force "$TARGET/apps/waybar/style.css"    "$WAYBAR_CFG/style.css"
-  if [[ -d "$WAYBAR_CFG/scripts" && ! -L "$WAYBAR_CFG/scripts" ]]; then backup_path "$WAYBAR_CFG/scripts"; fi
+  link_force "$TARGET/apps/waybar/config.jsonc" "$WAYBAR_CFG/config.jsonc"
+  link_force "$TARGET/apps/waybar/style.css" "$WAYBAR_CFG/style.css"
   link_force "$TARGET/apps/waybar/scripts" "$WAYBAR_CFG/scripts"
+  local app
+  for app in hypridle hyprlock; do
+    link_force "$TARGET/apps/$app/$app.conf" "$XDG_CFG/$app/$app.conf"
+  done
+  link_force "$TARGET/apps/mako/config" "$XDG_CFG/mako/config"
+  link_force "$TARGET/apps/rofi/config.rasi" "$XDG_CFG/rofi/config.rasi"
+  local surface
+  for surface in launcher controlcenter spotify keybinds; do
+    # Repair archives/checkouts which lost the relative directory symlinks.
+    if [[ ! "$TARGET/apps/quickshell/$surface/shared" -ef "$TARGET/apps/quickshell/shared" ]]; then
+      backup_path "$TARGET/apps/quickshell/$surface/shared"
+      ln -s ../shared "$TARGET/apps/quickshell/$surface/shared" || die "cannot link shared QML"
+    fi
+    [[ -f "$TARGET/apps/quickshell/$surface/shared/Theme.qml" ]] || die "shared QML is missing"
+    link_force "$TARGET/apps/quickshell/$surface" "$XDG_CFG/quickshell/$surface"
+  done
 
   # kitty.conf carries the transparent_background_colors that turn the Neovim
   # panes into glass — without this link a fresh machine renders them as opaque
@@ -868,10 +915,12 @@ deploy_files() {
     link_force "$TARGET/apps/kitty/kitty.conf" "$XDG_CFG/kitty/kitty.conf"
   fi
 
-  mkdir -p "$WALLPAPER_DIR"
-  if ! compgen -G "$WALLPAPER_DIR/*.[jpJP][pnPN]*[gG]" >/dev/null; then
+  mkdir -p "$WALLPAPER_DIR" "$TARGET/assets" || die "cannot create wallpaper directory"
+  local first
+  first="$(find "$WALLPAPER_DIR" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -print -quit)"
+  if [[ -z "$first" ]]; then
     # A 64x64 near-black placeholder, stored as base64 rather than generated
-    # by python — the rice has no python dependency any more.
+    # by an image editor, so no extra wallpaper-generation tool is needed.
     printf '%s' "\
 iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAIGNIUk0AAHomAACAhAAA+gAAAIDo\
 AAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAldEVYdGRhdGU6Y3JlYXRl\
@@ -881,55 +930,94 @@ NToxMTo0MSswMDowMMSiYesAAAB4SURBVGje7c9BDQAgEMAw4Hn+BSOCR0OyKej2zKyfOxrQgAY0\
 oAENaEADGtCABjSgAQ1oQAMa0IAGNKABDWhAAxrQgAY0oAENaEADGtCABjSgAQ1oQAMa0IAGNKAB\
 DWhAAxrQgAY0oAENaEADGtCABjSgAQ1owGsX6IMAnuKgjwgAAAAASUVORK5CYII=" \
       | base64 -d > "$WALLPAPER_DIR/suf.png" 2>/dev/null \
-      && ok "placeholder wallpaper written (drop your own into $WALLPAPER_DIR)"
+      || die "cannot seed wallpaper"
+    first="$WALLPAPER_DIR/suf.png"
+    ok "placeholder wallpaper written (drop your own into $WALLPAPER_DIR)"
   fi
-  local first
-  first="$(ls -1 "$WALLPAPER_DIR"/*.png "$WALLPAPER_DIR"/*.jpg "$WALLPAPER_DIR"/*.jpeg 2>/dev/null | head -n1)"
   if [[ -n "$first" ]]; then
-    ln -sfn "$first" "$TARGET/current-wallpaper"
-    ok "current-wallpaper → $(basename "$first")"
+    local state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/hypr"
+    mkdir -p "$state_dir" || die "cannot create wallpaper state directory"
+    local key image
+    for key in wallpaper wallpaper-lock; do
+      image="$(cat "$state_dir/$key" 2>/dev/null || true)"
+      [[ -f "$image" ]] || image="$first"
+      if [[ "$key" == wallpaper || -f "$state_dir/$key" ]]; then
+        printf '%s\n' "$image" >"$state_dir/$key" || die "cannot save wallpaper state"
+      fi
+      if [[ "$key" == wallpaper ]]; then
+        ln -sfn "$image" "$TARGET/assets/current-wallpaper" || die "cannot link wallpaper"
+      else
+        ln -sfn "$image" "$TARGET/assets/lock-wallpaper" || die "cannot link lock wallpaper"
+      fi
+    done
+    ok "desktop and lock wallpaper links are ready"
+
   fi
 
   if [[ -f "$TARGET/apps/gtk/gtk-3.0/bookmarks.template" ]]; then
     mkdir -p "$XDG_CFG/gtk-3.0"
-    sed "s|/home/USER|$HOME|g" "$TARGET/apps/gtk/gtk-3.0/bookmarks.template" > "$XDG_CFG/gtk-3.0/bookmarks"
-    ok "gtk bookmarks written for $USER"
+    backup_path "$XDG_CFG/gtk-3.0/bookmarks"
+    python3 - "$TARGET/apps/gtk/gtk-3.0/bookmarks.template" "$XDG_CFG/gtk-3.0/bookmarks" "$HOME" <<'PYBOOK'
+from pathlib import Path
+import sys
+Path(sys.argv[2]).write_text(Path(sys.argv[1]).read_text().replace('/home/USER', sys.argv[3]))
+PYBOOK
+    [[ $? == 0 ]] || die "cannot write GTK bookmarks"
+    ok "gtk bookmarks written for ${USER:-$(id -un)}"
   fi
 }
 
 personalise() {
   local f="$TARGET/hypr.conf"
-  [[ -f "$f" ]] || return 0
+  [[ -f "$f" ]] || die "hypr.conf is missing"
   headline "Personalise  ·  hypr.conf"
 
   if [[ -n "$PICK_MONITOR" ]]; then
-    sed -i -E "s|^monitor = .*|monitor = $PICK_MONITOR,preferred,auto,$PICK_SCALE|" "$f"
+    sed -i -E "s|^monitor = .*|monitor = $PICK_MONITOR,preferred,auto,$PICK_SCALE|" "$f" || die "cannot personalise $f"
     ok "monitor = $PICK_MONITOR,preferred,auto,$PICK_SCALE"
   else
-    skip "monitor line left at its default"
+    sed -i -E 's|^monitor *=.*|monitor = ,preferred,auto,1|' "$f" || die "cannot configure monitor"
+    ok "monitor = ,preferred,auto,1 (automatic output)"
   fi
 
   if has_group apps; then
-    sed -i -E "s|^(\\\$term = ).*|\1$PICK_TERM|"                     "$f"
-    sed -i -E "s|^(bind = SUPER, T, exec, ).*|\1$PICK_TERM|"         "$f"
-    sed -i -E "s|^(bind = SUPER, Return, exec, ).*|\1$PICK_TERM|"    "$f"
-    sed -i -E "s|^(bind = SUPER, W, exec, ).*|\1$PICK_BROWSER|"      "$f"
-    sed -i -E "s|^(bind = SUPER, E, exec, ).*|\1$PICK_FILES|"        "$f"
+    sed -i -E "s|^(\\\$term = ).*|\1$PICK_TERM|"                     "$f" || die "cannot personalise $f"
+    sed -i -E "s|^(bind = SUPER, T, exec, ).*|\1$PICK_TERM|"         "$f" || die "cannot personalise $f"
+    sed -i -E "s|^(bind = SUPER, Return, exec, ).*|\1$PICK_TERM|"    "$f" || die "cannot personalise $f"
+    sed -i -E "s|^(bind = SUPER, W, exec, ).*|\1$PICK_BROWSER|"      "$f" || die "cannot personalise $f"
+    sed -i -E "s|^(bind = SUPER, E, exec, ).*|\1$PICK_FILES|"        "$f" || die "cannot personalise $f"
     ok "SUPER+Return / T → $PICK_TERM"
     ok "SUPER+W → $PICK_BROWSER    SUPER+E → $PICK_FILES"
     case "$PICK_EDITOR" in
-      code) sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1code|"    "$f"; ok "SUPER+C → VS Code" ;;
-      nvim) sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1$PICK_TERM -e nvim|" "$f"; ok "SUPER+C → $PICK_TERM -e nvim" ;;
-      zed)  sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1zeditor|" "$f"; ok "SUPER+C → zed" ;;
+      code) sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1code|"    "$f" || die "cannot personalise $f"; ok "SUPER+C → VS Code" ;;
+      nvim) sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1$PICK_TERM -e nvim|" "$f" || die "cannot personalise $f"; ok "SUPER+C → $PICK_TERM -e nvim" ;;
+      zed)  sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1zeditor|" "$f" || die "cannot personalise $f"; ok "SUPER+C → zed" ;;
       *)    skip "SUPER+C left as is" ;;
     esac
   fi
 
   # eww daemon autostart only makes sense when eww is actually installed
   if ! command -v eww >/dev/null 2>&1; then
-    sed -i -E "s|^(exec-once = eww .*)|# \1  # eww not installed|" "$f"
+    sed -i -E "s|^(exec-once = eww .*)|# \1  # eww not installed|" "$f" || die "cannot personalise $f"
     skip "eww autostart commented out (panels are rofi-based)"
   fi
+  # Do not force NVIDIA GLX on Intel/AMD laptops.
+  if [[ "$FACT_GPU" != NVIDIA ]]; then
+    sed -i '/^env = __GLX_VENDOR_LIBRARY_NAME,nvidia$/d' "$f" || die "cannot set GPU environment"
+  fi
+  local entry="$TARGET/hyprland.conf"
+  if ! grep -q '^# VerumDot setup session environment$' "$entry"; then
+    cat >>"$entry" <<'SESSION'
+
+# VerumDot setup session environment
+exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start hyprpolkitagent.service
+SESSION
+    [[ $? == 0 ]] || die "cannot write session configuration"
+  fi
+  # Persist a custom wallpaper directory for scripts launched by Hyprland.
+  sed -i '/^env = HYPR_WALLPAPER_DIR,/d' "$entry" || die "cannot update wallpaper environment"
+  printf 'env = HYPR_WALLPAPER_DIR,%s\n' "$WALLPAPER_DIR" >>"$entry" || die "cannot save wallpaper environment"
+
 }
 
 # ── neovim overlay ─────────────────────────────────────────────────────
@@ -955,11 +1043,16 @@ deploy_nvim() {
       say  "wire it up by hand: $TARGET/apps/nvim/README.md"
       return 0
     fi
-    if ! git clone --depth 1 https://github.com/LazyVim/starter "$NVIM_CFG" >>"$LOG" 2>&1; then
-      warn "could not clone the LazyVim starter — skipping the overlay"
-      return 0
+    local starter
+    starter="$(mktemp -d)" || die "cannot create Neovim staging directory"
+    if ! git clone --depth 1 https://github.com/LazyVim/starter "$starter/config" >>"$LOG" 2>&1; then
+      rm -rf -- "$starter"
+      die "could not clone the LazyVim starter; see $LOG or rerun with --no-nvim"
     fi
-    rm -rf "$NVIM_CFG/.git"
+    rm -rf -- "$starter/config/.git"
+    mkdir -p "$(dirname "$NVIM_CFG")" || die "cannot create Neovim config parent"
+    mv -- "$starter/config" "$NVIM_CFG" || die "cannot deploy Neovim starter"
+    rmdir -- "$starter"
     ok "LazyVim starter cloned into ${NVIM_CFG/#$HOME/\~}"
   fi
 
@@ -978,10 +1071,10 @@ apply_theme() {
     if "$TARGET/scripts/theme-install.sh" >>"$LOG" 2>&1; then
       ok "GTK · Qt · Kvantum · portal pointed at PureBlackGlass"
     else
-      warn "theme-install.sh reported issues (see $LOG)"
+      die "theme-install.sh failed (see $LOG)"
     fi
   else
-    warn "scripts/theme-install.sh missing"
+    die "scripts/theme-install.sh missing"
   fi
 }
 
@@ -991,13 +1084,16 @@ apply_services() {
   if systemctl --user enable --now pipewire pipewire-pulse wireplumber >>"$LOG" 2>&1; then
     ok "pipewire · pipewire-pulse · wireplumber enabled"
   else
-    warn "could not enable pipewire user services (not a systemd user session?)"
+    die "cannot enable PipeWire services; use a systemd user session or rerun with --no-services and enable them after login"
   fi
   (( SUDO_OK )) || { skip "system services need root — skipped"; return 0; }
-  local svc
+  local svc group
   for svc in power-profiles-daemon NetworkManager bluetooth; do
-    systemctl list-unit-files "$svc.service" >/dev/null 2>&1 || continue
-    sudo systemctl enable --now "$svc" >>"$LOG" 2>&1 && ok "$svc enabled"
+    case "$svc" in power-profiles-daemon) group=power ;; *) group=net ;; esac
+    has_group "$group" || continue
+    systemctl cat "$svc.service" >/dev/null 2>&1 || continue
+    sudo systemctl enable --now "$svc" >>"$LOG" 2>&1 || die "cannot enable $svc; see $LOG"
+    ok "$svc enabled"
   done
 }
 
@@ -1030,14 +1126,12 @@ apply_lid() {
   [[ -f "$src" ]] || return 0
   headline "Lid policy  ·  lock and blank, never suspend"
   (( SUDO_OK )) || { warn "needs root — copy $src to /etc/systemd/logind.conf.d/ yourself"; return 0; }
-  sudo mkdir -p /etc/systemd/logind.conf.d
+  sudo mkdir -p /etc/systemd/logind.conf.d || die "cannot create lid policy directory"
   if sudo cp "$src" /etc/systemd/logind.conf.d/10-lid-lock.conf; then
     sudo rm -f /etc/systemd/logind.conf.d/10-lid-hibernate.conf
-    sudo systemctl restart systemd-logind >>"$LOG" 2>&1 \
-      && ok "logind updated — HandleLidSwitch=ignore" \
-      || warn "policy copied; reboot for it to take effect"
+    ok "lid policy installed; reboot to apply it (logind is not restarted during setup)"
   else
-    warn "could not write logind policy"
+    die "could not write logind policy"
   fi
 }
 
@@ -1058,8 +1152,8 @@ finish() {
   printf '\n   %sNext%s\n' "$BOLD$C_INK" "$RST"
   printf '   %s1%s  drop wallpapers into %s%s%s\n'  "$C_RED_HOT" "$RST" "$C_INK" "$WALLPAPER_DIR" "$RST"
   if [[ -z "$PICK_MONITOR" ]]; then
-    printf '   %s2%s  set your output in %s%s%s  (%shyprctl monitors%s)\n' \
-      "$C_RED_HOT" "$RST" "$C_INK" "$TARGET/hypr.conf" "$RST" "$C_DIM" "$RST"
+    printf '   %s2%s  automatic output configured; customise %s%s%s if needed\n' \
+      "$C_RED_HOT" "$RST" "$C_INK" "$TARGET/hypr.conf" "$RST"
   else
     printf '   %s2%s  output already set to %s%s%s\n' "$C_RED_HOT" "$RST" "$C_INK" "$PICK_MONITOR" "$RST"
   fi
@@ -1089,7 +1183,12 @@ usage() {
      ./setup.sh --packages      dependencies only
      ./setup.sh --config        deploy rice + theme only
      ./setup.sh --dry-run       print the plan, change nothing
+     ./setup.sh --list-packages  print the current default repo / AUR manifest
      ./setup.sh --no-nvim       leave ~/.config/nvim untouched
+     ./setup.sh --no-aur        skip AUR extras and the default VS Code package
+     ./setup.sh --no-services   do not change running/system services
+     ./setup.sh --no-lid        leave the system lid policy unchanged
+     ./setup.sh --no-theme      skip GTK / Qt theme setup
      ./setup.sh --no-anim       skip the intro animation
      ./setup.sh --no-color      plain text, for logs and pipes
 
@@ -1109,7 +1208,12 @@ parse_args() {
       --config|--config-only)     MODE="config";   DO_PACKAGES=0; DO_CONFIG=1 ;;
       --packages|--packages-only) MODE="packages"; DO_PACKAGES=1; DO_CONFIG=0 ;;
       --dry-run|-n)               DRYRUN=1 ;;
+      --list-packages)            LIST_PACKAGES=1 ;;
       --no-nvim)                  DO_NVIM=0 ;;
+      --no-services)              DO_SERVICES=0 ;;
+      --no-lid)                   DO_LID=0 ;;
+      --no-theme)                 DO_THEME=0 ;;
+      --no-aur)                   NO_AUR=1 ;;
       --no-anim)                  ANIM=0 ;;
       --no-color)                 COLOR=0; ANIM=0 ;;
       -h|--help)                  usage ;;
@@ -1120,22 +1224,34 @@ parse_args() {
 }
 
 main() {
-  # curl | bash still gets a keyboard
-  if [[ ! -t 0 ]] && { : </dev/tty; } 2>/dev/null; then exec </dev/tty; fi
-
   parse_args "$@"
+  if (( LIST_PACKAGES )); then
+    init_style
+    build_pkg_lists
+    printf '[repo]\n'; printf '%s\n' "${PACMAN_LIST[@]}"
+    printf '[aur]\n'; (( ${#AUR_LIST[@]} )) && printf '%s\n' "${AUR_LIST[@]}"
+    return 0
+  fi
+  if [[ "$MODE" == wizard && ! -t 0 ]] && (( ! DRYRUN )); then
+    if { : </dev/tty; } 2>/dev/null; then exec </dev/tty
+    else init_style; die "interactive setup needs a terminal; use --auto, --config or --packages"; fi
+  fi
   init_style
   [[ "$(id -u)" -eq 0 ]] && die "do not run as root — sudo is used only where it is needed"
 
-  mkdir -p "$(dirname "$LOG")"; : >"$LOG"
-  printf 'VerumDot %s — %s\nsource: %s\n\n' "$VD_VERSION" "$(date)" "$RICE_SRC" >>"$LOG"
+  [[ "$XDG_CFG" == "$HOME/.config" ]] || die "this rice currently requires XDG_CONFIG_HOME=$HOME/.config because its desktop configs use that path"
+  if (( ! DRYRUN )); then
+    mkdir -p "$(dirname "$LOG")" || die "cannot create log directory"
+    : >"$LOG" || die "cannot create log file"
+    printf 'VerumDot %s — %s\nsource: %s\n\n' "$VD_VERSION" "$(date)" "$RICE_SRC" >>"$LOG"
+  fi
 
   clear 2>/dev/null
   banner
   preflight
 
   case "$MODE" in
-    wizard) wizard ;;
+    wizard) (( DRYRUN )) || wizard ;;
     auto)   say "--auto: full install with defaults, no questions"
             local mons; mons="$(detect_monitors | head -n1)"
             [[ -n "$mons" ]] && PICK_MONITOR="$mons"
@@ -1148,9 +1264,14 @@ main() {
               (( FACT_LAPTOP )) || DO_LID=0 ;;
   esac
 
+  # Explicit skip flags also win over answers in the interactive wizard.
+  local arg
+  for arg in "$@"; do
+    case "$arg" in --no-theme) DO_THEME=0 ;; --no-services) DO_SERVICES=0 ;; --no-lid) DO_LID=0 ;; esac
+  done
   show_plan
 
-  if (( DO_PACKAGES )) || (( DO_LID )) || (( DO_SERVICES )); then sudo_begin; fi
+  if (( DO_PACKAGES || (DO_CONFIG && (DO_LID || DO_SERVICES)) )); then sudo_begin; fi
 
   STEP_TOTAL=0
   (( DO_PACKAGES )) && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
@@ -1158,6 +1279,7 @@ main() {
   STEP_N=0
 
   (( DO_PACKAGES )) && install_packages
+  verify_quickshell
   if (( DO_CONFIG )); then
     deploy_files
     personalise
@@ -1168,7 +1290,8 @@ main() {
     apply_fan
   fi
   sudo_end
-  finish
+  if (( DO_CONFIG )); then finish
+  else ok "selected dependencies installed and Quickshell runtime checked"; fi
 }
 
 main "$@"
