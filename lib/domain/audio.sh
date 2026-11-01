@@ -68,6 +68,8 @@ audio::set_volume() {
     "pamixer --allow-boost --set-limit $AUDIO_MAX_PERCENT --set-volume $pct" \
     "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ ${pct}%" \
     "pactl set-sink-volume @DEFAULT_SINK@ ${pct}%"
+  local rc=$?
+  (( rc == 0 )) || return "$rc"
   waybar::refresh volume
 }
 
@@ -78,6 +80,8 @@ audio::step_volume() {
     "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ ${AUDIO_STEP_PERCENT}%${sign}" \
     "pamixer --allow-boost --set-limit $AUDIO_MAX_PERCENT $([[ $sign == + ]] && printf -- -i || printf -- -d) $AUDIO_STEP_PERCENT" \
     "pactl set-sink-volume @DEFAULT_SINK@ ${sign}${AUDIO_STEP_PERCENT}%"
+  local rc=$?
+  (( rc == 0 )) || return "$rc"
   waybar::refresh volume
 }
 
@@ -86,6 +90,8 @@ audio::toggle_mute() {
     "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle" \
     "pamixer -t" \
     "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+  local rc=$?
+  (( rc == 0 )) || return "$rc"
   waybar::refresh volume
 }
 
@@ -94,5 +100,7 @@ audio::toggle_mic() {
     "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle" \
     "pamixer --default-source -t" \
     "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
+  local rc=$?
+  (( rc == 0 )) || return "$rc"
   waybar::refresh mic
 }

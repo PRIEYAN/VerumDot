@@ -17,7 +17,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass, field
-from typing import Iterable
+from typing import Iterable, Protocol
 
 # Sections render in this order; anything unmatched lands in "Other".
 GROUP_ORDER = [
@@ -31,6 +31,14 @@ class Bind:
     group: str
     chord: tuple[str, ...]
     action: str
+
+
+class ChordFormatter(Protocol):
+    def chord(self, modifiers: str, key: str) -> tuple[str, ...]: ...
+
+
+class Classifier(Protocol):
+    def classify(self, dispatcher: str, args: str) -> tuple[str, str]: ...
 
 
 class KeyFormatter:
@@ -180,10 +188,10 @@ class ConfigReader:
 
     BIND_KEY = re.compile(r"bind[a-z]*")
 
-    def __init__(self, classifier: BindClassifier | None = None,
-                 formatter: KeyFormatter | None = None):
-        self._classifier = classifier or BindClassifier()
-        self._formatter = formatter or KeyFormatter()
+    def __init__(self, classifier: Classifier | None = None,
+                 formatter: ChordFormatter | None = None):
+        self._classifier = BindClassifier() if classifier is None else classifier
+        self._formatter = KeyFormatter() if formatter is None else formatter
 
     def read(self, path: str) -> list[Bind]:
         binds: list[Bind] = []

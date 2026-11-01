@@ -19,12 +19,8 @@
 # pwm1_enable returns to the BIOS default on every boot. fan::apply is what
 # re-asserts it, at login and after any power-mode change.
 
-# domain/power is a genuine mutual dependency: the fan policy is expressed
-# relative to the power mode, and changing the power mode re-resolves the
-# fan. The module loader marks a module as loaded before sourcing it, so the
-# cycle terminates — the function definitions are all in place before any of
-# them is called.
-hypr::use core/log core/guard os/proc os/state ui/notify domain/power
+# Read the power profile without loading the power workflow (which calls fan::apply).
+hypr::use core/log core/guard os/proc os/state ui/notify domain/powerprofile
 
 readonly -a FAN_MODES=(auto normal max)
 readonly FAN_STATE_KEY=fan-mode
@@ -56,20 +52,28 @@ fan::supported() { fan::device >/dev/null; }
 
 fan::mode() { state::get_enum "$FAN_STATE_KEY" auto "${FAN_MODES[@]}"; }
 
-# fan::target_pwm — what the current (setting, power mode) pair resolves to.
-# This is the whole policy, in one expression.
-fan::target_pwm() {
-  case "$(fan::mode)" in
+# Pure policy, reusable without reading sysfs or starting a system process.
+# fan::resolve_pwm <fan setting> <power mode>
+fan::resolve_pwm() {
+  case "$1" in
     max)    printf '%s' "$FAN_PWM_PINNED" ;;
     normal) printf '%s' "$FAN_PWM_BIOS" ;;
-    *)
-      if [[ $(power::mode) == performance ]]; then
+    auto)
+      if [[ $2 == performance ]]; then
         printf '%s' "$FAN_PWM_PINNED"
       else
         printf '%s' "$FAN_PWM_BIOS"
       fi
       ;;
+    *) return 2 ;;
   esac
+}
+
+fan::target_pwm() {
+  local mode profile=normal
+  mode=$(fan::mode)
+  [[ $mode != auto ]] || profile=$(powerprofile::mode)
+  fan::resolve_pwm "$mode" "$profile"
 }
 
 # fan::_write <value> — push a pwm value, skipping a no-op write.
@@ -100,7 +104,7 @@ fan::set_mode() {
   state::set "$FAN_STATE_KEY" "$mode"
   fan::apply || return 1
   local label=$mode
-  [[ $mode == auto ]] && label="auto ($(power::mode))"
+  [[ $mode == auto ]] && label="auto ($(powerprofile::mode))"
   notify::transient fan-mode "Fan · ${label}"
 }
 
@@ -128,6 +132,6 @@ fan::status() {
   local device
   device=$(fan::device) || { printf 'unsupported\n'; return 1; }
   printf 'setting=%s mode=%s pwm1_enable=%s rpm=%s\n' \
-    "$(fan::mode)" "$(power::mode)" \
+    "$(fan::mode)" "$(powerprofile::mode)" \
     "$(proc::capture_or '?' cat "$device")" "$(fan::rpm)"
 }

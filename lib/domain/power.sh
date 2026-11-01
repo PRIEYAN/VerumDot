@@ -11,48 +11,20 @@
 # predictable path in a world-writable directory, and the wrong tree for
 # something meant to survive a reboot. It is now ordinary state.
 
-hypr::use core/guard core/log core/paths os/proc os/state ui/notify ui/waybar domain/fan
+hypr::use core/guard core/log core/paths os/proc os/state ui/notify ui/waybar domain/powerprofile domain/fan
 
-readonly -a POWER_MODES=(normal performance battery)
-readonly POWER_STATE_KEY=power-mode
-
-# Mode -> (ppd profile | cpupower governor | glyph | toast)
-declare -Ag POWER_PROFILE=([normal]=balanced [performance]=performance [battery]=power-saver)
-declare -Ag POWER_GOVERNOR=([normal]=ondemand [performance]=performance [battery]=powersave)
+# Public lookup consumed by the Waybar entry point.
+# shellcheck disable=SC2034
 declare -Ag POWER_GLYPH=([normal]=$'' [performance]=$'' [battery]=$'')
 declare -Ag POWER_TOAST=([normal]='ツ' [performance]='(ᗒᗣᗕ)՞' [battery]='(˶ᵔ ᵕ ᵔ˶)')
 
-# power::mode — the current mode, from ppd when available.
-power::mode() {
-  local profile
-  if guard::has powerprofilesctl && profile=$(proc::capture powerprofilesctl get); then
-    case $profile in
-      performance) printf 'performance'; return 0 ;;
-      power-saver) printf 'battery';     return 0 ;;
-      balanced)    printf 'normal';      return 0 ;;
-    esac
-  fi
-  state::get_enum "$POWER_STATE_KEY" normal "${POWER_MODES[@]}"
-}
+# Keep the public entry point stable for Waybar and menu callers.
+power::mode() { powerprofile::mode; }
 
 # power::set_mode <mode> — apply, cache, and tell everything that cares.
 power::set_mode() {
   local mode=$1
-  guard::one_of "$mode" "${POWER_MODES[@]}" >/dev/null \
-    || { log::error "unknown power mode: $mode"; return 2; }
-
-  state::set "$POWER_STATE_KEY" "$mode"
-
-  if guard::has powerprofilesctl; then
-    proc::quiet powerprofilesctl set "${POWER_PROFILE[$mode]}"
-  elif guard::has cpupower; then
-    # Needs root, unlike the D-Bus path, so it is the fallback rather than
-    # the default — and it fights ppd over the same intel_pstate driver if
-    # both are present.
-    proc::quiet sudo cpupower frequency-set -g "${POWER_GOVERNOR[$mode]}"
-  else
-    log::warn "no power profile backend (install power-profiles-daemon)"
-  fi
+  powerprofile::set "$mode" || return $?
 
   # The fan setting is expressed relative to the power mode, so a mode change
   # has to re-resolve it. Not an error when the machine has no hp-wmi fan.
