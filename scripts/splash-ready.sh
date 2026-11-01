@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Readiness probe for the boot splash: exit 0 once the desktop is painted.
+# Readiness probe for the boot splash: exit 0 once the desktop layers are mapped.
 #
-# "Painted" means the two things whose absence is actually visible when the
+# "Ready" means the two things whose absence is actually visible when the
 # splash lifts — the wallpaper and the bar. hypridle, the applets and the
 # quickshell daemons are deliberately not checked: nothing is on screen for
 # them until they are clicked, so waiting on them would only delay the reveal.
@@ -18,13 +18,15 @@ source "$_dir/lib/bootstrap.sh"
 unset _dir
 hypr::use os/hypr
 
-# hyprpaper answering IPC is the wallpaper's own readiness signal — the same
-# socket wallpaper.sh waits on before pushing an image to it.
-[[ -S "$(hypr::hyprpaper_socket)" ]] || exit 1
-
-# waybar is checked by process rather than by its layer surface: hyprctl
-# exposes no layer list, and the gap between the process existing and the bar
-# being drawn is well inside the splash's own fade.
-pgrep -x waybar >/dev/null 2>&1 || exit 1
-
-exit 0
+# Query mapped layers in this compositor instance. A process existing (or a
+# wallpaper socket accepting connections) does not mean a surface is visible.
+# Require both desktop layers on every output reported by Hyprland. The query
+# is bounded so a stuck IPC socket cannot accumulate readiness processes.
+guard::has hyprctl jq timeout || exit 1
+[[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || exit 1
+timeout --kill-after=0.05 0.15 hyprctl -j layers 2>/dev/null | jq -e '
+  type == "object" and length > 0 and all(.[];
+    [.levels[][]? | select(.w > 0 and .h > 0 and (.alpha // 1) > 0) | .namespace] as $names
+    | ($names | index("hyprpaper")) != null and ($names | index("waybar")) != null
+  )
+' >/dev/null 2>&1

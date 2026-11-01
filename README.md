@@ -246,10 +246,30 @@ a panel from inside a Hyprland session:
 qs -p ~/.config/hypr/apps/quickshell/controlcenter --no-color
 ```
 
-The splash screen is separate work: the version currently on `main` imports
-`Quickshell.Core`, which is unavailable in Quickshell 0.3.2. This installer update
-does not change splash QML or merge the splash-screen branch. That existing
-splash error does not mean the four desktop panels are missing their modules.
+### Login splash
+
+This branch starts a silent video overlay on every connected monitor through
+`scripts/splash.sh`. It stays hidden while Qt initializes, then fades both the
+video and black background when Hyprland reports mapped wallpaper and Waybar
+layers, or when the 850ms display budget expires. A separate 4-second watchdog
+(with 500ms kill escalation) bounds startup and decoder cleanup. Missing or
+invalid media never prevents login; concurrent launches are ignored.
+
+Preview it inside a Hyprland session:
+
+```bash
+~/.config/hypr/scripts/splash.sh
+```
+
+Use the launcher for previews so the watchdog stays active. Diagnostics are in
+`~/.cache/hypr/splash.log`. Replace `assets/splash.mp4` to change the animation;
+it is deliberately truncated to the short display budget. To disable the splash,
+comment its `exec-once` line in `hyprland.conf`.
+
+The Waybar supervisor now waits for the actual compositor socket, starts the
+bundled config explicitly, retries up to five immediate failures, and records
+errors in `~/.cache/hypr/waybar-start.log`. Stopping the supervisor stops its own
+bar child. See [splash testing and implementation notes](apps/quickshell/splash/README.md).
 
 ### Safe preview and config repair
 
@@ -275,8 +295,8 @@ packages resolved against an empty installed-package database using the local
 Arch repository metadata (599 packages including dependencies).
 
 This is not a full package-download/install or GPU/Wayland login test on another
-laptop. Wi-Fi, Bluetooth, audio devices and graphical panel interaction still
-need a real session; the existing splash QML error is described above.
+laptop. Wi-Fi, Bluetooth, audio devices and general graphical panel interaction
+still need a real session. The splash has separate graphical tests described above.
 
 ### Migrate
 

@@ -36,17 +36,39 @@ guard::has waybar || { log::warn "waybar is not installed"; exit 0; }
 # exec-once would stack supervisors and each would fight to respawn the bar.
 proc::lock "$WAYBAR_LOCK" || { log::info "waybar supervisor already running"; exit 0; }
 
-# The compositor must be up before waybar can bind its layer surface.
-hypr::wait_for_socket "$(hypr::event_socket)" 100 \
-  || log::warn "Hyprland socket never appeared; starting waybar anyway"
+# Resolve the socket on every attempt: resolving once before it exists gives
+# an empty path, which can never become ready no matter how long we wait.
+socket=""
+for (( attempt = 0; attempt < 100; attempt++ )); do
+  socket=$(hypr::event_socket)
+  [[ -S "$socket" ]] && break
+  sleep 0.1
+done
+[[ -S "$socket" ]] || { log::warn "Hyprland socket never appeared; skipping waybar"; exit 1; }
+mkdir -p -- "$HYPR_CACHE_DIR" || exit 1
+readonly WAYBAR_LOG="$HYPR_CACHE_DIR/waybar-start.log"
+: >"$WAYBAR_LOG"
+child=""
+# Called by the EXIT trap.
+# shellcheck disable=SC2329
+cleanup() {
+  [[ -z "$child" ]] || kill "$child" 2>/dev/null || true
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM HUP
 
 fast_fails=0
 while (( fast_fails < WAYBAR_MAX_FAST_FAILS )); do
   started=$SECONDS
-  # Via run_unlocked: waybar and the module scripts it spawns must not inherit
-  # the supervisor's lock fd, or killing the supervisor while the bar lives
-  # would leave the lock held and block every later supervisor.
-  proc::run_unlocked waybar >/dev/null 2>&1
+  # Close the supervisor lock in the child, then exec so $child is Waybar
+  # itself. Terminating the supervisor must stop only its own bar process.
+  (
+    exec {PROC_LOCK_FD}>&-
+    exec waybar -c "$HYPR_WAYBAR/config.jsonc" -s "$HYPR_WAYBAR/style.css"
+  ) >>"$WAYBAR_LOG" 2>&1 &
+  child=$!
+  wait "$child"
+  child=""
   ran=$(( SECONDS - started ))
 
   if (( ran >= WAYBAR_MIN_RUN )); then
@@ -59,9 +81,10 @@ while (( fast_fails < WAYBAR_MAX_FAST_FAILS )); do
     log::warn "waybar died after ${ran}s (${fast_fails}/${WAYBAR_MAX_FAST_FAILS})"
   fi
 
-  sleep "$WAYBAR_RESTART_DELAY"
+  (( fast_fails < WAYBAR_MAX_FAST_FAILS )) && sleep "$WAYBAR_RESTART_DELAY"
 done
 
 log::warn "waybar failed ${WAYBAR_MAX_FAST_FAILS} times in a row; giving up"
 notify::send -u critical -r waybar-supervisor "Waybar" \
-  "Failed to start after ${WAYBAR_MAX_FAST_FAILS} attempts. Run waybar in a terminal to see why."
+  "Failed to start after ${WAYBAR_MAX_FAST_FAILS} attempts. See $WAYBAR_LOG."
+exit 1
