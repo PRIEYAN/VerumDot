@@ -321,6 +321,16 @@ run_bg() { # run_bg <label> <cmd...>   -> streams to $LOG, spinner + tail
   return $rc
 }
 
+run_fg() { # AUR tools may need to ask for sudo again after a long build.
+  local label=$1 rc; shift
+  if (( DRYRUN )); then skip "$label  (dry-run)"; return 0; fi
+  "$@" 2>&1 | tee -a "$LOG"
+  rc=${PIPESTATUS[0]}
+  if (( rc == 0 )); then ok "$label"
+  else fail "$label  (exit $rc — see $LOG)"; fi
+  return "$rc"
+}
+
 # ══════════════════════════════════════════════════════════════════════
 #  input widgets — pure bash, arrow keys, black-on-white selection
 # ══════════════════════════════════════════════════════════════════════
@@ -797,7 +807,7 @@ bootstrap_aur_helper() {
   (( DO_AUR_HELPER )) || die "AUR packages selected but no helper is available; install yay/paru or use --no-aur"
   run_bg "build tools (base-devel, git)" sudo pacman -S --needed --noconfirm base-devel git || die "build tools failed"
   local tmp; tmp="$(mktemp -d)" || die "cannot create AUR build directory"
-  if run_bg "bootstrapping yay-bin" bash -c '
+  if run_fg "bootstrapping yay-bin" bash -c '
       git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$1/yay-bin" &&
       cd "$1/yay-bin" && makepkg -si --noconfirm' bash "$tmp"; then
     FACT_AUR="yay"
@@ -820,7 +830,7 @@ install_packages() {
     bootstrap_aur_helper
     local a
     for a in "${AUR_LIST[@]}"; do
-      run_bg "aur/$a" "$FACT_AUR" -S --needed --noconfirm "$a" \
+      run_fg "aur/$a" "$FACT_AUR" -S --needed --noconfirm "$a" \
         || die "AUR package $a failed; see $LOG (or rerun with --no-aur)"
     done
   fi
