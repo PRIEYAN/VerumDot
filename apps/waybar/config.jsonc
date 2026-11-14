@@ -1,7 +1,7 @@
 {
   "layer": "top",
   "position": "top",
-  "margin": "4 6 0 6",
+  "margin": "0",
   "height": 40,
   "spacing": 2,
   "font": "Iosevka Term 10",
@@ -57,24 +57,24 @@
     "on-click": "${HOME}/.config/hypr/scripts/app-launcher.sh"
   },
 
-  "custom/ws1": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 1", "return-type": "json", "on-click": "hyprctl dispatch workspace 1" },
-  "custom/ws2": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 2", "return-type": "json", "on-click": "hyprctl dispatch workspace 2" },
-  "custom/ws3": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 3", "return-type": "json", "on-click": "hyprctl dispatch workspace 3" },
-  "custom/ws4": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 4", "return-type": "json", "on-click": "hyprctl dispatch workspace 4" },
-  "custom/ws5": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 5", "return-type": "json", "on-click": "hyprctl dispatch workspace 5" },
-  "custom/ws6": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 6", "return-type": "json", "on-click": "hyprctl dispatch workspace 6" },
-  "custom/ws7": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 7", "return-type": "json", "on-click": "hyprctl dispatch workspace 7" },
-  "custom/ws8": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 8", "return-type": "json", "on-click": "hyprctl dispatch workspace 8" },
-  "custom/ws9": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 9", "return-type": "json", "on-click": "hyprctl dispatch workspace 9" },
+  "custom/ws1": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 1", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 1" },
+  "custom/ws2": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 2", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 2" },
+  "custom/ws3": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 3", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 3" },
+  "custom/ws4": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 4", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 4" },
+  "custom/ws5": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 5", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 5" },
+  "custom/ws6": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 6", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 6" },
+  "custom/ws7": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 7", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 7" },
+  "custom/ws8": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 8", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 8" },
+  "custom/ws9": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 9", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 9" },
   // Overflow slots. hypr-tabs.sh emits empty text for a workspace that
   // does not exist yet and waybar hides a module with empty text, so these
   // stay invisible until you actually swipe past 9. Fourteen is the ceiling:
   // each slot is a live process, so the row is bounded rather than infinite.
-  "custom/ws10": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 10", "return-type": "json", "on-click": "hyprctl dispatch workspace 10" },
-  "custom/ws11": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 11", "return-type": "json", "on-click": "hyprctl dispatch workspace 11" },
-  "custom/ws12": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 12", "return-type": "json", "on-click": "hyprctl dispatch workspace 12" },
-  "custom/ws13": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 13", "return-type": "json", "on-click": "hyprctl dispatch workspace 13" },
-  "custom/ws14": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 14", "return-type": "json", "on-click": "hyprctl dispatch workspace 14" },
+  "custom/ws10": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 10", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 10" },
+  "custom/ws11": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 11", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 11" },
+  "custom/ws12": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 12", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 12" },
+  "custom/ws13": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 13", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 13" },
+  "custom/ws14": { "exec": "${HOME}/.config/hypr/apps/waybar/scripts/hypr-tabs.sh 14", "return-type": "json", "on-click": "${HOME}/.config/hypr/scripts/goto-workspace.sh 14" },
 
   "custom/sep1": { "exec": "echo '│'", "interval": "once", "tooltip": false },
   "custom/sep2": { "exec": "echo '│'", "interval": "once", "tooltip": false },

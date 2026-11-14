@@ -5,6 +5,7 @@ Four responsibilities, kept apart so each can be exercised on its own:
   KeyFormatter      a chord ("SUPER SHIFT", "w") -> ["Super", "Shift", "W"]
   BindClassifier    a dispatcher and its arguments -> (group, description)
   ConfigReader      a .conf tree -> a flat list of binds
+  LuaConfigReader   a hyprland.lua tree -> a flat list of binds
   CheatSheet        binds -> merged, grouped sections
 
 The classifier is the part that needs replacing most often — it is a table
@@ -16,8 +17,11 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
+import subprocess
+from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Iterable
+from typing import Iterable, Protocol
 
 # Sections render in this order; anything unmatched lands in "Other".
 GROUP_ORDER = [
@@ -31,6 +35,14 @@ class Bind:
     group: str
     chord: tuple[str, ...]
     action: str
+
+
+class ChordFormatter(Protocol):
+    def chord(self, modifiers: str, key: str) -> tuple[str, ...]: ...
+
+
+class Classifier(Protocol):
+    def classify(self, dispatcher: str, args: str) -> tuple[str, str]: ...
 
 
 class KeyFormatter:
@@ -180,10 +192,10 @@ class ConfigReader:
 
     BIND_KEY = re.compile(r"bind[a-z]*")
 
-    def __init__(self, classifier: BindClassifier | None = None,
-                 formatter: KeyFormatter | None = None):
-        self._classifier = classifier or BindClassifier()
-        self._formatter = formatter or KeyFormatter()
+    def __init__(self, classifier: Classifier | None = None,
+                 formatter: ChordFormatter | None = None):
+        self._classifier = BindClassifier() if classifier is None else classifier
+        self._formatter = KeyFormatter() if formatter is None else formatter
 
     def read(self, path: str) -> list[Bind]:
         binds: list[Bind] = []
@@ -256,6 +268,59 @@ class ConfigReader:
         for name in sorted(variables, key=len, reverse=True):
             value = value.replace(f"${name}", variables[name])
         return value
+
+
+class LuaConfigReader:
+    """Reads binds from a Lua config by running it against a recording `hl`.
+
+    lib/lua/hl-recorder.lua executes the config with a stub `hl` that logs
+    every hl.bind() — loops, locals and helpers resolve exactly as Hyprland
+    resolves them — and prints `submap, modifiers, key, dispatcher, args`
+    per bind, with dispatchers under their legacy names. The rows then take
+    the same classify/format path as ConfigReader's.
+    """
+
+    RECORDER = Path(__file__).resolve().parents[2] / "lua" / "hl-recorder.lua"
+    INTERPRETERS = ("lua", "lua5.4", "luajit")
+
+    def __init__(self, classifier: Classifier | None = None,
+                 formatter: ChordFormatter | None = None,
+                 interpreter: str | None = None):
+        self._classifier = BindClassifier() if classifier is None else classifier
+        self._formatter = KeyFormatter() if formatter is None else formatter
+        self._interpreter = interpreter
+
+    def read(self, path: str) -> list[Bind]:
+        interpreter = self._interpreter or next(
+            (found for name in self.INTERPRETERS if (found := shutil.which(name))), None)
+        if interpreter is None:
+            raise RuntimeError("no Lua interpreter found (install the `lua` package)")
+        result = subprocess.run(
+            [interpreter, str(self.RECORDER), os.path.realpath(path)],
+            capture_output=True, text=True, timeout=10, check=True,
+        )
+        binds: list[Bind] = []
+        for line in result.stdout.splitlines():
+            fields = line.split("\t")
+            if len(fields) != 5:
+                continue
+            submap, modifiers, key, dispatcher, args = fields
+            # Switching submaps is bookkeeping, not something for the sheet.
+            if dispatcher == "submap":
+                continue
+            group, action = self._classifier.classify(dispatcher, args)
+            if submap:
+                group = "Calendar" if submap.lower() == "calendar" else submap.capitalize()
+            binds.append(Bind(group=group, chord=self._formatter.chord(modifiers, key),
+                              action=action))
+        return binds
+
+
+def read_config(path: str, classifier: Classifier | None = None,
+                formatter: ChordFormatter | None = None) -> list[Bind]:
+    """Read binds from either config format, chosen by file extension."""
+    reader_type = LuaConfigReader if path.endswith(".lua") else ConfigReader
+    return reader_type(classifier, formatter).read(path)
 
 
 @dataclass

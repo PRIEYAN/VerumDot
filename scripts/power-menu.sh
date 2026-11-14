@@ -53,6 +53,7 @@ cmd_menu() {
 declare -A COMMANDS=(
   [status]="cmd_status|emit the waybar module JSON (the default)"
   [menu]="cmd_menu|open the power picker"
+  [logout]="power::logout|exit the compositor (control centre button)"
 )
 
 cli::dispatch "${1:-status}" "${@:2}"

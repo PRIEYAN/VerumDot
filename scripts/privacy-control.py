@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib" / "python"
 
 from hyprrice import RiceError, json_main           # noqa: E402
 from hyprrice.privacy import PrivacyService         # noqa: E402
+from hyprrice.composition import create_privacy_service  # noqa: E402
 
 USAGE = "Usage: privacy-control.py status|mac-on|mac-off|browser|install|check"
 
@@ -38,7 +39,7 @@ def dispatch(service: PrivacyService, action: str):
 
 def main() -> int:
     action = sys.argv[1] if len(sys.argv) > 1 else "status"
-    service = PrivacyService()
+    service = create_privacy_service()
     return json_main(lambda: dispatch(service, action))
 
 

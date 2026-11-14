@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from typing import Sequence
+from typing import Protocol
 
 from .errors import RiceError
 
@@ -13,6 +13,12 @@ DEFAULT_TIMEOUT = 40
 
 class CommandError(RiceError):
     """A command exited non-zero, timed out, or was not found."""
+
+
+class CommandRunner(Protocol):
+    """The only operation command-consuming domain objects need."""
+
+    def run(self, *args: str, timeout: int | None = None) -> str: ...
 
 
 class Command:
@@ -29,7 +35,7 @@ class Command:
 
     def __init__(self, timeout: int = DEFAULT_TIMEOUT, env: dict[str, str] | None = None):
         self._timeout = timeout
-        self._env = {**(env or os.environ), "LC_ALL": "C"}
+        self._env = {**(os.environ if env is None else env), "LC_ALL": "C"}
 
     def run(self, *args: str, timeout: int | None = None) -> str:
         """Run a command and return its stdout, stripped.
@@ -50,6 +56,8 @@ class Command:
             raise CommandError(f"{args[0]} timed out") from error
         except FileNotFoundError as error:
             raise CommandError(f"{args[0]} is not installed") from error
+        except OSError as error:
+            raise CommandError(f"Could not run {args[0]}: {error}") from error
 
         if result.returncode:
             detail = result.stderr.strip() or result.stdout.strip()
@@ -63,12 +71,16 @@ class Command:
         except CommandError:
             return default
 
-    @staticmethod
-    def detach(*args: str) -> None:
-        """Start a program that must outlive this process."""
-        subprocess.Popen(
-            args,
-            start_new_session=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+    def detach(self, *args: str) -> None:
+        """Start a program with this runner's environment, detached from stdin."""
+        try:
+            subprocess.Popen(
+                args,
+                env=self._env,
+                start_new_session=True,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError as error:
+            raise CommandError(f"Could not start {args[0]}: {error}") from error

@@ -88,7 +88,7 @@ Most rices hand you a color scheme. VerumDot hands you a finished laptop.
 - ⚡ **Three-way performance toggle** — `SUPER + P` cycles performance → battery → normal across the CPU governor.
 - 🔆 **Shader brightness boost** — push the panel past 100% with a GLSL shader when the sun wins.
 - 👆 **Gesture-driven** — 3-finger swipe for workspaces, 4-finger up for a hidden scratchpad workspace.
-- 🔋 **Laptop-literate** — battery alerts at 20/15%, lid-close locks instead of suspending, NVIDIA suspend fix included.
+- 🔋 **Laptop-literate** — battery alerts at 20/15%; lid-close pauses MPRIS media (including compatible browser playback), locks and blanks without suspending; NVIDIA suspend fix included.
 - 🔕 **Do-not-disturb** — `SUPER + CTRL + N`, straight into mako.
 - 🎵 **Spotify, glassed** — a translucent now-playing card in the bar and a live quickshell dropdown on click.
 - 🎛️ **Control centre** — throw the pointer at the top-right corner and a frosted panel slides in: brightness and volume sliders, power mode, mic, stay-awake. The Wi-Fi and Bluetooth tiles toggle from their icon and open network/device lists in place.
@@ -156,7 +156,7 @@ default, so holding enter is a valid answer.
 |---------|---------|
 | Full / config-only / packages-only | scopes the run |
 | Which package groups | audio, capture, network, power, theming, fonts, apps, AUR |
-| Terminal · browser · file manager · editor | installs your picks and rewrites the binds in `hypr.conf` |
+| Terminal · browser · file manager · editor | installs your picks and writes them into `config/settings.lua` |
 | Which output, which scale | writes the real `monitor =` line — no more editing `eDP-1` by hand |
 | Wallpaper folder | creates it, seeds an image if empty, saves the choice and links both wallpapers under `assets/` |
 | Theme · services · lid policy | PureBlackGlass, pipewire, lock-don't-suspend |
@@ -203,10 +203,10 @@ bash <(curl -fsSL https://github.com/PRIEYAN/VerumDot/raw/main/install.sh) --aut
 
 1. Drop wallpapers into `~/Pictures/Wallpapers/`
 2. Log out, pick the **Hyprland** session, log back in
-3. Reload anytime: `hyprctl reload`
+3. Reload anytime: `hyprctl reload` (the config is Lua — see [LUA_MIGRATION.md](LUA_MIGRATION.md))
 
-When no output is detected, setup uses `monitor = ,preferred,auto,1` so a desktop
-or another laptop is not tied to `eDP-1`. Adjust `~/.config/hypr/hypr.conf` if needed
+When no output is detected, setup leaves `monitor_output = ""` (any display) so a desktop
+or another laptop is not tied to `eDP-1`. Adjust `~/.config/hypr/config/settings.lua` if needed
 (`hyprctl monitors` lists outputs). A changed lid policy takes effect after reboot;
 setup does not restart logind in the middle of your session.
 
@@ -246,10 +246,30 @@ a panel from inside a Hyprland session:
 qs -p ~/.config/hypr/apps/quickshell/controlcenter --no-color
 ```
 
-The splash screen is separate work: the version currently on `main` imports
-`Quickshell.Core`, which is unavailable in Quickshell 0.3.2. This installer update
-does not change splash QML or merge the splash-screen branch. That existing
-splash error does not mean the four desktop panels are missing their modules.
+### Login splash
+
+This branch starts a silent video overlay on every connected monitor through
+`scripts/splash.sh`. It stays hidden while Qt initializes, then fades both the
+video and black background when Hyprland reports mapped wallpaper and Waybar
+layers, or when the 850ms display budget expires. A separate 4-second watchdog
+(with 500ms kill escalation) bounds startup and decoder cleanup. Missing or
+invalid media never prevents login; concurrent launches are ignored.
+
+Preview it inside a Hyprland session:
+
+```bash
+~/.config/hypr/scripts/splash.sh
+```
+
+Use the launcher for previews so the watchdog stays active. Diagnostics are in
+`~/.cache/hypr/splash.log`. Replace `assets/splash.mp4` to change the animation;
+it is deliberately truncated to the short display budget. To disable the splash,
+comment its `splash.sh` line in `config/autostart.lua`.
+
+The Waybar supervisor now waits for the actual compositor socket, starts the
+bundled config explicitly, retries up to five immediate failures, and records
+errors in `~/.cache/hypr/waybar-start.log`. Stopping the supervisor stops its own
+bar child. See [splash testing and implementation notes](apps/quickshell/splash/README.md).
 
 ### Safe preview and config repair
 
@@ -275,8 +295,8 @@ packages resolved against an empty installed-package database using the local
 Arch repository metadata (599 packages including dependencies).
 
 This is not a full package-download/install or GPU/Wayland login test on another
-laptop. Wi-Fi, Bluetooth, audio devices and graphical panel interaction still
-need a real session; the existing splash QML error is described above.
+laptop. Wi-Fi, Bluetooth, audio devices and general graphical panel interaction
+still need a real session. The splash has separate graphical tests described above.
 
 ### Migrate
 
@@ -368,11 +388,13 @@ VerumDot/
 ├── install.sh            # one-command bootstrap (clone + setup)
 ├── setup.sh              # interactive installer
 ├── packages.txt          # historical reference; setup.sh --list-packages is current
-├── hyprland.conf         # entry → ./hypr.conf
-├── hypr.conf             # binds, blur, rules, gestures
+├── hyprland.lua          # entry — requires config/*
+├── config/               # Lua config: settings, env, monitors, look, input, rules, binds, autostart
+├── LUA_MIGRATION.md      # hyprlang → Lua: what changed, update/rollback command
 ├── shaders/              # GLSL brightness boost
 ├── screenshots/          # gallery assets
 ├── scripts/
+│   ├── hyprland-lua-update.sh   # upgrade Hyprland + switch to the Lua config
 │   ├── wallpaper.sh
 │   ├── screenshot.sh
 │   ├── battery-alert.sh
@@ -397,8 +419,8 @@ VerumDot/
 - **Wallpapers** — `~/Pictures/Wallpapers/`; desktop/lock images are linked as `assets/current-wallpaper` and `assets/lock-wallpaper`
 - **Theme refresh** — `~/.config/hypr/scripts/theme-install.sh`
 - **Neovim glass** — the panes are painted by `apps/nvim/lua/verum/palette.lua` and made see-through by `transparent_background_colors` in `apps/kitty/kitty.conf`; the two lists must match, or a pane goes opaque. `setup.sh --no-nvim` skips the overlay entirely
-- **Glass Spotify** — window opacity rule in `hypr.conf`; quickshell dropdown via Waybar click
-- **NVIDIA / lid** — comments in `hypr.conf` and `apps/hypridle/hypridle.conf`
+- **Glass Spotify** — window opacity rule in `config/rules.lua`; quickshell dropdown via Waybar click
+- **NVIDIA / lid** — comments in `config/env.lua`, `config/binds.lua` and `apps/hypridle/hypridle.conf`
 - **Eye comfort** — needs `hyprsunset`; the toggle manages the daemon directly (see the note in `apps/waybar/scripts/eye-comfort-toggle.sh` for why not redshift)
 - **Performance mode** — needs `cpupower` for governor switching; degrades quietly without it
 

@@ -1,8 +1,9 @@
 # lib — the shared library
 
-Everything in `scripts/` and `apps/waybar/scripts/` is a thin entry point over
-this directory. A script's job is to parse a verb and call into a module; the
-behaviour lives here.
+Shared behavior belongs here. Entry points in `scripts/` and
+`apps/waybar/scripts/` parse verbs and assemble application workflows. Some
+older menu/profile entry points still contain domain logic; see the
+[architecture review](ARCHITECTURE.md) for the remaining boundaries.
 
 ## Loading it
 
@@ -24,9 +25,10 @@ Then declare what you need:
 hypr::use ui/rofi ui/notify domain/network
 ```
 
-Modules load once, may declare their own dependencies, and may form a cycle
-(`domain/power` and `domain/fan` genuinely need each other) — the loader marks
-a module as loaded before sourcing it, so a cycle terminates.
+Modules load once and declare their own dependencies. Keep the dependency
+graph acyclic: `domain/fan` and `domain/power` both use `domain/powerprofile`,
+while only the power workflow calls the fan policy. The loader guards duplicate
+loads; that guard is not a reason to introduce a dependency cycle.
 
 ## Layout
 
@@ -61,14 +63,15 @@ lib/
     eww.sh         the remaining eww panels
   domain/
     audio.sh brightness.sh battery.sh bluetooth.sh eyecomfort.sh
-    fan.sh network.sh player.sh power.sh session.sh sysstats.sh wallpaper.sh
+    fan.sh network.sh player.sh power.sh powerprofile.sh session.sh sysstats.sh wallpaper.sh
   python/hyprrice/
-    process.py errors.py cli.py privacy.py keybinds.py
+    process.py errors.py cli.py privacy.py tor.py composition.py keybinds.py
 ```
 
-`core` knows nothing about this rice. `os` wraps the system. `ui` renders.
-`domain` models one piece of hardware or one service each. Dependencies point
-downwards; nothing in `core` imports from `ui` or `domain`.
+`core` provides paths, logging, guards and dispatch. `os` wraps system access;
+`ui` renders. Hardware/domain modules provide reusable operations; a few also
+coordinate UI notifications. Neither `core` nor `os` imports `ui` or `domain`,
+and the tests enforce that dependency direction.
 
 ## Conventions
 
@@ -97,11 +100,35 @@ two devices sharing a name.
 **Enumerations are data.** Power modes, fan modes and battery thresholds are
 arrays and tables, not chains of `elif`. Adding one is a line, not a branch.
 
+## Dependency injection and reuse
+
+Python workflows accept small structural `Protocol` interfaces. A replacement
+only implements the methods its caller needs; it does not subclass a concrete
+system adapter. `composition.create_privacy_service()` constructs production
+adapters and injects them into `PrivacyService`. Browser launch, executable
+lookup, command execution, network inspection, profile storage and IP checking
+can all be replaced without contacting the real system. The CLI and QML JSON
+formats are unchanged. Direct Python callers now construct `PrivacyService`
+with its keyword dependencies, or use `create_privacy_service()`.
+
+`ConfigReader` accepts a `Classifier` and `ChordFormatter`. Optional dependency
+defaults check `is None`, preserving valid objects whose boolean value is false.
+`Command(env={})` uses the empty environment plus `LC_ALL=C`; it does not inherit
+the host environment accidentally. Detached commands use the same environment.
+
+Bash uses functions and modules instead of artificial classes. Keep policy pure
+when possible (`fan::resolve_pwm setting power_mode`). Tests replace named
+system-boundary functions such as `proc::quiet`, then exercise the real workflow.
+Power/audio operations return failures before updating dependent state or
+repainting the UI. Add behavior tests whenever a shared function's error or
+side-effect contract changes.
+
 ## Tests
 
 ```bash
 tests/run.sh          # everything
 tests/run.sh markup   # matching test functions only
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
 The suite is hermetic: tests that touch state run in a child shell with the

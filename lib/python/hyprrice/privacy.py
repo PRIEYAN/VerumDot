@@ -17,18 +17,14 @@ from __future__ import annotations
 import fcntl
 import json
 import os
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ContextManager, Protocol
 
 from .errors import RiceError
-from .process import Command
+from .process import CommandRunner
+from .tor import BrowserControl, IpChecker
 
-STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "hypr/privacy"
-
-TOR_ENDPOINT = "https://check.torproject.org/api/ip"
-TOR_SOCKS = "socks5h://127.0.0.1:9150"
 RANDOM = "random"
 
 
@@ -47,14 +43,30 @@ class Connection:
                 "setting": self.setting, "mac": self.mac}
 
 
+class ConnectionSource(Protocol):
+    def active(self) -> Connection: ...
+
+
+class ProfileRepository(Protocol):
+    def remember(self, connection: Connection) -> None: ...
+    def forget(self, uuid: str) -> None: ...
+    def recorded(self, uuid: str) -> dict[str, str] | None: ...
+    def lock(self) -> ContextManager[Any]: ...
+
+
+class MacControl(Protocol):
+    def apply(self, enable: bool) -> None: ...
+
+
 class ConnectionInspector:
     """Finds the connection a MAC change should apply to."""
 
     WIFI_PROP = "802-11-wireless.cloned-mac-address"
     ETHERNET_PROP = "802-3-ethernet.cloned-mac-address"
 
-    def __init__(self, command: Command):
+    def __init__(self, command: CommandRunner, network_directory: Path = Path("/sys/class/net")):
         self._command = command
+        self._network_directory = network_directory
 
     def active(self) -> Connection:
         device, kind = self._preferred_device()
@@ -63,7 +75,10 @@ class ConnectionInspector:
         setting = self._command.run(
             "nmcli", "--escape", "no", "-g", prop, "connection", "show", "uuid", uuid
         )
-        mac = (Path("/sys/class/net") / device / "address").read_text().strip()
+        try:
+            mac = (self._network_directory / device / "address").read_text().strip()
+        except OSError as error:
+            raise RiceError(f"Could not read the MAC address for {device}: {error}") from error
         return Connection(device=device, uuid=uuid, prop=prop, setting=setting, mac=mac)
 
     def _preferred_device(self) -> tuple[str, str]:
@@ -73,12 +88,20 @@ class ConnectionInspector:
         both Wi-Fi and Ethernet up: randomising the MAC of the interface
         that is not actually carrying traffic looks like a no-op to the user.
         """
-        routes = json.loads(self._command.run("ip", "-j", "route", "show", "default"))
-        default_devices = {route.get("dev") for route in routes}
+        try:
+            routes = json.loads(self._command.run("ip", "-j", "route", "show", "default"))
+        except ValueError as error:
+            raise RiceError("Could not read the default network route.") from error
+        if not isinstance(routes, list) or any(not isinstance(route, dict) for route in routes):
+            raise RiceError("The default network route has an unexpected format.")
+        default_devices = {route["dev"] for route in routes if isinstance(route.get("dev"), str)}
 
         devices: list[tuple[str, str]] = []
         for row in self._command.run("nmcli", "-t", "-f", "DEVICE,TYPE,STATE", "device").splitlines():
-            device, kind, state = row.split(":", 2)
+            fields = row.split(":", 2)
+            if len(fields) != 3:
+                raise RiceError("NetworkManager returned an unexpected device record.")
+            device, kind, state = fields
             if kind in ("wifi", "ethernet") and state == "connected":
                 devices.append((device, kind))
 
@@ -95,13 +118,22 @@ class ProfileStore:
     the user had, which may well not be the NetworkManager default.
     """
 
-    def __init__(self, directory: Path = STATE_DIR):
+    def __init__(self, directory: Path | None = None):
+        if directory is None:
+            directory = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "hypr/privacy"
         self._directory = directory
         self._path = directory / "profiles.json"
 
     def load(self) -> dict[str, Any]:
         try:
-            return json.loads(self._path.read_text())
+            profiles = json.loads(self._path.read_text())
+            if not isinstance(profiles, dict):
+                return {}
+            # Stored JSON is an external boundary, even if we wrote it before.
+            return {uuid: profile for uuid, profile in profiles.items()
+                    if isinstance(profile, dict)
+                    and all(isinstance(profile.get(key), str)
+                            for key in ("device", "uuid", "prop", "setting", "mac"))}
         except FileNotFoundError:
             return {}
         except json.JSONDecodeError:
@@ -149,7 +181,7 @@ class MacRandomiser:
 
     RECONNECT_TIMEOUT = "30"
 
-    def __init__(self, command: Command, inspector: ConnectionInspector, store: ProfileStore):
+    def __init__(self, command: CommandRunner, inspector: ConnectionSource, store: ProfileRepository):
         self._command = command
         self._inspector = inspector
         self._store = store
@@ -206,15 +238,17 @@ class MacRandomiser:
 class PrivacyService:
     """What the control centre actually calls."""
 
-    def __init__(self, command: Command | None = None):
-        self._command = command or Command()
-        self._inspector = ConnectionInspector(self._command)
-        self._store = ProfileStore()
-        self._randomiser = MacRandomiser(self._command, self._inspector, self._store)
+    def __init__(self, *, inspector: ConnectionSource, store: ProfileRepository,
+                 randomiser: MacControl, ip_checker: IpChecker, browser: BrowserControl):
+        self._inspector = inspector
+        self._store = store
+        self._randomiser = randomiser
+        self._ip_checker = ip_checker
+        self._browser = browser
 
     def status(self) -> dict[str, Any]:
         result: dict[str, Any] = {
-            "browser_available": bool(shutil.which("torbrowser-launcher")),
+            "browser_available": self._browser.available(),
             "device": "", "mac": "", "randomized": False, "restorable": False, "error": "",
         }
         try:
@@ -240,36 +274,12 @@ class PrivacyService:
         return self.status()
 
     def check_ip(self) -> dict[str, Any]:
-        result = {"direct_ip": "Unavailable", "tor_ip": "Not connected", "tor_verified": False}
-        result["direct_ip"] = self._fetch_ip(("--noproxy", "*")) or "Unavailable"
-
-        reply = self._fetch_json(("--noproxy", "", "--proxy", TOR_SOCKS))
-        if reply is not None:
-            # Trust Tor only when the endpoint itself confirms it. A reply
-            # that merely arrived could have come over a direct connection.
-            result["tor_verified"] = reply.get("IsTor") is True
-            result["tor_ip"] = reply.get("IP") if result["tor_verified"] else "Tor could not be verified"
-        return result
-
-    def _fetch_json(self, extra: tuple[str, ...]) -> dict[str, Any] | None:
-        base = ("curl", "-4", "--fail", "--silent", "--show-error",
-                "--connect-timeout", "8", "--max-time", "20")
-        try:
-            return json.loads(self._command.run(*base, *extra, TOR_ENDPOINT, timeout=25))
-        except (RiceError, ValueError):
-            return None
-
-    def _fetch_ip(self, extra: tuple[str, ...]) -> str | None:
-        reply = self._fetch_json(extra)
-        return reply.get("IP") if reply else None
+        return self._ip_checker.check()
 
     def launch_browser(self) -> dict[str, str]:
-        if not shutil.which("torbrowser-launcher"):
-            raise RiceError("Install Tor Browser first.")
-        Command.detach("torbrowser-launcher")
+        self._browser.launch()
         return {"message": "Connect inside Tor Browser to start private browsing."}
 
     def install_browser(self) -> dict[str, Any]:
-        self._command.run("pkexec", "/usr/bin/pacman", "-S", "--needed", "--noconfirm",
-                          "torbrowser-launcher", timeout=600)
+        self._browser.install()
         return self.status()

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Screen brightness, up and down across the combined hardware/shader scale.
-# Bound to XF86MonBrightnessUp / Down in hypr.conf.
+# Bound to XF86MonBrightnessUp / Down in config/binds.lua.
 #
 # All of the policy lives in lib/domain/brightness.sh; this file is only the
 # command-line face of it.

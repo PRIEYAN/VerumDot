@@ -27,7 +27,8 @@ cmd_toggle() { power::cycle; }
 
 cmd_set() {
   cli::need 1 "set <normal|performance|battery>" "$@"
-  power::set_mode "$1" || log::usage "set <normal|performance|battery>"
+  guard::one_of "$1" "${POWER_MODES[@]}" >/dev/null || log::usage "set <normal|performance|battery>"
+  power::set_mode "$1"
 }
 
 # cache — record a mode that something else has *already* applied, and
@@ -41,6 +42,8 @@ cmd_cache() {
   waybar::refresh battery
 }
 
+# Dispatched by core/cli through the shared COMMANDS table.
+# shellcheck disable=SC2034
 declare -A COMMANDS=(
   [status]="cmd_status|emit the waybar module JSON (the default)"
   [toggle]="cmd_toggle|cycle normal -> performance -> battery"
