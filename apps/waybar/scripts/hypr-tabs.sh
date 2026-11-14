@@ -17,7 +17,7 @@ source "$_dir/lib/bootstrap.sh"
 unset _dir
 hypr::use core/guard ui/waybar ui/appicons os/hypr
 
-readonly PERSISTENT_WORKSPACES=9   # 1..9 always exist; 10+ are on demand
+readonly PERSISTENT_WORKSPACES=9   # buttons 1..9 always shown; 10+ only while they exist
 readonly RECONNECT_DELAY=0.5
 
 workspace_id=${1:-}

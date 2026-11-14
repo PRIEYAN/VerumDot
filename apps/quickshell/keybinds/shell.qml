@@ -3,11 +3,11 @@
 // Keybinding cheat sheet — SUPER+I.
 //
 // One glass card holding every bind in this rice, grouped into columns.
-// The list is not hardcoded: scripts/keybinds-dump.py parses hypr.conf (and
-// everything it sources) on each open, so a bind added to the config shows up
+// The list is not hardcoded: scripts/keybinds-dump.py runs hyprland.lua (and
+// every module it requires) on each open, so a bind added to the config shows up
 // here without touching this file.
 //
-// Blur comes from the `hypr-keybinds` layerrule in hypr.conf; the surface is
+// Blur comes from the `hypr-keybinds` layer rule in config/rules.lua; the surface is
 // fullscreen but transparent outside the card, and ignore_alpha keeps the
 // frost off those pixels.
 //

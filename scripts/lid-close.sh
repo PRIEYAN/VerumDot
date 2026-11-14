@@ -25,4 +25,4 @@ fi
 # settle lets it map before blanking.
 session::lock
 sleep 0.15
-hypr::dispatch dpms off
+hypr::dpms off

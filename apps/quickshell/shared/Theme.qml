@@ -63,11 +63,11 @@ Singleton {
     // deliberately stay local: the control centre and the cheat sheet use 22,
     // the spotify card and launcher 20, and that is a design choice per
     // surface rather than drift.
-    readonly property int barHeight: 44      // waybar island: 4px margin + 40px
+    readonly property int barHeight: 40      // waybar, docked to the top edge (no margin)
 
     // ---- motion ------------------------------------------------------
     // Sonoma easing: decelerate into place, never overshoot. Mirrors the
-    // bezier curves hypr.conf defines for window animations.
+    // bezier curves config/look.lua defines for window animations.
     readonly property int fastMs: 150
     readonly property int normalMs: 220
 }

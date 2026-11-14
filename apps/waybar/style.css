@@ -14,10 +14,13 @@
   transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
 }
 
+/* Docked flush to the top edge, full width, outlined on all four sides in
+   light grey. 0.7px is a hairline: at scale 1 GTK antialiases it into one
+   pixel row at ~70% coverage, so it reads finer than a hard 1px line. */
 window#waybar {
   background: rgba(30, 30, 30, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 18px 18px 0 0;
+  border: 0.7px solid #888888;
+  border-radius: 0;
   color: rgba(255, 255, 255, 0.95);
 }
 
@@ -37,7 +40,7 @@ tooltip label {
   font-family: "IosevkaTerm Nerd Font", "JetBrainsMono Nerd Font", monospace;
 }
 
-/* ── every module: chip-shaped hover, no colour flips ───────────────────── */
+/* ── every module: square hover highlight, no colour flips ───────────────── */
 
 #custom-clock,
 #custom-app_launcher,
@@ -54,7 +57,7 @@ tooltip label {
 #custom-stay_awake {
   color: rgba(255, 255, 255, 0.95);
   background: transparent;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 0 9px;
   margin: 4px 1px;
 }

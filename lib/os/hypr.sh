@@ -12,9 +12,80 @@ hypr::use core/log core/guard os/proc
 # ---------------------------------------------------------------------------
 hypr::ctl()      { proc::quiet hyprctl "$@"; }
 hypr::query()    { proc::capture hyprctl -j "$@"; }
-hypr::dispatch() { hypr::ctl dispatch "$@"; }
-hypr::keyword()  { hypr::ctl keyword "$@"; }
+
+# ---------------------------------------------------------------------------
+# Config engine: Lua (hyprland.lua) or legacy hyprlang (hyprland.conf)
+# ---------------------------------------------------------------------------
+# The two engines take different command syntax over the same socket. Under
+# Lua, `hyprctl dispatch` evaluates a Lua expression and `hyprctl keyword` is
+# gone (it says "keyword can't work with non-legacy parsers. Use eval."), so
+# every action below asks which engine is live and speaks its language. That
+# keeps the scripts working before, during and after a migration, and after a
+# rollback, without each caller knowing there is a difference.
+#
+# Detection: `hyprctl eval` answers exactly "ok" under the Lua engine; the
+# legacy engine refuses it. Cached for the life of the calling process.
+hypr::is_lua() {
+  if [[ -z ${_HYPR_ENGINE:-} ]]; then
+    local out
+    out=$(hyprctl eval 'return nil' 2>/dev/null)
+    [[ ${out//[[:space:]]/} == ok ]] && _HYPR_ENGINE=lua || _HYPR_ENGINE=legacy
+  fi
+  [[ $_HYPR_ENGINE == lua ]]
+}
+
+# hypr::lua_str <text> — <text> as a double-quoted Lua string literal.
+hypr::lua_str() {
+  local s=${1//\\/\\\\}
+  s=${s//\"/\\\"}
+  printf '"%s"' "$s"
+}
+
+# hypr::dispatch_lua <lua-expr> <legacy dispatcher> [legacy args...]
+# Runs one action under whichever engine is live.
+hypr::dispatch_lua() {
+  local lua=$1; shift
+  if hypr::is_lua; then hypr::ctl dispatch "$lua"
+  else hypr::ctl dispatch "$@"
+  fi
+}
+
+# hypr::set_option <section.key> <lua-value> <legacy section:key> <legacy value>
+# A runtime option change (the old `hyprctl keyword`); lasts until reload.
+hypr::set_option() {
+  local path=$1 lua_value=$2 legacy_key=$3 legacy_value=$4
+  if hypr::is_lua; then
+    # decoration.screen_shader -> { decoration = { screen_shader = v } }
+    local open="" close="" part
+    local -a parts
+    IFS=. read -ra parts <<<"$path"
+    for part in "${parts[@]}"; do open+="$part = { "; close+=" }"; done
+    open=${open%\{ }; close=${close# \}}
+    hypr::ctl eval "hl.config({ ${open}${lua_value}${close} })"
+  else
+    hypr::ctl keyword "$legacy_key" "$legacy_value"
+  fi
+}
+
+# hypr::reload — re-read the config with the engine already in use.
 hypr::reload()   { hypr::ctl reload; }
+
+# hypr::exit — quit the compositor (logout).
+hypr::exit() { hypr::dispatch_lua 'hl.dsp.exit()' exit; }
+
+# hypr::dpms on|off — power the outputs' backlight.
+hypr::dpms() {
+  hypr::dispatch_lua "hl.dsp.dpms({ action = $(hypr::lua_str "$1") })" dpms "$1"
+}
+
+# hypr::monitor <output> <mode> <position> <scale> — (re)declare an output.
+hypr::monitor() {
+  if hypr::is_lua; then
+    hypr::ctl eval "hl.monitor({ output = $(hypr::lua_str "$1"), mode = $(hypr::lua_str "$2"), position = $(hypr::lua_str "$3"), scale = $(hypr::lua_str "$4") })"
+  else
+    hypr::ctl keyword monitor "$1,$2,$3,$4"
+  fi
+}
 
 # hypr::monitors — one monitor name per line.
 hypr::monitors() {
@@ -39,8 +110,10 @@ hypr::special_workspace_open() {
 # ---------------------------------------------------------------------------
 # A named concept rather than a raw keyword, because "clear the shader" is
 # the empty string and that is not self-evident at a call site.
-hypr::set_shader()   { hypr::keyword decoration:screen_shader "$1"; }
-hypr::clear_shader() { hypr::keyword decoration:screen_shader ""; }
+hypr::set_shader() {
+  hypr::set_option decoration.screen_shader "$(hypr::lua_str "$1")" decoration:screen_shader "$1"
+}
+hypr::clear_shader() { hypr::set_option decoration.screen_shader '""' decoration:screen_shader ""; }
 
 # ---------------------------------------------------------------------------
 # Event stream (socket2)
@@ -142,5 +215,9 @@ hypr::active_special() {
   hypr::query monitors | jq -r 'map(select(.focused))[0] | .specialWorkspace.name // ""' 2>/dev/null
 }
 
-hypr::toggle_special() { hypr::dispatch togglespecialworkspace "$1"; }
-hypr::goto_workspace() { hypr::dispatch workspace "$1"; }
+hypr::toggle_special() {
+  hypr::dispatch_lua "hl.dsp.workspace.toggle_special($(hypr::lua_str "$1"))" togglespecialworkspace "$1"
+}
+hypr::goto_workspace() {
+  hypr::dispatch_lua "hl.dsp.focus({ workspace = $(hypr::lua_str "$1") })" workspace "$1"
+}

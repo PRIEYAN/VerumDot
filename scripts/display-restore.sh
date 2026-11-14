@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Bring the internal panel back after a lid-open or a resume.
 #
-# `hyprctl dispatch dpms on` is not sufficient on its own: dpms only toggles
+# A dpms-on is not sufficient on its own: dpms only toggles
 # the power state of an output that is still *enabled*, and when the lid
 # shuts the output can end up disabled outright. A disabled output cannot be
 # dpms'd back, so the monitor line has to be re-declared first — otherwise
@@ -22,15 +22,17 @@ source "$_dir/lib/bootstrap.sh"
 unset _dir
 hypr::use core/paths os/hypr os/proc domain/session
 
+# output,mode,position,scale — the same four fields as hl.monitor().
 readonly MONITOR_LINE="${HYPR_MONITOR_LINE:-eDP-1,preferred,auto,1.0}"
+IFS=, read -r MON_OUTPUT MON_MODE MON_POSITION MON_SCALE <<<"$MONITOR_LINE"
 readonly RESTORE_ATTEMPTS=5
 readonly RESTORE_DELAY=0.4
 
 # DRM can need a moment to settle coming out of suspend, so re-assert a few
 # times rather than firing once into a device that is not ready yet.
 for (( attempt = 0; attempt < RESTORE_ATTEMPTS; attempt++ )); do
-  hypr::keyword monitor "$MONITOR_LINE"
-  hypr::dispatch dpms on
+  hypr::monitor "$MON_OUTPUT" "$MON_MODE" "$MON_POSITION" "$MON_SCALE"
+  hypr::dpms on
 
   if hypr::panel_powered; then
     session::ensure_locked
@@ -41,6 +43,6 @@ done
 
 # Last-ditch: even if the status probe never confirmed, leave the panel
 # commanded on rather than exiting with it dark.
-hypr::dispatch dpms on
+hypr::dpms on
 session::ensure_locked
 exit 0

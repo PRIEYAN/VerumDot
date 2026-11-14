@@ -23,14 +23,14 @@ import Quickshell.Services.Mpris
 ShellRoot {
     id: root
 
-    // ---- geometry: hangs off the waybar island ----
+    // ---- geometry: hangs off the docked waybar ----
     readonly property int barHeight: Theme.barHeight
-    // The bar's song title starts at x=468; the card's content is inset by
-    // `pad`, so this lines the album art up with the title. (The module
-    // shifts a little as the app-info title beside it changes width.)
-    readonly property int leftOffset: 452
+    // Kept clear of the workspace row: the first workspace icon starts at
+    // x=780, so the card (420 wide) ends at 750, leaving a ~30px gap. It
+    // sits a little left of the bar's song title rather than under it.
+    readonly property int leftOffset: 330
     readonly property int cardWidth: 420
-    readonly property int cardRadius: 20
+    readonly property int cardRadius: 0
     readonly property int pad: 16
 
     // ---- macOS Sonoma glass material ----

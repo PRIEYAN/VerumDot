@@ -4,7 +4,7 @@
 #   eww-cal.sh prev | next | reset
 #
 # Bound to the panel's arrow buttons and to the Left/Right keys of the
-# `calendar` submap in hypr.conf.
+# `calendar` submap in config/binds.lua.
 
 # --- library bootstrap -----------------------------------------------------
 # Identical in every executable regardless of its depth: walk up until lib/

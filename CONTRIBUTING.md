@@ -35,6 +35,7 @@ A PR that adds a color is not a small PR. Open an issue first.
 
 ```bash
 ./setup.sh --dry-run     # prints the plan, touches nothing
+Hyprland --verify-config -c ~/.config/hypr/hyprland.lua   # check Lua config edits
 hyprctl reload           # reload the compositor after config edits
 ```
 

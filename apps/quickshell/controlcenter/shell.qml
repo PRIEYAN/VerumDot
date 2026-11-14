@@ -30,17 +30,17 @@ ShellRoot {
     id: root
 
     // ---- geometry ----
-    // waybar island: 4px top margin + 40px tall, so its underside is at 44.
+    // waybar is docked: 40px tall from the top edge, so its underside is at 40.
     readonly property int barHeight: Theme.barHeight
     readonly property int panelWidth: 380
     readonly property int edgeGap: 8
-    // waybar island side margin, from apps/waybar/config.jsonc ("4 6 0 6").
-    readonly property int islandInset: 6
+    // waybar side margin, from apps/waybar/config.jsonc (docked: "0").
+    readonly property int islandInset: 0
     readonly property int pad: 16
     readonly property int tileHeight: 64
     readonly property int tileGap: 10
-    readonly property int cardRadius: 22
-    readonly property int tileRadius: 14
+    readonly property int cardRadius: 0
+    readonly property int tileRadius: 2
     readonly property int listRowHeight: 44
     readonly property int listMaxHeight: 264   // 6 rows before it scrolls
     // The waybar island is inset from the screen edges now, so the very corner
@@ -50,7 +50,7 @@ ShellRoot {
 
     // ---- macOS Sonoma glass material ----
     // The panel sits at 60% so white text stays legible over a bright
-    // wallpaper; the frost itself comes from the 4-pass blur in hypr.conf.
+    // wallpaper; the frost itself comes from the 4-pass blur in config/look.lua.
     // Cards layered on it use the 12% white "raised" material.
     readonly property color glass: Theme.glass
     readonly property color edge: Theme.edge
@@ -406,7 +406,7 @@ ShellRoot {
         switch (what) {
         case "shutdown": cmd = [root.riceDir + "/scripts/mogger-shutdown.sh"]; break;
         case "reboot":   cmd = ["systemctl", "reboot"]; break;
-        case "logout":   cmd = ["hyprctl", "dispatch", "exit"]; break;
+        case "logout":   cmd = [root.riceDir + "/scripts/power-menu.sh", "logout"]; break;
         case "lock":     cmd = ["hyprlock", "-c",
                                 root.riceDir + "/apps/hyprlock/hyprlock.conf"]; break;
         default: return;
@@ -526,7 +526,7 @@ ShellRoot {
             anchors.verticalCenter: parent.verticalCenter
             width: 26
             height: 26
-            radius: 13
+            radius: width / 2
             color: {
                 if (!slider.iconClickable) return "transparent";
                 if (slider.iconActive) return root.accent;
@@ -537,7 +537,9 @@ ShellRoot {
             Text {
                 anchors.centerIn: parent
                 text: slider.glyph
-                color: (slider.iconClickable && slider.iconActive) ? root.fg : root.muted
+                // Black on the white "selected" circle, like the tile icons;
+                // white-on-white made the glyph vanish.
+                color: (slider.iconClickable && slider.iconActive) ? root.accentFg : root.muted
                 font.family: root.iconFont
                 font.pixelSize: 15
             }
@@ -803,7 +805,7 @@ ShellRoot {
         signal clicked()
 
         height: root.listRowHeight
-        radius: 10
+        radius: 0
         color: listRow.active
             ? root.accent
             : (rowHover.containsMouse ? root.hover : "transparent")
@@ -935,7 +937,7 @@ ShellRoot {
 
             width: root.panelWidth
             height: content.implicitHeight + root.pad * 2
-            // Flush against the underside of the waybar island and aligned to
+            // Flush against the underside of the waybar and aligned to
             // its right edge, so it reads as an extension of the bar.
             y: root.barHeight
             anchors.right: parent.right
@@ -1539,7 +1541,7 @@ ShellRoot {
                         width: parent.width
                         visible: root.pendingNetwork !== null
                         height: visible ? 76 : 0
-                        radius: 10
+                        radius: 0
                         color: root.tileOff
                         clip: true
 
@@ -1567,7 +1569,7 @@ ShellRoot {
                             anchors.top: pskTitle.bottom
                             anchors.topMargin: 6
                             height: 30
-                            radius: 8
+                            radius: 0
                             color: Qt.rgba(1, 1, 1, 0.08)
 
                             TextInput {

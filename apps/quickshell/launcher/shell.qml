@@ -4,7 +4,7 @@
 //
 // One glass card: it starts as just the search field and grows downward as
 // results arrive, the way Spotlight does. Blur comes from the `hypr-launcher`
-// layerrule in hypr.conf; the surface itself is fullscreen but fully
+// layer rule in config/rules.lua; the surface itself is fullscreen but fully
 // transparent outside the card, and ignore_alpha keeps the frost off those
 // pixels.
 //

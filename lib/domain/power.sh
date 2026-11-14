@@ -11,7 +11,7 @@
 # predictable path in a world-writable directory, and the wrong tree for
 # something meant to survive a reboot. It is now ordinary state.
 
-hypr::use core/guard core/log core/paths os/proc os/state ui/notify ui/waybar domain/powerprofile domain/fan
+hypr::use core/guard core/log core/paths os/hypr os/proc os/state ui/notify ui/waybar domain/powerprofile domain/fan
 
 # Public lookup consumed by the Waybar entry point.
 # shellcheck disable=SC2034
@@ -53,5 +53,5 @@ power::cycle() { power::set_mode "$(power::next_mode)"; }
 # to guess at an unrecognised selection.
 power::shutdown() { exec systemctl poweroff; }
 power::reboot()   { exec systemctl reboot; }
-power::logout()   { exec hyprctl dispatch exit; }
+power::logout()   { hypr::exit; }
 power::lock()     { exec hyprlock -c "$HYPR_HYPRLOCK_CONF"; }

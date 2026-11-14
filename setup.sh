@@ -495,7 +495,7 @@ pkgs_for() { # -> newline separated pacman packages
   case "$1" in
     core)  printf '%s\n' hyprland hyprpaper hypridle hyprlock hyprcursor \
              xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
-             waybar rofi quickshell mako jq inotify-tools curl rsync git python socat \
+             waybar rofi quickshell mako jq inotify-tools curl rsync git python lua socat \
              libnotify xdg-utils qt6-declarative qt6-svg qt6-wayland \
              qt6-multimedia qt6-multimedia-ffmpeg qt6-imageformats hyprpolkitagent \
              networkmanager bluez bluez-utils pipewire pipewire-pulse wireplumber upower brightnessctl ;;
@@ -686,7 +686,7 @@ wizard() {
     while read -r m; do [[ -n "$m" ]] && mons+=("$m"); done < <(detect_monitors)
     if (( ${#mons[@]} > 0 )); then
       mons+=("automatic output — use any connected display")
-      i="$(ui_select "Primary output — written into hypr.conf" 0 "${mons[@]}")"
+      i="$(ui_select "Primary output — written into config/settings.lua" 0 "${mons[@]}")"
       (( i < ${#mons[@]} - 1 )) && PICK_MONITOR="${mons[i]}"
     else
       PICK_MONITOR="$(ui_text "Primary output name (blank = automatic)" "")"
@@ -978,56 +978,65 @@ PYBOOK
 }
 
 personalise() {
-  local f="$TARGET/hypr.conf"
-  [[ -f "$f" ]] || die "hypr.conf is missing"
-  headline "Personalise  ·  hypr.conf"
+  # Every per-machine choice lives in config/settings.lua, one `key = value`
+  # per line, so each pick is a single anchored sed on its own line.
+  local f="$TARGET/config/settings.lua"
+  [[ -f "$f" ]] || die "config/settings.lua is missing"
+  headline "Personalise  ·  config/settings.lua"
+
+  # set_setting <key> <lua-literal> — replace one `key = value,` line.
+  set_setting() {
+    local value=${2//\\/\\\\}; value=${value//|/\\|}; value=${value//&/\\&}
+    sed -i -E "s|^([[:space:]]*$1[[:space:]]*=[[:space:]]*).*,|\1$value,|" "$f" || die "cannot personalise $f"
+  }
+  # lua_q <text> — <text> as a Lua string literal.
+  lua_q() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; printf '"%s"' "$s"; }
 
   if [[ -n "$PICK_MONITOR" ]]; then
-    sed -i -E "s|^monitor = .*|monitor = $PICK_MONITOR,preferred,auto,$PICK_SCALE|" "$f" || die "cannot personalise $f"
-    ok "monitor = $PICK_MONITOR,preferred,auto,$PICK_SCALE"
+    set_setting monitor_output "$(lua_q "$PICK_MONITOR")"
+    set_setting monitor_scale  "$(lua_q "$PICK_SCALE")"
+    ok "monitor = $PICK_MONITOR, preferred, auto, $PICK_SCALE"
   else
-    sed -i -E 's|^monitor *=.*|monitor = ,preferred,auto,1|' "$f" || die "cannot configure monitor"
-    ok "monitor = ,preferred,auto,1 (automatic output)"
+    set_setting monitor_output '""'
+    set_setting monitor_scale  '"1"'
+    ok "monitor = any output, preferred, auto, 1 (automatic output)"
   fi
 
   if has_group apps; then
-    sed -i -E "s|^(\\\$term = ).*|\1$PICK_TERM|"                     "$f" || die "cannot personalise $f"
-    sed -i -E "s|^(bind = SUPER, T, exec, ).*|\1$PICK_TERM|"         "$f" || die "cannot personalise $f"
-    sed -i -E "s|^(bind = SUPER, Return, exec, ).*|\1$PICK_TERM|"    "$f" || die "cannot personalise $f"
-    sed -i -E "s|^(bind = SUPER, W, exec, ).*|\1$PICK_BROWSER|"      "$f" || die "cannot personalise $f"
-    sed -i -E "s|^(bind = SUPER, E, exec, ).*|\1$PICK_FILES|"        "$f" || die "cannot personalise $f"
+    set_setting terminal "$(lua_q "$PICK_TERM")"
+    set_setting browser  "$(lua_q "$PICK_BROWSER")"
+    set_setting files    "$(lua_q "$PICK_FILES")"
     ok "SUPER+Return / T → $PICK_TERM"
     ok "SUPER+W → $PICK_BROWSER    SUPER+E → $PICK_FILES"
     case "$PICK_EDITOR" in
-      code) sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1code|"    "$f" || die "cannot personalise $f"; ok "SUPER+C → VS Code" ;;
-      nvim) sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1$PICK_TERM -e nvim|" "$f" || die "cannot personalise $f"; ok "SUPER+C → $PICK_TERM -e nvim" ;;
-      zed)  sed -i -E "s|^(bind = SUPER, C, exec, ).*|\1zeditor|" "$f" || die "cannot personalise $f"; ok "SUPER+C → zed" ;;
+      code) set_setting editor '"code"'; ok "SUPER+C → VS Code" ;;
+      nvim) set_setting editor "$(lua_q "$PICK_TERM -e nvim")"; ok "SUPER+C → $PICK_TERM -e nvim" ;;
+      zed)  set_setting editor '"zeditor"'; ok "SUPER+C → zed" ;;
       *)    skip "SUPER+C left as is" ;;
     esac
   fi
 
-  # eww daemon autostart only makes sense when eww is actually installed
-  if ! command -v eww >/dev/null 2>&1; then
-    sed -i -E "s|^(exec-once = eww .*)|# \1  # eww not installed|" "$f" || die "cannot personalise $f"
-    skip "eww autostart commented out (panels are rofi-based)"
-  fi
+  # The eww daemon autostart checks for eww itself (config/autostart.lua),
+  # so a machine without eww needs no edit here.
   # Do not force NVIDIA GLX on Intel/AMD laptops.
   if [[ "$FACT_GPU" != NVIDIA ]]; then
-    sed -i '/^env = __GLX_VENDOR_LIBRARY_NAME,nvidia$/d' "$f" || die "cannot set GPU environment"
+    set_setting nvidia false
   fi
-  local entry="$TARGET/hyprland.conf"
-  if ! grep -q '^# VerumDot setup session environment$' "$entry"; then
-    cat >>"$entry" <<'SESSION'
-
-# VerumDot setup session environment
-exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start hyprpolkitagent.service
-SESSION
-    [[ $? == 0 ]] || die "cannot write session configuration"
-  fi
+  # Push the session environment into systemd and start the polkit agent.
+  set_setting session_env true
   # Persist a custom wallpaper directory for scripts launched by Hyprland.
-  sed -i '/^env = HYPR_WALLPAPER_DIR,/d' "$entry" || die "cannot update wallpaper environment"
-  printf 'env = HYPR_WALLPAPER_DIR,%s\n' "$WALLPAPER_DIR" >>"$entry" || die "cannot save wallpaper environment"
+  set_setting wallpaper_dir "$(lua_q "$WALLPAPER_DIR")"
 
+  # Catch a bad edit now rather than at the next login.
+  if command -v Hyprland >/dev/null 2>&1; then
+    local verdict
+    verdict=$(Hyprland --verify-config -c "$TARGET/hyprland.lua" 2>&1 | sed -n '/Config parsing result/,$p' | tail -n +2)
+    if grep -qx 'config ok' <<<"$verdict"; then
+      ok "hyprland.lua verified"
+    else
+      warn "hyprland.lua did not verify:"; printf '%s\n' "$verdict" >>"$LOG"; say "$verdict"
+    fi
+  fi
 }
 
 # ── neovim overlay ─────────────────────────────────────────────────────
@@ -1163,7 +1172,7 @@ finish() {
   printf '   %s1%s  drop wallpapers into %s%s%s\n'  "$C_RED_HOT" "$RST" "$C_INK" "$WALLPAPER_DIR" "$RST"
   if [[ -z "$PICK_MONITOR" ]]; then
     printf '   %s2%s  automatic output configured; customise %s%s%s if needed\n' \
-      "$C_RED_HOT" "$RST" "$C_INK" "$TARGET/hypr.conf" "$RST"
+      "$C_RED_HOT" "$RST" "$C_INK" "$TARGET/config/settings.lua" "$RST"
   else
     printf '   %s2%s  output already set to %s%s%s\n' "$C_RED_HOT" "$RST" "$C_INK" "$PICK_MONITOR" "$RST"
   fi
@@ -1177,7 +1186,15 @@ finish() {
   printf '%*s%s%s%s\n\n' "$pad" '' "$C_VOID" "$tag" "$RST"
 
   if (( FACT_HYPR_RUNNING )) && [[ "$MODE" == "wizard" ]]; then
-    ui_yn "Hyprland is running — reload it now?" y && hyprctl reload >/dev/null 2>&1 && ok "reloaded"
+    if ui_yn "Hyprland is running — reload it now?" y; then
+      # A plain reload keeps the engine already running; switching from the
+      # legacy hyprlang engine to hyprland.lua needs a full reset.
+      if [[ "$(hyprctl eval 'return nil' 2>/dev/null)" == ok* ]]; then
+        hyprctl reload >/dev/null 2>&1 && ok "reloaded"
+      else
+        hyprctl reload full-reset >/dev/null 2>&1 && ok "reloaded (switched to the Lua config)"
+      fi
+    fi
   fi
 }
 

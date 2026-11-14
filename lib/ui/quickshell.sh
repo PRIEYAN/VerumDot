@@ -2,7 +2,7 @@
 # ui/quickshell.sh — toggling quickshell surfaces over IPC.
 #
 # Each surface (launcher, spotify, controlcenter, keybinds) runs as a daemon
-# started by an exec-once in hypr.conf. A click is then just an IPC call
+# started from config/autostart.lua. A click is then just an IPC call
 # against the live surface, which is what lets these panels redraw in place
 # — the rofi popups they replaced could only update by exiting and
 # relaunching, which is what made them flicker and dismiss themselves.
