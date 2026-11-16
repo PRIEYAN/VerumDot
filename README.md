@@ -136,7 +136,15 @@ This clones `main` into `~/.local/share/VerumDot`, installs the selected package
 and copies the desktop into `~/.config/hypr`. The source checkout stays separate
 from the deployed configuration. An existing source directory is never deleted;
 a dirty checkout, another branch, or a failed update stops the bootstrap.
-Use the local source checkout for subsequent updates.
+Already have VerumDot installed? Update it with:
+
+```bash
+bash <(curl -fsSL https://github.com/PRIEYAN/VerumDot/raw/main/install.sh) --update
+```
+
+You can also rerun the original command and choose **Update existing rice**.
+See [Updating an existing installation](#updating-an-existing-installation) for
+backups, dependency checks, and optional package/service removal.
 
 ### From a clone
 
@@ -154,7 +162,7 @@ default, so holding enter is a valid answer.
 
 | It asks | It does |
 |---------|---------|
-| Full / config-only / packages-only | scopes the run |
+| Full / update / config-only / packages-only | scopes the run |
 | Which package groups | audio, capture, network, power, theming, fonts, apps, AUR |
 | Terminal · browser · file manager · editor | installs your picks and writes them into `config/settings.lua` |
 | Which output, which scale | writes the real `monitor =` line — no more editing `eDP-1` by hand |
@@ -198,6 +206,48 @@ Flags pass through the bootstrap too (use `--list-packages` in the local clone):
 ```bash
 bash <(curl -fsSL https://github.com/PRIEYAN/VerumDot/raw/main/install.sh) --auto
 ```
+
+### Updating an existing installation
+
+Run the same bootstrap command and choose **Update existing rice**, or select it directly:
+
+```bash
+bash <(curl -fsSL https://github.com/PRIEYAN/VerumDot/raw/main/install.sh) --update
+```
+
+The bootstrap fetches GitHub `main` into `~/.local/share/VerumDot` and fast-forwards
+that clean source checkout. Update mode then:
+
+- Checks every dependency in the selected groups. Installed packages are skipped;
+  missing repo/AUR packages are installed. Adding dependencies includes a full Arch
+  system upgrade to keep Qt and Quickshell compatible. Pacman/AUR transaction
+  questions remain visible, including package replacements.
+- Backs up `~/.config/hypr` before deploying the latest rice and repairing links.
+  Existing single-line values in `config/settings.lua` are merged into the new
+  settings file; newly introduced settings keep the release defaults. Other rice
+  customizations are retained in the timestamped backup, rather than merged.
+- Reapplies the selected theme, editor overlay, lid policy and current services.
+  Retired services are offered for disabling before the current services start.
+- Asks separately before disabling each retired service or removing each retired
+  package. Enter means **keep**. Package removal uses `pacman -R`, preserving
+  dependencies and allowing pacman to refuse removal if another package needs it.
+  Declined or failed removals stay in the record for the next update.
+
+Choices and manifests are saved at `~/.local/state/verumdot/install.json`
+(or `$XDG_STATE_HOME/verumdot/install.json`) after a successful full install/update.
+An older installation without a record uses the default dependency groups on its
+first update, preserves its machine settings, and establishes a baseline without
+suggesting package/service removals. Later updates compare against that record.
+`--no-services`, `--no-theme`, `--no-lid`, `--no-nvim` and `--no-aur` are supported.
+Log out and back in afterward to start the refreshed desktop session.
+
+From the separate source checkout, use `git pull --ff-only && ./setup.sh --update`.
+Preview its local plan with `./setup.sh --update --dry-run`; the bootstrap's own
+`--dry-run` previews fetching only and does not contact GitHub.
+
+For release changes, maintain package requirements in `pkgs_for` / `aur_for` and
+service requirements in `services_for` inside `setup.sh`. Removing an entry from
+those catalogues makes it eligible for the next update's optional retirement prompt.
 
 ### After install
 
@@ -282,6 +332,25 @@ The bootstrap's `--dry-run` prints only its fetch/handoff plan without cloning;
 run the local `setup.sh --dry-run` to inspect the full dependency/config plan.
 
 ### Installer validation
+
+The `--update` flow passes 13 update tests, including missing-dependency checks,
+preserved app choices/settings, saved manifests, removal confirmations, failed
+removals, service ordering, and a real deployment into temporary directories.
+The full Python suite passes 58 tests; the shared-library suite passes 90 checks.
+Shell syntax and the local bootstrap's `--update --dry-run` also pass.
+
+To repeat these checks from a clone:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_*.py' -q
+bash tests/run.sh
+bash -n install.sh setup.sh
+bash install.sh --update --dry-run --no-color
+```
+
+Package installation and service changes in the update tests are simulated.
+The downloaded GitHub command has not been tested as a full live upgrade; it
+uses the version pushed to `main`, which must include these update changes.
 
 The installer update was checked in Bubblewrap with a read-only host filesystem,
 disposable home/runtime directories, and isolated network/process namespaces:

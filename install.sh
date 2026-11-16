@@ -8,6 +8,7 @@
 #   and deploys the config. Any flag you pass is forwarded:
 #
 #     bash <(curl -fsSL .../install.sh) --auto      # zero questions
+#     bash <(curl -fsSL .../install.sh) --update    # refresh an existing rice
 #     bash <(curl -fsSL .../install.sh) --dry-run   # show the plan only
 #
 set -uo pipefail
@@ -72,6 +73,7 @@ for arg in "$@"; do
       cat <<'HELP'
 VerumDot bootstrap — fetch main and run setup.sh as your normal user.
   --auto                 full install without the wizard
+  --update               update rice, install missing dependencies, offer cleanup
   --config               deploy config only
   --packages             install dependencies only
   --dry-run              show bootstrap actions without writing or fetching
@@ -84,7 +86,7 @@ VerumDot bootstrap — fetch main and run setup.sh as your normal user.
 Run ./setup.sh --dry-run in a clone to see the complete package/config plan.
 HELP
       exit 0 ;;
-    --auto|-y|--yes|--config|--config-only|--packages|--packages-only|--no-aur|--no-nvim|--no-services|--no-lid|--no-theme|--no-anim|--no-color) ;;
+    --auto|-y|--yes|--update|--config|--config-only|--packages|--packages-only|--no-aur|--no-nvim|--no-services|--no-lid|--no-theme|--no-anim|--no-color) ;;
     *) die "unknown flag: $arg (try --help)" ;;
   esac
 done

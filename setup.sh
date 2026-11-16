@@ -9,6 +9,7 @@
 #   From a local clone:
 #     ./setup.sh              interactive wizard (packages + config)
 #     ./setup.sh --auto       no questions, install everything, sane defaults
+#     ./setup.sh --update     refresh rice and install missing dependencies
 #     ./setup.sh --packages   dependencies only
 #     ./setup.sh --config     deploy config / theme only
 #     ./setup.sh --dry-run    show the plan, touch nothing
@@ -32,7 +33,7 @@ STAMP="$(date +%Y%m%d-%H%M%S)-$$"
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/verumdot-install-$STAMP.log"
 
 # ══ runtime flags ══════════════════════════════════════════════════════
-MODE="wizard"          # wizard | auto | packages | config
+MODE="wizard"          # wizard | auto | packages | config | update
 ANIM=1
 COLOR=1
 DRYRUN=0
@@ -566,6 +567,234 @@ build_pkg_lists() { # fills PACMAN_LIST / AUR_LIST
 # ══════════════════════════════════════════════════════════════════════
 #  discovery
 # ══════════════════════════════════════════════════════════════════════
+# Update records are data, never sourced as shell code. Keep them outside the
+# deployment so replacing ~/.config/hypr cannot erase the previous manifest.
+INSTALL_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/verumdot/install.json"
+PREVIOUS_PACKAGES=(); PREVIOUS_SERVICES=()
+RETIRED_PACKAGES=(); RETIRED_SERVICES=(); MANAGED_SERVICES=()
+UPDATE_SETTINGS=''
+
+load_update_state() {
+  [[ -f "$INSTALL_STATE" ]] || { warn "No previous install record: establishing a baseline; no removal guesses."; return 0; }
+  local records key value
+  records=$(python3 - "$INSTALL_STATE" <<'PYLOAD'
+import json, re, sys
+try:
+    data = json.load(open(sys.argv[1]))
+    if data.get('version') != 1:
+        raise ValueError('unsupported record version')
+    profile = data['profile']
+    if not isinstance(profile, dict):
+        raise ValueError("invalid profile")
+    for key, value in profile.items():
+        if key in ('SEL_GROUPS', 'EXTRA_PKGS'):
+            value = ' '.join(value)
+        if not isinstance(value, str) or '\n' in value or '\t' in value:
+            raise ValueError('invalid profile value')
+        print(key + '\t' + value)
+    for field, key in [('packages', 'package'), ('services', 'service')]:
+        for value in data[field]:
+            pattern = r'(?:user|system):[a-zA-Z0-9@._+-]+' if field == 'services' else r'[a-zA-Z0-9@._+-]+'
+            if not isinstance(value, str) or not re.fullmatch(pattern, value) or value.startswith('-'):
+                raise ValueError('invalid manifest entry')
+            print(key + '\t' + value)
+except (OSError, ValueError, KeyError, TypeError) as exc:
+    sys.exit('Invalid VerumDot install record: ' + str(exc))
+PYLOAD
+  ) || die "cannot read $INSTALL_STATE; restore its backup before updating"
+  PREVIOUS_PACKAGES=(); PREVIOUS_SERVICES=()
+  while IFS=$'\t' read -r key value; do
+    case "$key" in
+      SEL_GROUPS) read -ra SEL_GROUPS <<<"$value" ;;
+      EXTRA_PKGS) read -ra EXTRA_PKGS <<<"$value" ;;
+      PICK_TERM|PICK_BROWSER|PICK_FILES|PICK_EDITOR|PICK_MONITOR|PICK_SCALE|WALLPAPER_DIR)
+        printf -v "$key" '%s' "$value" ;;
+      DO_LID|DO_THEME|DO_SERVICES|DO_NVIM|NO_AUR)
+        [[ "$value" == 0 || "$value" == 1 ]] || die "invalid $key in install record"
+        printf -v "$key" '%s' "$value" ;;
+      package) PREVIOUS_PACKAGES+=("$value") ;;
+      service) PREVIOUS_SERVICES+=("$value") ;;
+    esac
+  done <<<"$records"
+}
+
+# Read common app choices from the existing flat settings table, so older
+# installations and hand-edited bindings do not pull in default desktop apps.
+adopt_update_settings() {
+  local key value choices
+  choices=$(printf '%s\n' "$UPDATE_SETTINGS" | python3 -c '
+import ast, re, shlex, sys
+settings = {}
+for line in sys.stdin:
+    match = re.match(r"\s*([A-Za-z_][A-Za-z_0-9]*)\s*=\s*(.*),\s*(?:--.*)?$", line)
+    if match:
+        try:
+            value = ast.literal_eval(match[2])
+        except (ValueError, SyntaxError):
+            continue
+        if isinstance(value, str) and not any(c in value for c in "\n\t\0"):
+            settings[match[1]] = value
+allowed = dict(terminal="kitty alacritty foot wezterm ghostty", browser="firefox chromium brave zen-browser", files="nautilus thunar dolphin nemo", editor="code nvim zed")
+for setting, picks in allowed.items():
+    if setting not in settings:
+        continue
+    try:
+        words = shlex.split(settings[setting])
+    except ValueError:
+        continue
+    command = words[0].rsplit("/", 1)[-1] if words else "none"
+    if setting == "editor":
+        if "nvim" in words:
+            command = "nvim"
+        elif command == "zeditor":
+            command = "zed"
+    if command not in picks.split():
+        command = "none"
+    print("PICK_" + dict(terminal="TERM", browser="BROWSER", files="FILES", editor="EDITOR")[setting] + "\t" + command)
+for setting, key in [("monitor_output", "PICK_MONITOR"), ("monitor_scale", "PICK_SCALE"), ("wallpaper_dir", "WALLPAPER_DIR")]:
+    if setting in settings:
+        print(key + "\t" + settings[setting])
+') || die "cannot read existing machine settings"
+  while IFS=$'\t' read -r key value; do
+    case "$key" in PICK_TERM|PICK_BROWSER|PICK_FILES|PICK_EDITOR|PICK_MONITOR|PICK_SCALE|WALLPAPER_DIR)
+      printf -v "$key" '%s' "$value" ;;
+    esac
+  done <<<"$choices"
+}
+
+prepare_update() {
+  (( FACT_EXISTING )) || die "no existing rice at $TARGET; choose Full install first"
+  (( FACT_INPLACE )) && die "update from the separate source checkout or install.sh, not the deployed configuration"
+  load_update_state
+  [[ -f "$TARGET/config/settings.lua" ]] && UPDATE_SETTINGS=$(cat "$TARGET/config/settings.lua")
+  [[ -n "$UPDATE_SETTINGS" ]] && adopt_update_settings
+  DO_PACKAGES=1; DO_CONFIG=1
+  say "Update: back up configs, preserve machine settings, install missing dependencies."
+  say "Retired packages and services require a separate yes; Enter keeps them."
+}
+
+services_for() {
+  printf '%s\n' user:pipewire user:pipewire-pulse user:wireplumber
+  has_group power && printf '%s\n' system:power-profiles-daemon
+  if has_group net; then printf '%s\n' system:NetworkManager system:bluetooth; fi
+  return 0
+}
+
+plan_retirements() {
+  local item
+  RETIRED_PACKAGES=(); RETIRED_SERVICES=()
+  for item in "${PREVIOUS_PACKAGES[@]}"; do
+    if ! printf '%s\n' "${PACMAN_LIST[@]}" "${AUR_LIST[@]}" | grep -Fx -- "$item" >/dev/null; then
+      pacman -Qq "$item" >/dev/null 2>&1 && RETIRED_PACKAGES+=("$item")
+    fi
+  done
+  mapfile -t MANAGED_SERVICES < <(services_for)
+  for item in "${PREVIOUS_SERVICES[@]}"; do
+    if ! printf '%s\n' "${MANAGED_SERVICES[@]}" | grep -Fx -- "$item" >/dev/null; then
+      RETIRED_SERVICES+=("$item")
+    fi
+  done
+  if (( ${#RETIRED_PACKAGES[@]} )); then
+    say "Previously required packages no longer selected (optional removal):"
+    wrap_list "${RETIRED_PACKAGES[@]}"
+  fi
+  if (( ${#RETIRED_SERVICES[@]} )); then
+    say "Previously configured services no longer selected (optional disable):"
+    wrap_list "${RETIRED_SERVICES[@]}"
+  fi
+}
+
+cleanup_retired_services() {
+  [[ "$MODE" == update ]] || return 0
+  local item scope unit kept=()
+  for item in "${RETIRED_SERVICES[@]}"; do
+    if (( DO_SERVICES )) && ui_yn "Disable retired service $item?" n; then
+      scope=${item%%:*}; unit=${item#*:}
+      if [[ "$scope" == user ]]; then
+        systemctl --user disable --now "$unit" >>"$LOG" 2>&1 || { warn "Could not disable $item; keeping it in the record."; kept+=("$item"); }
+      else
+        sudo systemctl disable --now "$unit" >>"$LOG" 2>&1 || { warn "Could not disable $item; keeping it in the record."; kept+=("$item"); }
+      fi
+    else kept+=("$item"); fi
+  done
+  RETIRED_SERVICES=("${kept[@]}")
+}
+
+cleanup_retired_packages() {
+  [[ "$MODE" == update ]] || return 0
+  local item kept=()
+  for item in "${RETIRED_PACKAGES[@]}"; do
+    pacman -Qq "$item" >/dev/null 2>&1 || continue
+    if ui_yn "Remove previously required package $item?" n; then
+      # Pacman checks reverse dependencies and asks for confirmation itself.
+      # Never recursively remove dependencies or force removal.
+      run_fg "remove $item" sudo pacman -R -- "$item" || { warn "Could not remove $item; keeping it in the record."; kept+=("$item"); }
+    else kept+=("$item"); fi
+  done
+  RETIRED_PACKAGES=("${kept[@]}")
+}
+
+cleanup_retired() {
+  cleanup_retired_services
+  cleanup_retired_packages
+}
+
+save_install_state() {
+  local key
+  mkdir -p "$(dirname "$INSTALL_STATE")" || die "cannot create installer state directory"
+  # Named, whitelisted values only; no eval/source on either side.
+  for key in PICK_TERM PICK_BROWSER PICK_FILES PICK_EDITOR PICK_MONITOR PICK_SCALE WALLPAPER_DIR DO_LID DO_THEME DO_SERVICES DO_NVIM NO_AUR; do
+    export "VD_SAVE_$key=${!key}"
+  done
+  export VD_SAVE_SEL_GROUPS="${SEL_GROUPS[*]}" VD_SAVE_EXTRA_PKGS="${EXTRA_PKGS[*]}"
+  printf '%s\n' "${PACMAN_LIST[@]}" "${AUR_LIST[@]}" "${RETIRED_PACKAGES[@]}" \
+    >"${INSTALL_STATE}.packages.$$" || die "cannot stage package record"
+  printf '%s\n' "${MANAGED_SERVICES[@]}" "${RETIRED_SERVICES[@]}" \
+    >"${INSTALL_STATE}.services.$$" || die "cannot stage service record"
+  python3 - "$INSTALL_STATE" "$$" <<'PYSAVE'
+import json, os, sys
+from pathlib import Path
+path, pid = sys.argv[1:]
+profile = {k.removeprefix('VD_SAVE_'): v for k, v in os.environ.items() if k.startswith('VD_SAVE_')}
+for key in ('SEL_GROUPS', 'EXTRA_PKGS'):
+    profile[key] = profile[key].split()
+def entries(kind):
+    return list(dict.fromkeys(filter(None, Path(f'{path}.{kind}.{pid}').read_text().splitlines())))
+data = dict(version=1, profile=profile, packages=entries('packages'), services=entries('services'))
+tmp = Path(f'{path}.tmp.{pid}')
+tmp.write_text(json.dumps(data, indent=2) + '\n')
+os.chmod(tmp, 0o600)
+if Path(path).exists():
+    Path(path + '.bak').write_bytes(Path(path).read_bytes())
+    os.chmod(path + '.bak', 0o600)
+os.replace(tmp, path)
+for kind in ('packages', 'services'):
+    Path(f'{path}.{kind}.{pid}').unlink()
+PYSAVE
+  [[ $? == 0 ]] || die "cannot save installer state"
+  ok "saved update record: $INSTALL_STATE"
+}
+
+restore_update_settings() {
+  [[ -n "$UPDATE_SETTINGS" ]] || return 0
+  # settings.lua is a flat table with one assignment per line. Copy existing
+  # assignments into matching new defaults, keeping newly introduced keys.
+  printf '%s\n' "$UPDATE_SETTINGS" | python3 -c '
+import re, sys
+from pathlib import Path
+path = Path(sys.argv[1])
+pattern = re.compile(r"^(\s*)([A-Za-z_][A-Za-z_0-9]*)\s*=.*?,\s*(?:--.*)?$")
+old = {}
+for line in sys.stdin.read().splitlines():
+    match = pattern.match(line)
+    if match:
+        old[match[2]] = line
+new = path.read_text().splitlines(keepends=True)
+path.write_text("".join(old[m[2]] + "\n" if (m := pattern.match(line.rstrip("\n"))) and m[2] in old else line for line in new))
+' "$TARGET/config/settings.lua" || die "cannot restore per-machine settings"
+  ok "preserved per-machine settings; new settings retain their defaults"
+}
+
 detect_monitors() { # unique, connected output names — one per line
   {
     if command -v hyprctl >/dev/null 2>&1 && hyprctl monitors >/dev/null 2>&1; then
@@ -637,11 +866,13 @@ wizard() {
   i="$(ui_select "What should this run do?" 0 \
       "Full install      packages + config + theme   (fresh machine)" \
       "Config only       deploy rice, skip packages" \
-      "Packages only     install dependencies, leave config alone" )"
+      "Packages only     install dependencies, leave config alone" \
+      "Update existing rice  refresh config + missing dependencies" )"
   case "$i" in
     0) DO_PACKAGES=1; DO_CONFIG=1 ;;
     1) DO_PACKAGES=0; DO_CONFIG=1 ;;
     2) DO_PACKAGES=1; DO_CONFIG=0 ;;
+    3) MODE=update; prepare_update; return 0 ;;
   esac
   (( FACT_PACMAN )) || DO_PACKAGES=0
 
@@ -712,11 +943,14 @@ wizard() {
 # ══════════════════════════════════════════════════════════════════════
 show_plan() {
   build_pkg_lists
+  [[ "$MODE" == update ]] && plan_retirements
   headline "Plan  ·  nothing has been touched yet"
 
   if (( DO_PACKAGES )); then
     kv "pacman packages" "${#PACMAN_LIST[@]}"
-    say "includes a full system upgrade (pacman -Syu) before AUR builds"
+    if [[ "$MODE" == update ]]; then
+      say "checks installed packages; adds missing ones only (full Arch upgrade when needed)"
+    else say "includes a full system upgrade (pacman -Syu) before AUR builds"; fi
     wrap_list ${PACMAN_LIST[@]+"${PACMAN_LIST[@]}"}
     if (( ${#AUR_LIST[@]} )); then
       kv "AUR packages" "${#AUR_LIST[@]}"
@@ -752,7 +986,7 @@ show_plan() {
     printf '   %sdry run — stopping here.%s\n\n' "$C_RED_HOT" "$RST"
     exit 0
   fi
-  if [[ "$MODE" == "wizard" ]]; then
+  if [[ "$MODE" == "wizard" || "$MODE" == update ]]; then
     ui_yn "Execute this plan?" y || { printf '\n   %snothing done.%s\n\n' "$C_GREY" "$RST"; exit 0; }
   fi
 }
@@ -820,18 +1054,33 @@ bootstrap_aur_helper() {
 
 install_packages() {
   headline "Packages  ·  ${#PACMAN_LIST[@]} from the repos, ${#AUR_LIST[@]} from the AUR"
-  # A full upgrade keeps Quickshell and Qt's private ABI in sync. Never -Sy
-  # followed by individual installs: Arch does not support partial upgrades.
-  run_bg "upgrading system and installing repo dependencies" \
-    sudo pacman -Syu --needed --noconfirm "${PACMAN_LIST[@]}" \
-    || die "repo package transaction failed; fix the error in $LOG and rerun setup"
-
-  if (( ${#AUR_LIST[@]} )); then
+  local repo=("${PACMAN_LIST[@]}") aur=("${AUR_LIST[@]}") p
+  if [[ "$MODE" == update ]]; then
+    repo=(); aur=()
+    for p in "${PACMAN_LIST[@]}"; do pacman -Qq "$p" >/dev/null 2>&1 || repo+=("$p"); done
+    for p in "${AUR_LIST[@]}"; do pacman -Qq "$p" >/dev/null 2>&1 || aur+=("$p"); done
+    ok "dependency check: ${#repo[@]} missing repo packages, ${#aur[@]} missing AUR packages"
+    # Resolve repo dependencies of new AUR packages against an upgraded system.
+    if (( ${#repo[@]} == 0 && ${#aur[@]} == 0 )); then return 0; fi
+  fi
+  # Arch requires a full upgrade when adding packages, keeping Qt's ABI in sync.
+  if [[ "$MODE" == update ]]; then
+    # Show pacman's questions, including any package replacements/conflicts.
+    run_fg "upgrading system and installing missing repo dependencies" \
+      sudo pacman -Syu --needed "${repo[@]}" \
+      || die "repo package transaction failed; fix the error in $LOG and rerun setup"
+  else
+    run_bg "upgrading system and installing repo dependencies" \
+      sudo pacman -Syu --needed --noconfirm "${repo[@]}" \
+      || die "repo package transaction failed; fix the error in $LOG and rerun setup"
+  fi
+  if (( ${#aur[@]} )); then
     bootstrap_aur_helper
-    local a
-    for a in "${AUR_LIST[@]}"; do
-      run_fg "aur/$a" "$FACT_AUR" -S --needed --noconfirm "$a" \
-        || die "AUR package $a failed; see $LOG (or rerun with --no-aur)"
+    for p in "${aur[@]}"; do
+      local aur_flags=(--needed --noconfirm)
+      [[ "$MODE" == update ]] && aur_flags=(--needed)
+      run_fg "aur/$p" "$FACT_AUR" -S "${aur_flags[@]}" "$p" \
+        || die "AUR package $p failed; see $LOG (or rerun with --no-aur)"
     done
   fi
 }
@@ -1100,20 +1349,23 @@ apply_theme() {
 apply_services() {
   (( DO_SERVICES )) || return 0
   headline "Services"
-  if systemctl --user enable --now pipewire pipewire-pulse wireplumber >>"$LOG" 2>&1; then
-    ok "pipewire · pipewire-pulse · wireplumber enabled"
-  else
-    die "cannot enable PipeWire services; use a systemd user session or rerun with --no-services and enable them after login"
-  fi
-  (( SUDO_OK )) || { skip "system services need root — skipped"; return 0; }
-  local svc group
-  for svc in power-profiles-daemon NetworkManager bluetooth; do
-    case "$svc" in power-profiles-daemon) group=power ;; *) group=net ;; esac
-    has_group "$group" || continue
-    systemctl cat "$svc.service" >/dev/null 2>&1 || continue
-    sudo systemctl enable --now "$svc" >>"$LOG" 2>&1 || die "cannot enable $svc; see $LOG"
-    ok "$svc enabled"
-  done
+  local entry scope svc
+  MANAGED_SERVICES=()
+  while IFS= read -r entry; do
+    scope=${entry%%:*}; svc=${entry#*:}
+    if [[ "$scope" == user ]]; then
+      systemctl --user enable --now "$svc" >>"$LOG" 2>&1 || die "cannot enable user service $svc; see $LOG"
+    else
+      (( SUDO_OK )) || { skip "$entry requires sudo — skipped"; continue; }
+      if ! systemctl cat "$svc.service" >/dev/null 2>&1; then
+        if (( DO_PACKAGES )); then die "required service $svc is missing after package installation";
+        else skip "$entry is not installed — config-only run"; continue; fi
+      fi
+      sudo systemctl enable --now "$svc" >>"$LOG" 2>&1 || die "cannot enable $svc; see $LOG"
+    fi
+    MANAGED_SERVICES+=("$entry")
+    ok "$entry enabled"
+  done < <(services_for)
 }
 
 apply_fan() {
@@ -1207,6 +1459,7 @@ usage() {
    ${BOLD}${C_INK}USAGE${RST}
      ./setup.sh                 interactive wizard — packages + config
      ./setup.sh --auto          no questions asked, everything, sane defaults
+     ./setup.sh --update        refresh existing rice; install missing dependencies
      ./setup.sh --packages      dependencies only
      ./setup.sh --config        deploy rice + theme only
      ./setup.sh --dry-run       print the plan, change nothing
@@ -1233,6 +1486,7 @@ parse_args() {
     case "$1" in
       --auto|-y|--yes)            MODE="auto" ;;
       --config|--config-only)     MODE="config";   DO_PACKAGES=0; DO_CONFIG=1 ;;
+      --update)                  MODE="update"; DO_PACKAGES=1; DO_CONFIG=1 ;;
       --packages|--packages-only) MODE="packages"; DO_PACKAGES=1; DO_CONFIG=0 ;;
       --dry-run|-n)               DRYRUN=1 ;;
       --list-packages)            LIST_PACKAGES=1 ;;
@@ -1284,6 +1538,7 @@ main() {
             [[ -n "$mons" ]] && PICK_MONITOR="$mons"
             (( FACT_LAPTOP )) || DO_LID=0
             [[ -z "$FACT_AUR" ]] && DO_AUR_HELPER=1 ;;
+    update) prepare_update ;;
     packages) say "--packages: dependencies only" ;;
     config)   say "--config: rice + theme only"
               local m2; m2="$(detect_monitors | head -n1)"
@@ -1294,7 +1549,7 @@ main() {
   # Explicit skip flags also win over answers in the interactive wizard.
   local arg
   for arg in "$@"; do
-    case "$arg" in --no-theme) DO_THEME=0 ;; --no-services) DO_SERVICES=0 ;; --no-lid) DO_LID=0 ;; esac
+    case "$arg" in --no-nvim) DO_NVIM=0 ;; --no-aur) NO_AUR=1 ;; --no-theme) DO_THEME=0 ;; --no-services) DO_SERVICES=0 ;; --no-lid) DO_LID=0 ;; esac
   done
   show_plan
 
@@ -1309,12 +1564,18 @@ main() {
   verify_quickshell
   if (( DO_CONFIG )); then
     deploy_files
-    personalise
+    if [[ "$MODE" == update && -n "$UPDATE_SETTINGS" ]]; then restore_update_settings; else personalise; fi
     deploy_nvim
     apply_theme
+    [[ "$MODE" == update ]] && cleanup_retired_services
     apply_services
     apply_lid
     apply_fan
+  fi
+  if (( DO_PACKAGES && DO_CONFIG )); then
+    (( DO_SERVICES )) || MANAGED_SERVICES=("${PREVIOUS_SERVICES[@]}")
+    cleanup_retired_packages
+    save_install_state
   fi
   sudo_end
   if (( DO_CONFIG )); then finish
