@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────
 // macOS Control-Center-ish styling for the eww popup panels.
-// Dark translucent cards, blue accent toggles, rounded pills.
+// Solid black panels, blue accent toggles, rounded pills.
 // ─────────────────────────────────────────────────────────────────────
 
-$bg:        rgba(28, 27, 26, 0.94);
+$bg:        #000000;
 $card:      rgba(255, 255, 255, 0.05);
 $card-hi:   rgba(255, 255, 255, 0.09);
 $fg:        #e8e3d8;

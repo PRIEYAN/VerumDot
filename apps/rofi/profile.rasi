@@ -1,5 +1,5 @@
 /**
- * Profile dropdown — macOS Sonoma glass / pure white, sharp edges.
+ * Profile dropdown — solid black / pure white, sharp edges.
  * Opened from the waybar star icon (custom/profile), left-anchored
  * so it drops down under the icon in the top-left corner.
  */
@@ -9,7 +9,7 @@ configuration {
 }
 
 * {
-    bg-color:            rgba(28, 28, 30, 0.60);
+    bg-color:            #000000;
     fg-color:            rgba(255, 255, 255, 0.95);
     fg-muted:            rgba(255, 255, 255, 0.55);
     line:                rgba(255, 255, 255, 0.18);

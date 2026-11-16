@@ -1,9 +1,9 @@
-// Top-right dropdown list theme, matching the bar's dark glass look.
+// Top-right dropdown list theme, matching the solid black bar.
 // Used by the Wi-Fi / Bluetooth waybar menus so the popup slides down
 // from under their icons in the top-right corner.
 
 * {
-    bg:                 rgba(28, 28, 30, 0.60);   // frosted glass, same as waybar
+    bg:                 #000000;
     fg:                 rgba(255, 255, 255, 0.95);
     fg-muted:           rgba(255, 255, 255, 0.55);
     line:               rgba(255, 255, 255, 0.18);

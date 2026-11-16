@@ -23,9 +23,8 @@ import Quickshell
 
 Singleton {
     // ---- material ----------------------------------------------------
-    // The panel sits at 60% so white text stays legible over a bright
-    // wallpaper; the compositor's blur supplies the frost behind it.
-    readonly property color glass: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.60)
+    // Solid black outer panels; inner cards retain their raised material.
+    readonly property color glass: "#000000"
     readonly property color edge: Qt.rgba(1, 1, 1, 0.18)
 
     // Cards layered on the glass use the 12% white "raised" material.

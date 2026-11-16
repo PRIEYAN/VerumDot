@@ -2,11 +2,8 @@
 
 // App launcher — macOS Spotlight.
 //
-// One glass card: it starts as just the search field and grows downward as
-// results arrive, the way Spotlight does. Blur comes from the `hypr-launcher`
-// layer rule in config/rules.lua; the surface itself is fullscreen but fully
-// transparent outside the card, and ignore_alpha keeps the frost off those
-// pixels.
+// One solid black card: it starts as just the search field and grows downward
+// as results arrive. The surface is transparent outside the card.
 //
 // Run:    qs -p ~/.config/hypr/apps/quickshell/launcher
 // Toggle: qs -p ~/.config/hypr/apps/quickshell/launcher ipc call launcher toggle
@@ -29,7 +26,7 @@ ShellRoot {
     readonly property int cardRadius: 20
     readonly property int topFraction: 20        // % of screen height above the card
 
-    // ---- macOS Sonoma glass material ----
+    // ---- panel material ----
     readonly property color glass: Theme.glass
     readonly property color edge: Theme.edge
     readonly property color hover: Theme.hover

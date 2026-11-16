@@ -1,5 +1,5 @@
 /**
- * Power Menu — macOS Sonoma glass, one row of five glyph buttons.
+ * Power Menu — solid black panel, one row of five glyph buttons.
  * Matches wallpaper.rasi.
  */
 
@@ -8,7 +8,7 @@ configuration {
 }
 
 * {
-    bg-color:            rgba(28, 28, 30, 0.60);
+    bg-color:            #000000;
     bg-selected:         rgba(255, 255, 255, 0.28);
     fg-color:            rgba(255, 255, 255, 0.95);
     accent-color:        #ffffff;

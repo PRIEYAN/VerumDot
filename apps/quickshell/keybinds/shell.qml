@@ -2,14 +2,12 @@
 
 // Keybinding cheat sheet — SUPER+I.
 //
-// One glass card holding every bind in this rice, grouped into columns.
+// One solid black card holding every bind in this rice, grouped into columns.
 // The list is not hardcoded: scripts/keybinds-dump.py runs hyprland.lua (and
 // every module it requires) on each open, so a bind added to the config shows up
 // here without touching this file.
 //
-// Blur comes from the `hypr-keybinds` layer rule in config/rules.lua; the surface is
-// fullscreen but transparent outside the card, and ignore_alpha keeps the
-// frost off those pixels.
+// The surface is fullscreen but transparent outside the card.
 //
 // Run:    qs -p ~/.config/hypr/apps/quickshell/keybinds
 // Toggle: qs -p ~/.config/hypr/apps/quickshell/keybinds ipc call keybinds toggle
@@ -32,7 +30,7 @@ ShellRoot {
     readonly property int rowSpacing: 7
     readonly property int capHeight: 22
 
-    // ---- macOS Sonoma glass material ----
+    // ---- panel material ----
     readonly property color glass: Theme.glass
     readonly property color edge: Theme.edge
     readonly property color chip: Theme.chip

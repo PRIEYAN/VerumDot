@@ -33,7 +33,8 @@ ShellRoot {
     readonly property int cardRadius: 0
     readonly property int pad: 16
 
-    // ---- macOS Sonoma glass material ----
+    // ---- card material ----
+    // Keep the outer card black while its inner box retains the raised color.
     readonly property color glass: Theme.glass
     readonly property color edge: Theme.edge
     readonly property color raised: Theme.raised
@@ -159,8 +160,7 @@ ShellRoot {
         color: "transparent"
 
         // Fullscreen so a click anywhere else dismisses. Everything outside the
-        // card is fully transparent, and the layerrule's ignore_alpha keeps the
-        // blur off those pixels.
+        // card is fully transparent.
         anchors.top: true
         anchors.bottom: true
         anchors.left: true

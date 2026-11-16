@@ -48,11 +48,9 @@ ShellRoot {
     // afford to be a slightly easier target.
     readonly property int hotSize: 12
 
-    // ---- macOS Sonoma glass material ----
-    // The panel sits at 60% so white text stays legible over a bright
-    // wallpaper; the frost itself comes from the 4-pass blur in config/look.lua.
-    // Cards layered on it use the 12% white "raised" material.
-    readonly property color glass: Theme.glass
+    // ---- panel material ----
+    // Match the waybar's solid black; tiles keep their raised material.
+    readonly property color glass: "#000000"
     readonly property color edge: Theme.edge
     readonly property color tileOff: Theme.tileOff
     readonly property color trackOff: Theme.trackOff

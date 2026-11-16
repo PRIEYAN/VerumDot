@@ -2,9 +2,9 @@ configuration {
   show-icons: false;
 }
 
-/* Sonoma glass, same tokens as the other menus. */
+/* Solid black panel, same tokens as the other menus. */
 * {
-  bg: rgba(28, 28, 30, 0.60);
+  bg: #000000;
   bg-alt: rgba(255, 255, 255, 0.12);
   fg: rgba(255, 255, 255, 0.95);
   muted: rgba(255, 255, 255, 0.45);

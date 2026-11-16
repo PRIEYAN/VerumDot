@@ -110,7 +110,7 @@
     "signal": 10,
     "return-type": "json",
     // max-length is measured in average character widths, not characters;
-    // the two icons are wider than that, so 8 cut "⚡ 󰁹 100%" short.
+    // the two icons are wider than that, so 8 cut "󰁹 100% ⚡" short.
     "max-length": 14
   },
   "custom/volume": {

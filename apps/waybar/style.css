@@ -1,4 +1,4 @@
-/* Waybar — translucent menu bar. */
+/* Waybar — solid black menu bar. */
 
 /* Icons must come from a Nerd Font *Propo* variant. The plain "Nerd Font"
    variant draws icons ~16px wide but reserves only one 9px cell, so the
@@ -23,16 +23,16 @@
    light grey. 0.7px is a hairline: at scale 1 GTK antialiases it into one
    pixel row at ~70% coverage, so it reads finer than a hard 1px line. */
 window#waybar {
-  background: rgba(30, 30, 30, 0.35);
+  background: #000000;
   border: 0.7px solid #888888;
   border-radius: 0;
   color: rgba(255, 255, 255, 0.95);
 }
 
-/* ── tooltips: small floating glass sheet ───────────────────────────────── */
+/* ── tooltips ────────────────────────────────────────────────────────────── */
 
 tooltip {
-  background: rgba(30, 30, 30, 0.55);
+  background: #000000;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 12px;
 }
@@ -102,19 +102,19 @@ tooltip label {
   min-width: 64px;
 }
 
-/* Battery: "⚡ 󰁹 100%" at its widest. A fixed width keeps the box from
+/* Battery: "󰁹 100% ⚡" at its widest. A fixed width keeps the box from
    jumping when the reading goes from 99% to 100%. */
 #custom-battery {
   padding: 0;
   min-width: 84px;
 }
 
-/* ── separators: barely there ───────────────────────────────────────────── */
+/* ── separators: light grey ─────────────────────────────────────────────── */
 
 #custom-sep1,
 #custom-sep2,
 #custom-sep3 {
-  color: rgba(255, 255, 255, 0.12);
+  color: #888888;
   padding: 0 2px;
   font-size: 13px;
   min-width: 2px;
@@ -206,18 +206,6 @@ tooltip label {
 #custom-bluetooth.off {
   color: rgba(255, 255, 255, 0.40);
 }
-
-/* Battery glyph tracks the CPU power mode — see battery-status.sh. */
-#custom-battery.mode-performance { color: rgba(255, 159, 10, 0.95); }   /* orange */
-#custom-battery.mode-battery     { color: rgba(48, 209, 88, 0.95); }    /* green  */
-#custom-battery.mode-normal      { color: rgba(255, 255, 255, 0.95); }
-
-/* Eye comfort (hyprsunset warm tint). */
-#custom-brightness.eye-comfort { color: rgba(255, 214, 10, 0.95); }
-
-/* Stay-awake toggle. */
-#custom-stay_awake.activated   { color: rgba(255, 159, 10, 0.95); }
-#custom-stay_awake.deactivated { color: rgba(255, 255, 255, 0.95); }
 
 #custom-power { font-size: 14px; padding: 0 12px 0 10px; margin-right: 5px; }
 #custom-power:hover { color: rgba(255, 105, 97, 0.95); background: rgba(255, 255, 255, 0.08); }

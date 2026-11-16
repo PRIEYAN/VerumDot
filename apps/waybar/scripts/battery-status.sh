@@ -6,8 +6,8 @@
 #   rows       rofi script-mode backend; rofi re-execs this on every
 #              activation key, which is how the panel refreshes in place
 #
-# The class (mode-performance / mode-battery / mode-normal) is what
-# style.css uses to tint the glyph red / green / white.
+# The battery glyph follows the power mode; the capacity and charging bolt
+# keep the bar's normal text color.
 #
 # The sampling lives in lib/domain/sysstats.sh and the rendering in
 # lib/ui/table.sh, so this file is only the three output shapes.
@@ -30,7 +30,7 @@ declare -Ag MODE_LABEL=([normal]='Balanced' [performance]='Performance' [battery
 # battery::_headline — the panel's prompt line, in plain text and markup.
 # Sets HEAD_PLAIN and HEAD_MARKUP.
 read_headline() {
-  local mode capacity status health icon bolt
+  local mode capacity status health icon bar_icon bolt
   mode=$(power::mode)
   local label=${MODE_LABEL[$mode]:-Balanced}
 
@@ -39,9 +39,14 @@ read_headline() {
     status=$(battery::status)
     health=$(battery::health)
     icon=$(battery::icon "$capacity")
-    battery::charging && bolt="${BATTERY_BOLT} " || bolt=''
+    bar_icon=$icon
+    case $mode in
+      performance) bar_icon="<span foreground=\"#ff9f0a\" alpha=\"95%\">${icon}</span>" ;;
+      battery)     bar_icon="<span foreground=\"#30d158\" alpha=\"95%\">${icon}</span>" ;;
+    esac
+    battery::charging && bolt=" ${BATTERY_BOLT}" || bolt=''
 
-    BAR_TEXT="${bolt}${icon} ${capacity}%"
+    BAR_TEXT="${bar_icon} ${capacity}%${bolt}"
     HEAD_PLAIN="${icon} ${capacity}%  ·  ${status} · ${label} · health ${health}"
     HEAD_MARKUP=$(printf '<span size="large">%s %s%%</span>  %s' \
       "$icon" "$capacity" "$(table::dim "${status} · ${label} · health ${health}")")

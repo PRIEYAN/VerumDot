@@ -1,6 +1,4 @@
-/* Calendar — macOS Sonoma floating glass sheet, under the waybar clock.
-   Blur comes from the `rofi` layerrule in hypr.conf; this file only supplies
-   the translucent material on top of it. */
+/* Calendar dropdown under the waybar clock. */
 
 configuration {
     show-icons:          false;
@@ -11,7 +9,7 @@ configuration {
 }
 
 * {
-    surface:            rgba(28, 28, 30, 0.60);
+    surface:            #000000;
     raised:             rgba(255, 255, 255, 0.12);
     line:               rgba(255, 255, 255, 0.18);
     hover:              rgba(255, 255, 255, 0.08);

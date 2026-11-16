@@ -5,7 +5,7 @@
 #   brightness-status.sh --watch   print one object now, then one per change
 #
 # Shows the hardware percentage normally, or the boost factor while the
-# software shader is active. The eye-comfort class tints the glyph amber.
+# software shader is active. Eye comfort tints only the glyph amber.
 #
 # Both readings come from lib/domain/brightness.sh, which is also what
 # applies them — previously this module re-derived "is a boost active?" with
@@ -34,8 +34,12 @@ readonly ICON_BOOSTED='⚡'
 
 # emit_brightness — one module object for the current brightness state.
 emit_brightness() {
-  local eye_class='' boost percent tooltip
-  eyecomfort::active && eye_class='eye-comfort'
+  local eye_class='' icon=$ICON boosted_icon=$ICON_BOOSTED boost percent tooltip
+  if eyecomfort::active; then
+    eye_class='eye-comfort'
+    icon="<span foreground=\"#ffd60a\" alpha=\"95%\">${ICON}</span>"
+    boosted_icon="<span foreground=\"#ffd60a\" alpha=\"95%\">${ICON_BOOSTED}</span>"
+  fi
 
   if ! brightness::available; then
     waybar::unavailable "$ICON" 'install brightnessctl for real brightness control'
@@ -44,13 +48,13 @@ emit_brightness() {
 
   if brightness::boosted; then
     boost=$(brightness::boost_percent)
-    waybar::emit_pct "${ICON_BOOSTED} ${boost}%" \
+    waybar::emit_pct "${boosted_icon} ${boost}%" \
       "Software boost active · ${boost}%" "$boost" boosted "$eye_class"
   else
     percent=$(brightness::hardware_percent)
     tooltip='Scroll to adjust brightness'
     [[ -n $eye_class ]] && tooltip+=' · eye comfort on'
-    waybar::emit_pct "${ICON} ${percent}%" "$tooltip" "$percent" "$eye_class"
+    waybar::emit_pct "${icon} ${percent}%" "$tooltip" "$percent" "$eye_class"
   fi
 }
 

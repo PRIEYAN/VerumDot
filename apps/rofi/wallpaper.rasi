@@ -9,7 +9,7 @@ configuration {
 }
 
 * {
-  bg:       rgba(28, 28, 30, 0.60);
+  bg:       #000000;
   fg:       rgba(255, 255, 255, 0.95);
   accent:   #ffffff;
   selected: rgba(255, 255, 255, 0.18);

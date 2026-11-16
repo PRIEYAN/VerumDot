@@ -1,24 +1,4 @@
--- Layer rules (blur behind bars / popups) and window rules.
-
--- Layer blur. Each layer gets one rule carrying both effects; ignore_alpha
--- keeps the blur off the fully transparent pixels around a card.
-local function glass_layer(namespace)
-    hl.layer_rule({
-        match        = { namespace = "^(" .. namespace .. ")$" },
-        blur         = true,
-        ignore_alpha = 0.2,
-    })
-end
-
-glass_layer("waybar")
-glass_layer("rofi")
--- quickshell surfaces, named by WlrLayershell.namespace in their shell.qml.
--- Their surfaces are fullscreen but fully transparent outside the card.
-glass_layer("hypr-spotify")
-glass_layer("hypr-launcher")
-glass_layer("hypr-controlcenter")
-glass_layer("hypr-keybinds")
-
+-- Window rules for application placement and opacity.
 
 -- A floating "Center" popup pinned under the bar. `move` takes monitor-local
 -- expressions: `monitor_w-window_w-10` is the old `100%-w-10` (right edge,
