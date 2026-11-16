@@ -15,8 +15,8 @@ source "$_dir/lib/bootstrap.sh"
 unset _dir
 hypr::use core/cli ui/waybar ui/quickshell ui/notify domain/player
 
-readonly ICON_PLAYING=$''
-readonly ICON_PAUSED=$''
+readonly ICON_PLAYING=$''    # nf-fa-spotify
+readonly ICON_PAUSED=$'\U000f03e4' # 󰏤 nf-md-pause
 
 cmd_status() {
   local status title artist icon

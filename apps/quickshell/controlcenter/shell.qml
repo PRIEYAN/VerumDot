@@ -82,6 +82,10 @@ ShellRoot {
     }
     property alias stayAwake: sessionState.stayAwake
     property string page: "main"               // main | wifi | bluetooth | privacy
+    // True when a detail page was opened straight from outside (the waybar
+    // Wi-Fi / Bluetooth icons, via showPage) rather than from the main menu.
+    // Back then has no menu to return to, so it closes the panel instead.
+    property bool directEntry: false
     property bool powerExpanded: false
     property bool audioExpanded: false
     property bool brightnessExpanded: false
@@ -398,6 +402,18 @@ ShellRoot {
         fan.apply();
     }
 
+    // ---- screenshot (same capture as the keybind: scripts/screenshot.sh) ----
+    // The panel closes first and slurp starts a beat later, so the panel is
+    // neither in the shot nor covering the area being picked.
+    Process { id: screenshotProc }
+
+    function takeScreenshot() {
+        root.close();
+        screenshotProc.command = ["sh", "-c", "sleep 0.25; exec \"$0\" selection",
+                                  root.riceDir + "/scripts/screenshot.sh"];
+        screenshotProc.startDetached();
+    }
+
     // ---- power actions (mirrors scripts/power-menu.sh) ----
     Process { id: powerProc }
 
@@ -458,8 +474,15 @@ ShellRoot {
         shown = true;
     }
 
+    // Back arrow and Escape on a detail page.
+    function goBack() {
+        if (directEntry) close();
+        else page = "main";
+    }
+
     function close() {
         shown = false;
+        directEntry = false;
         page = "main";
         powerExpanded = false;
         audioExpanded = false;
@@ -471,9 +494,9 @@ ShellRoot {
         target: "controlcenter"
         function toggle(): void {
             if (root.shown) root.close();
-            else root.open();
+            else { root.directEntry = false; root.open(); }
         }
-        function open(): void { root.open() }
+        function open(): void { root.directEntry = false; root.open() }
         function close(): void { root.close() }
         function isOpen(): bool { return root.shown }
         function toggleStayAwake(): void { root.stayAwake = !root.stayAwake }
@@ -483,10 +506,13 @@ ShellRoot {
         // "privacy". Lets a keybind jump to Wi-Fi without two clicks, and
         // gives the panel's pages something that can drive them under test.
         function showPage(name: string): void {
+            root.directEntry = name !== "main";
             root.open();
             root.page = name;
         }
         function currentPage(): string { return root.page }
+        // Same as the back arrow / Escape on a detail page.
+        function back(): void { root.goBack() }
 
         // Expand a collapsible section by name: "power", "audio",
         // "brightness" or "fan".
@@ -757,7 +783,7 @@ ShellRoot {
                 anchors.margins: -6
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.page = "main"
+                onClicked: root.goBack()
             }
         }
 
@@ -928,7 +954,7 @@ ShellRoot {
             focus: true
             Keys.onEscapePressed: {
                 if (root.page === "main") root.close();
-                else root.page = "main";
+                else root.goBack();
             }
         }
 
@@ -1272,12 +1298,26 @@ ShellRoot {
                         }
                     }
 
-                    Tile {
+                    // Screenshot | Privacy
+                    Row {
                         width: parent.width
-                        glyph: "󰒃"
-                        label: "Privacy"
-                        sublabel: "MAC address · Tor Browser"
-                        onClicked: root.page = "privacy"
+                        spacing: root.tileGap
+
+                        Tile {
+                            width: (parent.width - root.tileGap) / 2
+                            glyph: "󰆞"
+                            label: "Screenshot"
+                            sublabel: "Select an area"
+                            onClicked: root.takeScreenshot()
+                        }
+
+                        Tile {
+                            width: (parent.width - root.tileGap) / 2
+                            glyph: "󰒃"
+                            label: "Privacy"
+                            sublabel: "MAC · Tor"
+                            onClicked: root.page = "privacy"
+                        }
                     }
 
                     // Power — expands a drawer rather than opening a page, so
@@ -1352,7 +1392,7 @@ ShellRoot {
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: root.page = "main"
+                                onClicked: root.goBack()
                             }
                         }
                     }

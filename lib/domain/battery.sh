@@ -100,12 +100,12 @@ battery::reset_above() {
 # elif branches with hand-maintained boundaries.
 readonly -a BATTERY_ICON_STEPS=(80 40 15 0)
 declare -Ag BATTERY_ICON=(
-  [80]=$'\U000F0240'   # nf-md-battery_high
-  [40]=$'\U000F0241'   # nf-md-battery_medium
-  [15]=$'\U000F0242'   # nf-md-battery_low
-  [0]=$'\U000F0243'    # nf-md-battery_outline
+  [80]=$'\U000F12A3'   # nf-md-battery_high
+  [40]=$'\U000F12A2'   # nf-md-battery_medium
+  [15]=$'\U000F12A1'   # nf-md-battery_low
+  [0]=$'\U000F008E'    # nf-md-battery_outline
 )
-readonly BATTERY_AC_ICON=$'\U000F01E6'   # nf-md-power_plug
+readonly BATTERY_AC_ICON=$'\U000F06A5'   # nf-md-power_plug
 readonly BATTERY_BOLT=$'\uF0E7'          # nf-fa-bolt
 
 # battery::icon <capacity> — the glyph for a charge level.

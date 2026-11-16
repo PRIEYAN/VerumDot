@@ -11,11 +11,11 @@ source "$_dir/lib/bootstrap.sh"
 unset _dir
 hypr::use ui/waybar domain/audio
 
-readonly ICON_LIVE=$''
-readonly ICON_MUTED=$''
+readonly ICON_LIVE=$''   # nf-fa-microphone
+readonly ICON_MUTED=$''  # nf-fa-microphone_slash
 
 if ! audio::available; then
-  waybar::unavailable $'' "no audio backend (install pamixer or wireplumber)"
+  waybar::unavailable "$ICON_MUTED" "no audio backend (install pamixer or wireplumber)"
   exit 0
 fi
 

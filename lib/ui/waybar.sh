@@ -95,3 +95,20 @@ waybar::refresh() {
     pkill "-RTMIN+${signal}" waybar >/dev/null 2>&1 || true
   done
 }
+
+# waybar::watch <emit-fn> <source> — run a module as a continuous exec: call
+# emit-fn once now, then again on every line <source> prints. <source> is a
+# shell pipeline whose output is the event stream (pactl subscribe, udevadm
+# monitor). Waybar keeps the process alive, so nothing is polled.
+#
+# If the source exits (the audio server restarted, or the tool is missing),
+# wait a second and start it again. A missing source therefore degrades to a
+# repaint each second instead of leaving the module dead.
+waybar::watch() {
+  local emit=$1 source=$2
+  "$emit"
+  while :; do
+    bash -c "$source" | while IFS= read -r _; do "$emit"; done
+    sleep 1
+  done
+}

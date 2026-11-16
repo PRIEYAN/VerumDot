@@ -15,7 +15,7 @@ while [ "$_dir" != "/" ] && [ ! -f "$_dir/lib/bootstrap.sh" ]; do _dir=$(dirname
 # shellcheck source=/dev/null
 source "$_dir/lib/bootstrap.sh"
 unset _dir
-hypr::use core/cli ui/waybar ui/rofi ui/menu ui/notify domain/network
+hypr::use core/cli ui/waybar ui/quickshell ui/rofi ui/menu ui/notify domain/network
 
 readonly THEME=dropdown-right
 readonly ICON_ETHERNET='󰈀'
@@ -144,9 +144,17 @@ cmd_menu() {
   esac
 }
 
+# The waybar click: open the control center's Wi-Fi page, the same dropdown
+# its side menu shows. Falls back to the rofi menu without quickshell.
+cmd_panel() {
+  quickshell::toggle_page controlcenter controlcenter wifi && return 0
+  cmd_menu
+}
+
 declare -A COMMANDS=(
   [status]="cmd_status|emit the waybar module JSON (the default)"
   [menu]="cmd_menu|open the Wi-Fi dropdown"
+  [panel]="cmd_panel|open the control center's Wi-Fi page (the waybar click)"
 )
 
 cli::dispatch "${1:-status}" "${@:2}"

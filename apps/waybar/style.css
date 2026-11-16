@@ -1,9 +1,14 @@
 /* Waybar — translucent menu bar. */
 
+/* Icons must come from a Nerd Font *Propo* variant. The plain "Nerd Font"
+   variant draws icons ~16px wide but reserves only one 9px cell, so the
+   glyph spills 3-4px right of its hover highlight. Propo reserves the
+   real width; the Iosevka letters and digits are unchanged. */
+
 * {
   border: none;
   border-radius: 0;
-  font-family: "SF Pro Text", "Inter", "IosevkaTerm Nerd Font", "Symbols Nerd Font", sans-serif;
+  font-family: "SF Pro Text", "Inter", "IosevkaTerm Nerd Font Propo", "Symbols Nerd Font", sans-serif;
   font-size: 13px;
   font-weight: 500;
   min-height: 0;
@@ -46,7 +51,6 @@ tooltip label {
 #custom-app_launcher,
 #custom-app_info,
 #custom-spotify,
-#custom-screenshot,
 #custom-mic,
 #custom-volume,
 #custom-brightness,
@@ -66,7 +70,6 @@ tooltip label {
 #custom-app_launcher:hover,
 #custom-app_info:hover,
 #custom-spotify:hover,
-#custom-screenshot:hover,
 #custom-mic:hover,
 #custom-volume:hover,
 #custom-brightness:hover,
@@ -76,6 +79,34 @@ tooltip label {
 #custom-power:hover,
 #custom-stay_awake:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── fixed hover boxes on the right ─────────────────────────────────────── */
+
+/* Icon-only toggles get identical squares. The bar is 40px tall and every
+   module has a 4px top/bottom margin, so a 32px-wide box is square. Padding
+   is zeroed so min-width alone sets the size; GTK centres the glyph. */
+#custom-stay_awake,
+#custom-mic,
+#custom-bluetooth,
+#custom-wifi {
+  padding: 0;
+  min-width: 32px;
+}
+
+/* Volume and brightness share one fixed rectangle, wide enough for
+   "icon 100%", so the box doesn't change size as the number changes. */
+#custom-volume,
+#custom-brightness {
+  padding: 0;
+  min-width: 64px;
+}
+
+/* Battery: "⚡ 󰁹 100%" at its widest. A fixed width keeps the box from
+   jumping when the reading goes from 99% to 100%. */
+#custom-battery {
+  padding: 0;
+  min-width: 84px;
 }
 
 /* ── separators: barely there ───────────────────────────────────────────── */

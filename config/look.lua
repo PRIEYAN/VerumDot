@@ -95,13 +95,8 @@ anim("borderangle", 30, "sonoma")
 anim("fade",        2,  "sonoma")
 anim("fadeIn",      2,  "sonoma")
 anim("fadeOut",     2,  "sonomaOut")
--- Workspace switching (keys, SUPER+scroll, 3-finger swipe): Hyprland's stock
--- transition, copied from /usr/share/hypr/hyprland.lua — a short fade on the
--- almostLinear curve. The hidden special workspace keeps its vertical slide.
-bezier("almostLinear", 0.5, 0.5, 0.75, 1)
-anim("workspaces",    1.94, "almostLinear", "fade")
-anim("workspacesIn",  1.21, "almostLinear", "fade")
-anim("workspacesOut", 1.94, "almostLinear", "fade")
+-- Restore the horizontal workspace slide from the previous Hyprland config.
+anim("workspaces", 3, "snap", "slide")
 anim("specialWorkspace", 3, "snap", "slidevert")
 anim("layers",      2,  "sonoma",    "fade")
 anim("layersIn",    2,  "sonoma",    "fade")
